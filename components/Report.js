@@ -177,22 +177,60 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
           <div className="sec-head">
             <span className="sec-no">03</span>
             <h2 className="sec-title">Vagas onde você tem chance real</h2>
-            <p className="sec-sub">Ordenadas por aderência ao seu gêmeo. Clique em “Adaptar currículo” para alinhar seu CV a uma delas.</p>
+            <p className="sec-sub">
+              Ordenadas por aderência ao seu gêmeo. Cada vaga mostra a fonte;
+              clique em "Adaptar currículo" para alinhar seu CV a uma delas.
+            </p>
           </div>
           <div className="vaga-list">
             {opp.vagas.map((v, i) => {
               const { text, src } = splitSrc(v.porque);
+              const sourceLabel = v.sourceLabel || v.source || "";
+              const isReal = v.source && v.source !== "fixtures";
               return (
                 <div className="vagac" key={i}>
                   <div className="vagac-top">
-                    <div><h4 className="vagac-title">{v.titulo}</h4><p className="vagac-co">{v.empresa}{v.local ? " · " + v.local : ""}</p></div>
-                    <div className="match"><span className="match-num">{v.match}</span><span className="match-lbl">match</span></div>
+                    <div>
+                      <h4 className="vagac-title">{v.titulo}</h4>
+                      <p className="vagac-co">
+                        {v.empresa}{v.local ? " · " + v.local : ""}
+                        {v.salario ? " · " + v.salario : ""}
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                      {sourceLabel && (
+                        <span
+                          className="src"
+                          style={{
+                            background: isReal ? "rgba(185,217,12,.18)" : "rgba(255,255,255,.10)",
+                            color: isReal ? "#B9D90C" : "rgba(255,255,255,.7)",
+                            border: isReal ? "1px solid rgba(185,217,12,.35)" : "1px dashed rgba(255,255,255,.25)",
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            fontSize: 11,
+                          }}
+                          title={isReal ? "Fonte real" : "Vaga ilustrativa — não é uma empresa real"}
+                        >
+                          {sourceLabel}
+                        </span>
+                      )}
+                      <div className="match"><span className="match-num">{v.match}</span><span className="match-lbl">match</span></div>
+                    </div>
                   </div>
                   <p className="vagac-why">{text} <Src value={src} /></p>
                   {v.falta && v.falta.length > 0 && (
                     <div className="vagac-falta"><span className="falta-lbl">falta:</span>{v.falta.map((f, j) => <span className="falta-chip" key={j}>{f}</span>)}</div>
                   )}
-                  <button className="vagac-tailor" onClick={() => setTailorVaga(v)}>Adaptar currículo para esta vaga →</button>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    {v.url && (
+                      <a className="vagac-tailor" href={v.url} target="_blank" rel="noopener noreferrer">
+                        Ver vaga original ↗
+                      </a>
+                    )}
+                    <button className="vagac-tailor" onClick={() => setTailorVaga(v)}>
+                      Adaptar currículo →
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -228,7 +266,16 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
       <div className="rep-foot">
         {onRestart && <button className="btn btn-ghost" onClick={onRestart}>← Construir outro gêmeo</button>}
         <p className="transp">{footerNote || (
-          <><b>Transparência:</b> o score é um cálculo auditável (a fórmula acima); os textos são gerados por IA a partir do seu currículo. As vagas são <b>ilustrativas</b>. Princípio do produto: número = cálculo, texto = explicação com fonte.</>
+          <>
+            <b>Transparência:</b> o score é um cálculo auditável (a fórmula acima);
+            os textos são gerados por IA a partir do seu currículo
+            {opp?.illustrative ? (
+              <> ; as vagas aqui são <b>ilustrativas</b> (sem provider real configurado)</>
+            ) : opp?.sources?.length ? (
+              <> ; vagas vieram de {opp.sources.join(", ")}</>
+            ) : null}
+            . Princípio do produto: número = cálculo, texto = explicação com fonte.
+          </>
         )}</p>
       </div>
 

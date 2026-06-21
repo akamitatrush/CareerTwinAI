@@ -113,6 +113,40 @@ export default function Home() {
               <div className="builder-actions">
                 <button className="btn btn-primary" onClick={build} disabled={busy}>Construir meu gêmeo (sem salvar) <span className="arw">→</span></button>
                 <button className="btn btn-ghost" onClick={loadSample} disabled={busy}>Carregar exemplo</button>
+                <label className="btn btn-ghost" style={{ cursor: "pointer" }}>
+                  Enviar PDF
+                  <input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    style={{ display: "none" }}
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = "";
+                      if (!f) return;
+                      setError("");
+                      setBusy(true);
+                      try {
+                        const fd = new FormData();
+                        fd.append("file", f);
+                        const r = await fetch("/api/cv/upload", { method: "POST", body: fd });
+                        const data = await r.json();
+                        if (!r.ok) {
+                          if (r.status === 401) {
+                            setError("Pra enviar PDF voce precisa estar logado. Cole o texto, ou entre em /entrar para salvar.");
+                          } else {
+                            setError(data.error || "Falha ao ler o PDF.");
+                          }
+                          return;
+                        }
+                        setCv(data.text);
+                      } catch (err) {
+                        setError("Falha de upload: " + (err.message || ""));
+                      } finally {
+                        setBusy(false);
+                      }
+                    }}
+                  />
+                </label>
               </div>
               <p className="note-line"><b>Modo experimentar (efêmero):</b> roda a IA ao vivo, mas <b>não salva</b> nada. Para construir um gêmeo que persiste, <a href="/entrar">crie sua conta</a> — gratuita, com consentimento por fonte e botão de "apagar tudo" sempre disponível.</p>
               {error && <div className="err">{error}</div>}
