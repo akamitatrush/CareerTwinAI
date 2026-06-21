@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -105,6 +106,24 @@ export async function POST(req) {
       },
       include: { gaps: true },
     });
+
+    // Rastro LGPD: registra fonte + consentimento (payloadHash prova consent
+    // sem reter o bruto se o usuario revogar/apagar).
+    const payloadHash = createHash("sha256").update(cv).digest("hex");
+    const cvLabel = `Curriculo colado (${(cv.length / 1024).toFixed(1)} KB)`;
+    await prisma.$transaction([
+      prisma.dataSource.create({
+        data: {
+          userId,
+          kind: "CV_PASTE",
+          label: cvLabel,
+          sizeBytes: Buffer.byteLength(cv, "utf8"),
+        },
+      }),
+      prisma.consent.create({
+        data: { userId, source: "CV_PASTE", payloadHash },
+      }),
+    ]);
 
     return NextResponse.json({
       snapshotId: snapshot.id,
