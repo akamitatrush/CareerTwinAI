@@ -10,10 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const userId = session.user.id;
+  const userId = session?.user?.id ?? null;
 
   let parsed;
   try {
@@ -26,10 +23,9 @@ export async function POST(req) {
   }
   const { snapshotId, role: roleIn, perfil: perfilIn, gaps: gapsIn } = parsed.data;
 
-  // Se o cliente passou snapshotId, validamos o dono e usamos os dados de la
-  // — assim ele nao consegue forjar perfil/role no body para um snapshot que nao e dele.
+  // snapshotId so vale com sessao — sem userId nao da para escopar.
   let snapshot = null;
-  if (snapshotId) {
+  if (snapshotId && userId) {
     snapshot = await prisma.scoreSnapshot.findFirst({
       where: { id: snapshotId, userId }, // dono dentro do WHERE
       include: { gaps: true },

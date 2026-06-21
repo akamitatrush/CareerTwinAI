@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { completeJSON } from "@/lib/llm";
 import { promptInterviewQuestion, promptInterviewEval } from "@/lib/prompts";
 import { InterviewBody } from "@/lib/validators";
@@ -7,12 +6,9 @@ import { InterviewBody } from "@/lib/validators";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Rota efemera (tool): nao persiste nada e nao acessa dados de outro usuario.
+// TODO Fase 4: rate limit por IP/sessao.
 export async function POST(req) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   let parsed;
   try {
     parsed = InterviewBody.safeParse(await req.json());

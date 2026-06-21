@@ -10,12 +10,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req) {
-  // Camada 2 de defesa: middleware já bloqueia anônimo, mas a rota re-checa.
+  // Sessao opcional: logado → persiste com escopo de dono; anonimo → efemero.
+  // Nao ha IDOR aqui: persistencia so acontece quando userId vem de auth().
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const userId = session.user.id;
+  const userId = session?.user?.id ?? null;
 
   let parsed;
   try {
@@ -48,6 +46,18 @@ export async function POST(req) {
 
   // Score determinístico — calculado aqui, não na IA.
   const overall = computeOverall(diag.sub_scores);
+
+  // Modo efemero (anonimo): nao persiste, retorna direto.
+  if (!userId) {
+    return NextResponse.json({
+      snapshotId: null,
+      perfil: diag.perfil,
+      sub_scores: diag.sub_scores,
+      gaps: diag.gaps,
+      overall,
+      efemero: true,
+    });
+  }
 
   // Persistência: profile vigente sobrescrito; snapshot imutável.
   // Tudo escopado por userId vindo da sessão (sem IDOR).

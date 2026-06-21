@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { completeJSON } from "@/lib/llm";
 import { promptChat } from "@/lib/prompts";
 import { ChatBody } from "@/lib/validators";
@@ -7,12 +6,9 @@ import { ChatBody } from "@/lib/validators";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Rota efemera (tool): perfil/historico vem no body, nao persiste.
+// TODO Fase 4: rate limit por sessao/IP.
 export async function POST(req) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   let parsed;
   try {
     parsed = ChatBody.safeParse(await req.json());
