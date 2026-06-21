@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: careertwin-pg
+    environment:
+      POSTGRES_USER: careertwin
+      POSTGRES_PASSWORD: careertwin
+      POSTGRES_DB: careertwin
+    ports:
+      - "5432:5432"
+    volumes:
+      - careertwin_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U careertwin -d careertwin"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: careertwin-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  careertwin_pg:
