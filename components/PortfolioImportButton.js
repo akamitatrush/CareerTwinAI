@@ -57,17 +57,17 @@ export default function PortfolioImportButton({ onImport, disabled }) {
         >
           {!result ? (
             <>
-              <label style={{ display: "block", fontSize: 12, color: "#4C5048", marginBottom: 4, marginTop: 4 }}>
+              <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 4, marginTop: 4 }}>
                 Usuário GitHub
               </label>
               <input
                 value={github}
                 onChange={(e) => setGithub(e.target.value)}
                 placeholder="ex.: shasher"
-                style={{ width: "100%", padding: 10, fontSize: 14, border: "1px solid #D4D6CA", borderRadius: 6, fontFamily: "inherit", marginBottom: 10 }}
+                style={{ width: "100%", padding: 10, fontSize: 14, border: "1px solid var(--border-strong)", borderRadius: 6, fontFamily: "inherit", marginBottom: 10 }}
                 disabled={busy}
               />
-              <label style={{ display: "block", fontSize: 12, color: "#4C5048", marginBottom: 4 }}>
+              <label style={{ display: "block", fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>
                 URL do portfólio (opcional)
               </label>
               <input
@@ -75,7 +75,7 @@ export default function PortfolioImportButton({ onImport, disabled }) {
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://seu-site.com"
                 type="url"
-                style={{ width: "100%", padding: 10, fontSize: 14, border: "1px solid #D4D6CA", borderRadius: 6, fontFamily: "inherit" }}
+                style={{ width: "100%", padding: 10, fontSize: 14, border: "1px solid var(--border-strong)", borderRadius: 6, fontFamily: "inherit" }}
                 disabled={busy}
               />
               {err && <div className="err" style={{ marginTop: 10 }}>{err}</div>}
@@ -100,13 +100,13 @@ export default function PortfolioImportButton({ onImport, disabled }) {
 function PortfolioPreview({ portfolio, onClose }) {
   return (
     <div>
-      <p style={{ fontSize: 14, color: "#0F0F0E", lineHeight: 1.5, marginTop: 0 }}>{portfolio.resumo}</p>
+      <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.5, marginTop: 0 }}>{portfolio.resumo}</p>
       {portfolio.stack?.length > 0 && (
         <div style={{ marginTop: 12 }}>
-          <div style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "#6B6B66", marginBottom: 6 }}>Stack</div>
+          <div style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 6 }}>Stack</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {portfolio.stack.map((s) => (
-              <span key={s} style={{ fontSize: 11, padding: "3px 8px", background: "#F4F2EC", borderRadius: 12, fontFamily: "JetBrains Mono, monospace" }}>
+              <span key={s} style={{ fontSize: 11, padding: "3px 8px", background: "var(--surface-2)", borderRadius: 12, fontFamily: "JetBrains Mono, monospace" }}>
                 {s}
               </span>
             ))}
@@ -115,10 +115,10 @@ function PortfolioPreview({ portfolio, onClose }) {
       )}
       {portfolio.projetos?.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          <div style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "#6B6B66", marginBottom: 8 }}>Projetos</div>
+          <div style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 8 }}>Projetos</div>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
             {portfolio.projetos.map((p, i) => (
-              <li key={i} style={{ padding: 10, border: "1px solid #E5E3DA", borderRadius: 6 }}>
+              <li key={i} style={{ padding: 10, border: "1px solid var(--border)", borderRadius: 6 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
                   {p.url ? (
                     <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>
@@ -128,8 +128,8 @@ function PortfolioPreview({ portfolio, onClose }) {
                     p.nome
                   )}
                 </div>
-                {p.descricao && <div style={{ fontSize: 13, color: "#4C5048", lineHeight: 1.5 }}>{p.descricao}</div>}
-                {p.destaque && <div style={{ fontSize: 12, color: "#A33B20", marginTop: 4, fontStyle: "italic" }}>{p.destaque}</div>}
+                {p.descricao && <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>{p.descricao}</div>}
+                {p.destaque && <div style={{ fontSize: 12, color: "var(--alert)", marginTop: 4, fontStyle: "italic" }}>{p.destaque}</div>}
               </li>
             ))}
           </ul>

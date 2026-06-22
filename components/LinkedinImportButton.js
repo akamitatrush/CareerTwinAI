@@ -51,7 +51,7 @@ export default function LinkedinImportButton({ onImport, disabled }) {
           onClose={() => !busy && setOpen(false)}
           wide
         >
-          <ol style={{ fontSize: 13, color: "#4C5048", marginTop: 0, paddingLeft: 18, lineHeight: 1.55 }}>
+          <ol style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 0, paddingLeft: 18, lineHeight: 1.55 }}>
             <li>Abra seu perfil em <a href="https://linkedin.com/in/me" target="_blank" rel="noopener noreferrer">linkedin.com/in/me</a></li>
             <li>Selecione e copie tudo de <b>Sobre</b> + <b>Experiência</b> + <b>Formação</b> + <b>Skills</b></li>
             <li>Cole abaixo. A IA estrutura e devolve um currículo pronto pro diagnóstico.</li>
@@ -61,7 +61,7 @@ export default function LinkedinImportButton({ onImport, disabled }) {
             onChange={(e) => setText(e.target.value)}
             placeholder="Cole aqui o conteúdo do seu LinkedIn…"
             rows={12}
-            style={{ width: "100%", padding: 12, fontSize: 13, border: "1px solid #D4D6CA", borderRadius: 8, fontFamily: "inherit", resize: "vertical", marginTop: 8 }}
+            style={{ width: "100%", padding: 12, fontSize: 13, border: "1px solid var(--border-strong)", borderRadius: 8, fontFamily: "inherit", resize: "vertical", marginTop: 8 }}
             disabled={busy}
           />
           {err && <div className="err" style={{ marginTop: 10 }}>{err}</div>}

@@ -183,7 +183,7 @@ export default async function MeusDadosPage({ searchParams }) {
             </thead>
             <tbody>
               {dataSources.map((d) => (
-                <tr key={d.id} style={{ borderTop: "1px solid rgba(255,255,255,.08)" }}>
+                <tr key={d.id} style={{ borderTop: "1px solid var(--border)" }}>
                   <td>{SOURCE_LABEL[d.kind] || d.kind}</td>
                   <td>{d.label}</td>
                   <td>{d.sizeBytes ? `${(d.sizeBytes / 1024).toFixed(1)} KB` : "—"}</td>
@@ -204,9 +204,9 @@ export default async function MeusDadosPage({ searchParams }) {
         <a className="btn btn-primary" href="/api/me/export">Baixar meus dados (JSON)</a>
       </div>
 
-      <div className="sec" style={{ borderTop: "1px solid #c33", paddingTop: 16 }}>
+      <div className="sec" style={{ borderTop: "1px solid var(--alert)", paddingTop: 16 }}>
         <div className="sec-head">
-          <span className="sec-no" style={{ color: "#c33" }}>04</span>
+          <span className="sec-no" style={{ color: "var(--alert)" }}>04</span>
           <h2 className="sec-title">Apagar tudo</h2>
           <p className="sec-sub">
             Isso remove sua conta, perfil, todos os snapshots/gaps/plano, consentimentos
@@ -228,7 +228,7 @@ export default async function MeusDadosPage({ searchParams }) {
           {erroConfirmar && (
             <div className="err">Confirmação não bateu. Digite exatamente APAGAR.</div>
           )}
-          <button className="btn" style={{ background: "#c33", color: "white" }} type="submit">
+          <button className="btn" style={{ background: "var(--alert)", color: "var(--surface)" }} type="submit">
             Apagar tudo definitivamente
           </button>
         </form>

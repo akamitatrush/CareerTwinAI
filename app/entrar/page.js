@@ -265,7 +265,7 @@ export default function EntrarPage({ searchParams }) {
           font-family:var(--sans);
           font-size:14.5px;
           color:var(--ink);
-          background:#fff;
+          background:var(--surface);
           border:1px solid var(--rule);
           border-radius:4px;
           padding:13px 14px;
@@ -307,7 +307,7 @@ export default function EntrarPage({ searchParams }) {
         .entrar-dev{
           display:grid; gap:8px;
           margin-top:24px; padding:14px;
-          border:1px dashed #888;
+          border:1px dashed var(--text-subtle);
           border-radius:8px;
         }
         .entrar-dev input{
@@ -351,7 +351,7 @@ export default function EntrarPage({ searchParams }) {
           flex:none;
           width:34px; height:34px;
           display:grid; place-items:center;
-          background:#fff;
+          background:var(--surface);
           border:1px solid var(--rule);
           border-radius:4px;
           color:var(--ink);

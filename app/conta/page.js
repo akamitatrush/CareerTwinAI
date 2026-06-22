@@ -219,8 +219,8 @@ export default async function ContaPage({ searchParams }) {
                 width: 64,
                 height: 64,
                 borderRadius: "50%",
-                background: "#B9D90C",
-                color: "var(--ink)",
+                background: "var(--accent)",
+                color: "var(--accent-text)",
                 display: "grid",
                 placeItems: "center",
                 fontFamily: "Bricolage Grotesque, sans-serif",
@@ -297,7 +297,7 @@ export default async function ContaPage({ searchParams }) {
               padding: "12px 14px",
               borderRadius: 4,
               border: "1px solid var(--rule)",
-              background: "#fff",
+              background: "var(--surface)",
               fontFamily: "Inter, sans-serif",
               fontSize: 14.5,
             }}
@@ -350,7 +350,7 @@ export default async function ContaPage({ searchParams }) {
               padding: "12px 14px",
               borderRadius: 4,
               border: "1px solid var(--rule)",
-              background: "#fff",
+              background: "var(--surface)",
               fontFamily: "Inter, sans-serif",
               fontSize: 14.5,
             }}
@@ -536,7 +536,7 @@ function StatCard({ n, label, sub }) {
   return (
     <div
       style={{
-        background: "#fff",
+        background: "var(--surface)",
         border: "1px solid var(--rule)",
         borderRadius: 6,
         padding: "18px 20px",

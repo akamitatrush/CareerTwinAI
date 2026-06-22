@@ -157,12 +157,12 @@ function ScoreHistory({ snapshots }) {
         <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
           <div title={new Date(s.createdAt).toLocaleString("pt-BR") + " · " + s.role} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
             <div style={{ fontSize: 12, opacity: 0.7 }}>{s.overall}</div>
-            <div style={{ width: 14, height: 60, background: "#B9D90C", borderRadius: 4 }} />
+            <div style={{ width: 14, height: 60, background: "var(--accent)", borderRadius: 4 }} />
             <div style={{ fontSize: 10, opacity: 0.5 }}>{new Date(s.createdAt).toLocaleDateString("pt-BR")}</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity: 0.4 }}>
             <div style={{ fontSize: 12 }}>?</div>
-            <div style={{ width: 14, height: 30, background: "#ccc", borderRadius: 4, borderStyle: "dashed", borderWidth: 1 }} />
+            <div style={{ width: 14, height: 30, background: "var(--border-strong)", borderRadius: 4, borderStyle: "dashed", borderWidth: 1 }} />
             <div style={{ fontSize: 10 }}>próximo</div>
           </div>
         </div>
@@ -183,7 +183,7 @@ function ScoreHistory({ snapshots }) {
           return (
             <div key={s.id} title={new Date(s.createdAt).toLocaleString("pt-BR") + " · " + s.role} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div style={{ fontSize: 12, opacity: 0.7 }}>{s.overall}</div>
-              <div style={{ width: 14, height: h, background: "#B9D90C", borderRadius: 4 }} />
+              <div style={{ width: 14, height: h, background: "var(--accent)", borderRadius: 4 }} />
               <div style={{ fontSize: 10, opacity: 0.5 }}>{new Date(s.createdAt).toLocaleDateString("pt-BR")}</div>
             </div>
           );

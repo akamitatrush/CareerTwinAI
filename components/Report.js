@@ -110,7 +110,7 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
           <div className="inst-top">
             <div className="gauge">
               <svg width="120" height="120">
-                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="9" />
+                <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" strokeWidth="9" />
                 <circle cx="60" cy="60" r="52" fill="none" className="gauge-arc" strokeWidth="9" strokeLinecap="round" strokeDasharray={CIRC.toFixed(1)} strokeDashoffset={gaugeOff.toFixed(1)} />
               </svg>
               <div className="gauge-num">{liveOverall}</div>
@@ -194,10 +194,10 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
               fontes temporariamente fora. Tente:
             </p>
           </div>
-          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.7, color: "#4C5048" }}>
+          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.7, color: "var(--text-muted)" }}>
             <li>Refazer o diagnóstico com um cargo-alvo mais comum (ex.: "engenheiro de software" em vez de "engenheiro de plataforma sênior em fintech")</li>
             <li>Voltar daqui a algumas horas — a base atualiza periodicamente</li>
-            <li>Cadastrar candidaturas manualmente em <a href="/candidaturas" style={{ color: "#2563EB" }}>/candidaturas</a> enquanto isso</li>
+            <li>Cadastrar candidaturas manualmente em <a href="/candidaturas" style={{ color: "var(--accent)" }}>/candidaturas</a> enquanto isso</li>
           </ul>
         </div>
       )}
@@ -232,9 +232,9 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
                         <span
                           className="src"
                           style={{
-                            background: isReal ? "rgba(185,217,12,.18)" : "rgba(255,255,255,.10)",
-                            color: isReal ? "#B9D90C" : "rgba(255,255,255,.7)",
-                            border: isReal ? "1px solid rgba(185,217,12,.35)" : "1px dashed rgba(255,255,255,.25)",
+                            background: isReal ? "var(--accent-soft)" : "var(--surface-2)",
+                            color: isReal ? "var(--accent)" : "var(--text-muted)",
+                            border: isReal ? "1px solid var(--accent)" : "1px dashed var(--border-strong)",
                             padding: "2px 8px",
                             borderRadius: 6,
                             fontSize: 11,

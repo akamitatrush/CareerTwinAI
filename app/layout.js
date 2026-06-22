@@ -1,5 +1,6 @@
 import "./globals.css";
 import PostHogProvider from "@/components/PostHogProvider";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // Forca renderizacao dinamica em todas as paginas. Necessario porque o
 // middleware gera um nonce CSP novo a cada request — se a Vercel servir
@@ -19,6 +20,23 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
       <head>
+        {/* Aplica o tema do localStorage SINCRONAMENTE antes do paint pra
+            evitar flash-of-wrong-theme. Roda em try/catch porque pode falhar
+            em iframes/SSR/Safari privado. Fallback: dark. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var t = localStorage.getItem('ct_theme') || 'dark';
+                  document.documentElement.setAttribute('data-theme', t);
+                } catch (e) {
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                }
+              })();
+            `,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -27,6 +45,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
+        <ThemeToggle />
         <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>

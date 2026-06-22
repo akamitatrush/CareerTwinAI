@@ -144,7 +144,7 @@ export default function KanbanClient({ initialItems, columns }) {
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
-        <p style={{ fontSize: 13, color: "#6B6B66", margin: 0 }}>
+        <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
           {isEmpty
             ? "Cada coluna abaixo representa uma etapa do funil."
             : "Use o seletor em cada card para mover pela próxima etapa. As métricas no topo atualizam sozinhas."}
@@ -161,7 +161,7 @@ export default function KanbanClient({ initialItems, columns }) {
       {showNew && (
         <form
           onSubmit={(e) => { e.preventDefault(); createNew(e.currentTarget); }}
-          style={{ marginBottom: 20, padding: 16, border: "1px solid #D4D6CA", borderRadius: 10, background: "#FAF8F2" }}
+          style={{ marginBottom: 20, padding: 16, border: "1px solid var(--border-strong)", borderRadius: 10, background: "var(--surface-2)" }}
         >
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
             <input name="titulo" placeholder="Cargo (obrigatório)" className="ks-input" required />
@@ -241,25 +241,25 @@ export default function KanbanClient({ initialItems, columns }) {
         .kanban { display: grid; grid-template-columns: repeat(6, minmax(180px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 10px; }
         @media (max-width: 1100px) { .kanban { grid-template-columns: repeat(3, minmax(220px, 1fr)); } }
         @media (max-width: 700px) { .kanban { grid-template-columns: 1fr; } }
-        .kanban-col { background: #F4F2EC; border-radius: 8px; padding: 10px; min-height: 200px; }
-        .kanban-col-head { display: flex; justify-content: space-between; align-items: center; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #4C5048; margin-bottom: 10px; }
-        .kanban-col-count { background: #fff; padding: 2px 6px; border-radius: 10px; font-size: 10px; }
+        .kanban-col { background: var(--surface-2); border-radius: 8px; padding: 10px; min-height: 200px; }
+        .kanban-col-head { display: flex; justify-content: space-between; align-items: center; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+        .kanban-col-count { background: var(--surface); padding: 2px 6px; border-radius: 10px; font-size: 10px; }
         .kanban-col-body { display: flex; flex-direction: column; gap: 8px; }
-        .kanban-empty { font-size: 11px; color: #888; text-align: center; padding: 14px 8px; line-height: 1.5; font-style: italic; }
-        .kanban-card { background: #fff; border: 1px solid #E5E3DA; border-radius: 6px; padding: 10px; font-size: 12px; transition: opacity .15s; }
+        .kanban-empty { font-size: 11px; color: var(--text-subtle); text-align: center; padding: 14px 8px; line-height: 1.5; font-style: italic; }
+        .kanban-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 12px; transition: opacity .15s; }
         .kanban-card-t { font-weight: 600; font-size: 13px; line-height: 1.3; margin-bottom: 3px; }
-        .kanban-card-m { color: #6B6B66; font-size: 11px; margin-bottom: 4px; }
-        .kanban-card-src { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #888; margin-bottom: 4px; }
-        .kanban-card-link { font-size: 11px; color: #2563EB; text-decoration: none; display: inline-block; margin-bottom: 6px; }
+        .kanban-card-m { color: var(--text-muted); font-size: 11px; margin-bottom: 4px; }
+        .kanban-card-src { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 4px; }
+        .kanban-card-link { font-size: 11px; color: var(--accent); text-decoration: none; display: inline-block; margin-bottom: 6px; }
         .kanban-card-link:hover { text-decoration: underline; }
         .kanban-card-actions { display: flex; gap: 4px; margin-top: 6px; }
-        .kanban-card-actions select { flex: 1; font-size: 11px; padding: 4px 6px; border: 1px solid #E5E3DA; border-radius: 4px; background: #FAFAF8; cursor: pointer; }
-        .kanban-x { background: none; border: 1px solid #E5E3DA; border-radius: 4px; padding: 4px 8px; cursor: pointer; color: #888; font-size: 11px; }
-        .kanban-x:hover { color: #C0392B; border-color: #C0392B; }
-        .kanban-empty-hero { margin-bottom: 20px; padding: 22px; border: 1px dashed #D4D6CA; border-radius: 12px; background: #FAF8F2; }
+        .kanban-card-actions select { flex: 1; font-size: 11px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface-2); cursor: pointer; }
+        .kanban-x { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; cursor: pointer; color: var(--text-subtle); font-size: 11px; }
+        .kanban-x:hover { color: var(--alert); border-color: var(--alert); }
+        .kanban-empty-hero { margin-bottom: 20px; padding: 22px; border: 1px dashed var(--border-strong); border-radius: 12px; background: var(--surface-2); }
         .kanban-empty-hero-inner h2 { margin: 0 0 8px; font-size: 20px; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; }
-        .kanban-empty-hero-inner p { margin: 0 0 14px; color: #4C5048; font-size: 14px; line-height: 1.55; max-width: 620px; }
-        :global(.ks-input) { padding: 8px 10px; border: 1px solid #D4D6CA; border-radius: 6px; font-size: 13px; font-family: inherit; background: #fff; }
+        .kanban-empty-hero-inner p { margin: 0 0 14px; color: var(--text-muted); font-size: 14px; line-height: 1.55; max-width: 620px; }
+        :global(.ks-input) { padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 13px; font-family: inherit; background: var(--surface); }
       `}</style>
     </>
   );
