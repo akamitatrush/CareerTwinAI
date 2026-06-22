@@ -26,9 +26,15 @@ function buildCsp() {
   const scriptSrc = IS_DEV
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
     : "script-src 'self' 'unsafe-inline'";
+  // PostHog + Sentry precisam de connect-src liberado pra mandar eventos.
+  // - us.i.posthog.com: ingestion da PostHog Cloud (US)
+  // - *.posthog.com: cobre subdomínios extras (assets, session recording, etc)
+  // - *.ingest.sentry.io e *.ingest.us.sentry.io: ingestion do Sentry
+  const observabilityHosts =
+    "https://us.i.posthog.com https://*.posthog.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io";
   const connectSrc = IS_DEV
-    ? "connect-src 'self' ws: wss:"
-    : "connect-src 'self'";
+    ? `connect-src 'self' ws: wss: ${observabilityHosts}`
+    : `connect-src 'self' ${observabilityHosts}`;
   return [
     "default-src 'self'",
     scriptSrc,

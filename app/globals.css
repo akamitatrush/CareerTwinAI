@@ -1,67 +1,96 @@
 /* ===========================================================
- * CareerTwin AI — Direção visual "Dossiê" (editorial jornalístico)
- * Tema dark por default · verde-limão como grifo · light opt-in
- * Sistema de tokens via CSS variables. Default: dark.
+ * CareerTwin AI — Direção visual "Claude Design / Índigo Sereno"
+ * Tema light por default · índigo como cor primária · dark opt-in
+ * Sistema de tokens via CSS variables. Default: light.
  * =========================================================== */
 
 :root {
-  /* shared (não muda entre temas) */
-  --accent: #B9D90C;
-  --accent-soft: rgba(185, 217, 12, 0.12);
-  --accent-text: #0A0A0A;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --font-display: "Bricolage Grotesque", sans-serif;
-  --font-body: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-  --font-serif: "Source Serif 4", serif;
+  /* === Paleta nova "Índigo Sereno" — shared entre temas === */
+  --primary: #4F4FB0;
+  --primary-deep: #34357E;
+  --primary-soft: #EEEEFB;
+  --primary-tint: #DEDEF4;
+  --primary-light: #6E6EC8;
+
+  --positive: #1E9C7E;
+  --positive-deep: #1E7E66;
+  --positive-soft: #ECF6F0;
+  --positive-tint: #CFE8DB;
+
+  --attention: #B6822A;
+  --attention-deep: #7A6326;
+  --attention-soft: #FBF6EC;
+  --attention-tint: #F0E4C9;
+
+  --avatar-from: #E7B98C;
+  --avatar-to: #C98A57;
+
+  /* === Aliases legados pros tokens semânticos antigos ===
+     Mantemos os nomes (--accent, --alert, --ok, etc.) pra não quebrar
+     as ~300 referências espalhadas. Só mudamos pra onde eles APONTAM. */
+  --accent: var(--primary);
+  --accent-soft: var(--primary-soft);
+  --accent-text: #FFFFFF;
+  --accent-deep: var(--primary-light);
+  --accent-wash: var(--primary-soft);
+  --alert: var(--attention);
+  --alert-wash: var(--attention-soft);
+  --ok: var(--positive);
+  --ok-wash: var(--positive-soft);
+
+  /* === Radius === */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  /* === Tipografia ===
+     Plus Jakarta Sans (body) substitui Inter + Bricolage Grotesque
+     Spectral (serif) substitui Source Serif 4
+     JetBrains Mono mantém */
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Spectral', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-serif: 'Spectral', Georgia, serif;
+
+  /* === Sombras / motion === */
   --transition-theme: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
+  --shadow-sm: 0 1px 2px rgba(28,26,54,.04);
+  --shadow-md: 0 4px 12px -4px rgba(52,53,126,.18);
 }
 
-/* Dark é o default — aplica em :root sem data-theme E em data-theme="dark"
-   Paleta recalibrada (2026-06-22) pra passar WCAG AA em texto pequeno:
-   - surface bumpado pra criar elevação real sobre bg (era 1.07:1, agora 1.50:1)
-   - text-subtle bumpado pra passar AA em texto pequeno (era 666, agora 909090) */
+/* LIGHT é o novo default — aplica em :root sem data-theme E em data-theme="light" */
 :root,
-:root[data-theme="dark"] {
-  --bg: #0A0A0A;
-  --surface: #1A1A1A;
-  --surface-2: #242424;
-  --border: #333333;
-  --border-strong: #454545;
-  --text: #EDEDED;
-  --text-muted: #B5B5B5;
-  --text-subtle: #909090;
-  --scrim: rgba(0, 0, 0, 0.6);
-
-  /* tokens da paleta editorial — reescritos pra dark */
-  --accent-deep: #D8EE5A;
-  --accent-wash: rgba(185, 217, 12, 0.10);
-  --alert: #E07A5F;
-  --alert-wash: rgba(224, 122, 95, 0.12);
-  --ok: #6FB58E;
-  --ok-wash: rgba(111, 181, 142, 0.12);
+:root[data-theme="light"] {
+  --bg: #F6F5F2;
+  --surface: #FFFFFF;
+  --surface-2: #FAF9F5;
+  --border: #E7E4EC;
+  --border-strong: #DEDBE6;
+  --text: #1F1D33;
+  --text-strong: #1F1D33;
+  --text-muted: #514E5C;
+  --text-soft: #797585;
+  --text-faint: #9893A4;
+  --text-subtle: #797585;  /* alias legado — usado em ~32 lugares, mapeia pro novo --text-soft */
+  --scrim: rgba(31, 29, 51, 0.4);
 }
 
-:root[data-theme="light"] {
-  --bg: #FAFAFA;
-  --surface: #FFFFFF;
-  --surface-2: #F4F2EC;
-  --border: #E8E8E8;
-  --border-strong: #D4D6CA;
-  --text: #0F0F0E;
-  --text-muted: #525252;
-  --text-subtle: #888888;
-  --scrim: rgba(0, 0, 0, 0.4);
-
-  /* tokens da paleta editorial — reescritos pra light */
-  --accent-deep: #7C9106;
-  --accent-wash: #EEF6BF;
-  --alert: #A33B20;
-  --alert-wash: #F5E4DC;
-  --ok: #2F7D5B;
-  --ok-wash: #E0F0E7;
+:root[data-theme="dark"] {
+  /* Dark mode mantido como opt-in. Paleta nova adaptada (cinzas frios em vez
+     dos cinzas neutros da v0.6 — combina com o índigo). */
+  --bg: #0A0A12;
+  --surface: #1A1A26;
+  --surface-2: #232333;
+  --border: #2E2E40;
+  --border-strong: #3F3F56;
+  --text: #E8E6F0;
+  --text-strong: #FFFFFF;
+  --text-muted: #B5B0C4;
+  --text-soft: #9089A3;
+  --text-faint: #6F6A80;
+  --text-subtle: #9089A3;  /* alias legado */
+  --scrim: rgba(0, 0, 0, 0.6);
 }
 
 /* ===========================================================
@@ -92,7 +121,11 @@
 
   --radius: var(--radius-sm);
 
-  /* fontes legadas — apontam pros novos */
+  /* fontes legadas — apontam pros novos
+     ATENÇÃO: --display agora é Spectral (serif), não Bricolage (sans).
+     Componentes que esperam display sans (Bricolage) podem ficar
+     visualmente estranhos — preferir --font-body pra h1/h2 grandes
+     no novo design. */
   --serif: var(--font-serif);
   --sans: var(--font-body);
   --mono: var(--font-mono);
@@ -106,8 +139,8 @@ body{
   background:var(--bg);
   color:var(--text);
   font-family:var(--font-body);
-  font-size:15px;
-  line-height:1.6;
+  font-size:14.5px;
+  line-height:1.55;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
   font-feature-settings:"kern" 1, "liga" 1;
@@ -166,8 +199,11 @@ hr{border:0; border-top:1px solid var(--border); margin:20px 0;}
 .topbar-inner{display:flex; align-items:center; justify-content:space-between; padding:18px 0;}
 .brand{display:flex; align-items:center; gap:12px;}
 .brand-mark{
-  width:34px; height:34px; border-radius:2px;
-  background:var(--text); display:grid; place-items:center; flex:none;
+  width:34px; height:34px;
+  background:linear-gradient(150deg, var(--primary-light), var(--primary-deep));
+  border-radius:10px;
+  box-shadow:0 4px 12px -4px rgba(52,53,126,.5);
+  display:grid; place-items:center; flex:none;
 }
 .brand-name{
   font-family:var(--font-display);
@@ -1236,41 +1272,201 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 /* ===========================================================
  * Dark mode overrides — .instrument
  * ===========================================================
- * Em light mode, .instrument é uma caixa preta dramática (preserva
- * identidade editorial). Em dark mode, inverter pra branco quebra a
- * fórmula auditável (verde-limão pequeno sobre branco = WCAG fail).
- * Solução: em dark, .instrument vira surface-2 (eleva sobre bg sem
- * inverter), e os filhos voltam pra cores do tema dark.
- * =========================================================== */
-:root[data-theme="dark"] .instrument,
-:root:not([data-theme="light"]) .instrument {
+ * Em light mode (default), .instrument é uma caixa escura dramática
+ * (preserva identidade editorial). Em dark mode, inverter pra branco
+ * quebra a auditabilidade da fórmula. Solução: em dark, .instrument
+ * vira surface-2 (eleva sobre bg sem inverter).
+ *
+ * Nota: o seletor `:not([data-theme="light"])` foi removido porque
+ * agora light é o default — o script anti-FOWT já garante que :root
+ * sempre tem data-theme setado. Bastam os seletores explícitos. */
+:root[data-theme="dark"] .instrument {
   background: var(--surface-2);
   color: var(--text);
   border: 1px solid var(--border);
 }
-:root[data-theme="dark"] .gauge-num,
-:root:not([data-theme="light"]) .gauge-num {
+:root[data-theme="dark"] .gauge-num {
   color: var(--text);
 }
-:root[data-theme="dark"] .inst-headline h3,
-:root:not([data-theme="light"]) .inst-headline h3 {
+:root[data-theme="dark"] .inst-headline h3 {
   color: var(--text);
 }
-:root[data-theme="dark"] .inst-headline p,
-:root:not([data-theme="light"]) .inst-headline p {
+:root[data-theme="dark"] .inst-headline p {
   color: var(--text-muted);
 }
-:root[data-theme="dark"] .formula,
-:root:not([data-theme="light"]) .formula {
+:root[data-theme="dark"] .formula {
   color: var(--text-muted);
   background: var(--accent-soft);
   border-color: var(--border);
 }
-:root[data-theme="dark"] .formula b,
-:root:not([data-theme="light"]) .formula b {
+:root[data-theme="dark"] .formula b {
   color: var(--accent-deep);
 }
-:root[data-theme="dark"] .inst-delta,
-:root:not([data-theme="light"]) .inst-delta {
+:root[data-theme="dark"] .inst-delta {
   color: var(--accent-deep);
 }
+
+/* ===========================================================
+ * AppShell — sidebar 252px desktop + header colapsavel mobile.
+ * Quebra em 880px (mesmo do mock). NAO usar media queries pra
+ * trocar entre sidebar/header — JS controla via matchMedia, porque
+ * a estrutura DOM muda (sidebar fora vs header dentro do main).
+ * Esta secao so estiliza os elementos uma vez renderizados.
+ * =========================================================== */
+.appshell { display: flex; min-height: 100vh; }
+.appshell-sidebar {
+  width: 252px;
+  flex: none;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 22px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.appshell-main {
+  flex: 1;
+  background: var(--bg);
+  min-width: 0;
+}
+.appshell-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 8px;
+}
+.appshell-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: inherit;
+  transition: background-color 150ms, color 150ms;
+  width: 100%;
+  text-align: left;
+}
+.appshell-nav-item:hover { color: var(--text); background: var(--surface-2); }
+.appshell-nav-item.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.appshell-lgpd-card {
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-tint);
+  border-radius: 14px;
+  padding: 13px 14px;
+  margin-top: auto;
+  margin-bottom: 14px;
+}
+.appshell-lgpd-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: .02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.appshell-lgpd-text {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.appshell-user {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 4px 0;
+  border-top: 1px solid var(--border);
+}
+.appshell-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--avatar-from), var(--avatar-to));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  flex: none;
+}
+.appshell-user-info { min-width: 0; }
+.appshell-user-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text);
+}
+.appshell-user-role {
+  font-size: 11px;
+  color: var(--text-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mobile header */
+.appshell-mobile-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  z-index: 5;
+  position: sticky;
+  top: 0;
+}
+.appshell-mobile-top { display: flex; align-items: center; justify-content: space-between; }
+.appshell-mobile-brand { display: flex; align-items: center; gap: 9px; }
+.appshell-mobile-nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.appshell-mobile-nav::-webkit-scrollbar { display: none; }
+.appshell-mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.appshell-mobile-nav-item.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary-tint);
+}
+
+/* layout container in main */
+.app-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 30px;
+}
+@media (max-width: 880px) {
+  .app-container { padding: 18px 16px; }
+}
+

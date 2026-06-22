@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function ThemeToggle() {
     try {
       saved = localStorage.getItem("ct_theme");
     } catch {}
-    const current = saved || "dark";
+    const current = saved || "light";
     setTheme(current);
     document.documentElement.setAttribute("data-theme", current);
   }, []);

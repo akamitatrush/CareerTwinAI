@@ -22,16 +22,16 @@ export default function RootLayout({ children }) {
       <head>
         {/* Aplica o tema do localStorage SINCRONAMENTE antes do paint pra
             evitar flash-of-wrong-theme. Roda em try/catch porque pode falhar
-            em iframes/SSR/Safari privado. Fallback: dark. */}
+            em iframes/SSR/Safari privado. Fallback: light (novo default). */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  var t = localStorage.getItem('ct_theme') || 'dark';
+                  var t = localStorage.getItem('ct_theme') || 'light';
                   document.documentElement.setAttribute('data-theme', t);
                 } catch (e) {
-                  document.documentElement.setAttribute('data-theme', 'dark');
+                  document.documentElement.setAttribute('data-theme', 'light');
                 }
               })();
             `,
@@ -40,7 +40,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;0,8..60,800;1,8..60,400;1,8..60,600;1,8..60,700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Spectral:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
       </head>

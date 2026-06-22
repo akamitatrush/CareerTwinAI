@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { signIn, EMAIL_PROVIDER_ID } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -152,6 +153,19 @@ export default function EntrarPage({ searchParams }) {
           <p className="entrar-footer">
             Só quer testar primeiro? Use o <a href="/">modo experimentar</a> — a IA
             roda de verdade mas nada é salvo.
+          </p>
+
+          <p
+            style={{
+              marginTop: 24,
+              fontSize: 11,
+              color: "var(--text-soft)",
+              lineHeight: 1.55,
+            }}
+          >
+            Ao continuar, você concorda com nossos{" "}
+            <Link href="/termos">Termos de Uso</Link> e{" "}
+            <Link href="/privacidade">Política de Privacidade</Link>.
           </p>
         </section>
 
