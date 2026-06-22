@@ -280,10 +280,10 @@ export default function Home() {
                 </button>
                 <button className="btn btn-ghost" onClick={loadSample} disabled={busy}>Carregar exemplo</button>
                 <label className="btn btn-ghost" style={{ cursor: "pointer" }}>
-                  Enviar PDF
+                  Enviar CV (PDF ou DOCX)
                   <input
                     type="file"
-                    accept="application/pdf,.pdf"
+                    accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
                     style={{ display: "none" }}
                     onChange={async (e) => {
                       const f = e.target.files?.[0];
@@ -298,9 +298,9 @@ export default function Home() {
                         const data = await r.json();
                         if (!r.ok) {
                           if (r.status === 401) {
-                            setError("Pra enviar PDF você precisa estar logado. Cole o texto direto aqui, ou entre em /entrar pra salvar.");
+                            setError("Pra enviar arquivo você precisa estar logado. Cole o texto direto aqui, ou entre em /entrar pra salvar.");
                           } else {
-                            setError(data.error || "Não consegui ler esse PDF. Tenta um arquivo de texto (não escaneado).");
+                            setError(data.error || "Não consegui ler esse arquivo. Tenta colar o texto direto.");
                           }
                           return;
                         }

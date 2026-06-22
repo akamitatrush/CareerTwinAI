@@ -152,6 +152,7 @@ enum PlanStatus {
 enum ConsentSource {
   CV_PASTE
   CV_PDF
+  CV_DOCX
   LINKEDIN_EXPORT
   LINKEDIN_OIDC
   LINKEDIN_PASTE
