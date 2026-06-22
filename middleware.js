@@ -64,10 +64,17 @@ export default async function middleware(req) {
   }
 
   // Clona os headers preservando duplicados (importante pra cookies do NextAuth).
+  // O CSP precisa ir TAMBEM no request header — eh assim que o Next 14 sabe que
+  // tem nonce e propaga ele automaticamente pra todos os <script> internos.
+  // So no response (que faziamos antes) NAO basta — os scripts saem sem nonce.
+  // Ref: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
+  const csp = buildCsp(nonce);
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
   const res = NextResponse.next({ request: { headers: requestHeaders } });
-  setSecurityHeaders(res, nonce);
+  res.headers.set("Content-Security-Policy", csp);
+  res.headers.set("x-nonce", nonce);
   return res;
 }
 
