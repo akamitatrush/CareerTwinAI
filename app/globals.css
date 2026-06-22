@@ -445,7 +445,8 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 }
 
 .subscores{display:flex; flex-direction:column; gap:8px;}
-.ss{background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius-sm); overflow:hidden;}
+.ss{background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius-sm); overflow:hidden; opacity:.35; transform:translateY(4px); transition:opacity .35s ease, transform .35s ease;}
+.ss.ss-revealed{opacity:1; transform:translateY(0);}
 .ss-head{
   width:100%; appearance:none; border:0; background:none;
   color:var(--bg); text-align:left;

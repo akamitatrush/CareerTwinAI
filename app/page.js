@@ -19,6 +19,19 @@ export default function Home() {
   const [opp, setOpp] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
   const [snapshotId, setSnapshotId] = useState(null);
+  const [showWizard, setShowWizard] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      if (!window.localStorage.getItem("ct_seen_wizard_v1")) setShowWizard(true);
+    } catch {}
+  }, []);
+
+  function dismissWizard() {
+    setShowWizard(false);
+    try { window.localStorage.setItem("ct_seen_wizard_v1", "1"); } catch {}
+  }
 
   // Detecta sessao no client. Endpoint publico do NextAuth, sem expor PII alem
   // do que o proprio user ja sabe (email/nome).
@@ -200,6 +213,40 @@ export default function Home() {
               <p className="hero-lede">Cole seu currículo e diga o cargo que você quer. A IA estrutura quem você é hoje, compara com o que o mercado pede e te mostra a distância — com o porquê e a fonte de cada número.</p>
             </div>
 
+            {showWizard && (
+              <div className="wizard" role="note" aria-label="Como o CareerTwin funciona">
+                <button className="wizard-x" onClick={dismissWizard} aria-label="Fechar">✕</button>
+                <p className="wizard-eyebrow">Primeira vez aqui? Em 3 passos:</p>
+                <ol className="wizard-steps">
+                  <li>
+                    <span className="wizard-n">1</span>
+                    <div>
+                      <b>Você cola seu CV</b> (texto, PDF ou perfil do LinkedIn) <b>e diz o cargo-alvo</b>.
+                      Aceita também portfólio do GitHub se você for de tech.
+                    </div>
+                  </li>
+                  <li>
+                    <span className="wizard-n">2</span>
+                    <div>
+                      <b>A IA estrutura seu perfil</b> e busca vagas reais para esse cargo (Adzuna BR · Jooble · Greenhouse).
+                      O cálculo do score é <b>determinístico em código</b> — a IA só explica.
+                    </div>
+                  </li>
+                  <li>
+                    <span className="wizard-n">3</span>
+                    <div>
+                      <b>Você recebe um dossiê:</b> Career Health Score, 4 sub-scores ponderados,
+                      lacunas com microação concreta, vagas com match calculado e plano de 3 semanas.
+                    </div>
+                  </li>
+                </ol>
+                <p className="wizard-foot">
+                  Sem cadastro pra começar — modo experimentar é efêmero. <a href="/entrar">Entre</a> pra salvar
+                  e ver evolução no tempo. <b>LGPD por construção:</b> apagar tudo em 1 clique.
+                </p>
+              </div>
+            )}
+
             {/* Stepper visual discreto — só estado, não interativo */}
             <ol className="home-steps" aria-label="Etapas do diagnóstico">
               <li className={"home-step" + (homeStep >= 1 ? " active" : "") + (homeStep > 1 ? " done" : "")}>
@@ -338,6 +385,15 @@ export default function Home() {
         .home-step.active .home-step-n { background: #B9D90C; border-color: #B9D90C; color: #1a1a1a; font-weight: 700; }
         .home-step-l { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #4C5048; }
         .field-hint { font-size: 12px; color: #6B6B66; margin: 6px 0 0; line-height: 1.4; }
+        .wizard { position: relative; background: linear-gradient(180deg, #FAF8F2 0%, #F4F2EC 100%); border: 1px solid #D4D6CA; border-radius: 14px; padding: 22px 24px 20px; margin: 4px 0 26px; max-width: 760px; }
+        .wizard-x { position: absolute; top: 10px; right: 12px; background: none; border: 0; color: #888; font-size: 18px; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 4px; }
+        .wizard-x:hover { color: #1f1f1f; background: rgba(0,0,0,.04); }
+        .wizard-eyebrow { margin: 0 0 14px; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #4C5048; }
+        .wizard-steps { list-style: none; padding: 0; margin: 0 0 14px; display: flex; flex-direction: column; gap: 12px; }
+        .wizard-steps li { display: flex; gap: 14px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: #1f1f1f; }
+        .wizard-n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #B9D90C; color: #0F0F0E; font-weight: 800; font-family: "Bricolage Grotesque", sans-serif; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+        .wizard-foot { margin: 0; padding-top: 14px; border-top: 1px solid #E5E3DA; font-size: 12.5px; color: #4C5048; line-height: 1.5; }
+        .wizard-foot a { color: #1f1f1f; font-weight: 600; }
         .proc-headline { margin: 18px 0 22px; max-width: 560px; }
         .proc-title { font-size: 22px; font-weight: 700; line-height: 1.25; margin: 0 0 6px; font-family: "Bricolage Grotesque", sans-serif; }
         .proc-sub { font-size: 14px; color: #4C5048; margin: 0 0 8px; line-height: 1.45; }

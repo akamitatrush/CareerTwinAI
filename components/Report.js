@@ -30,15 +30,24 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
 
   const [open, setOpen] = useState({});
   const [completed, setCompleted] = useState({});
-  const [animated, setAnimated] = useState(false);
+  const [reveal, setReveal] = useState(0);
   const [showInterview, setShowInterview] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [tailorVaga, setTailorVaga] = useState(null);
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => setAnimated(true));
-    return () => cancelAnimationFrame(id);
+    const timers = [];
+    const start = requestAnimationFrame(() => setReveal(1));
+    [320, 540, 760, 980, 1200].forEach((ms, i) => {
+      timers.push(setTimeout(() => setReveal(2 + i), ms));
+    });
+    return () => {
+      cancelAnimationFrame(start);
+      timers.forEach(clearTimeout);
+    };
   }, []);
+
+  const animated = reveal >= 1;
 
   const baseVals = {};
   SS_KEYS.forEach((k) => (baseVals[k] = Number(ss[k]?.valor) || 0));
@@ -113,21 +122,22 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
             </div>
           </div>
           <div className="subscores">
-            {SS_KEYS.map((k) => {
+            {SS_KEYS.map((k, idx) => {
               const v = liveVals[k];
               const meta = SS_META[k];
               const contrib = (v * WEIGHTS[k]).toFixed(1);
               const isOpen = !!open[k];
               const { text, src } = splitSrc(ss[k]?.explicacao);
               const boosted = v > baseVals[k];
+              const ssRevealed = reveal >= 2 + idx;
               return (
-                <div className="ss" key={k}>
+                <div className={"ss" + (ssRevealed ? " ss-revealed" : "")} key={k}>
                   <button className="ss-head" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [k]: !o[k] }))}>
                     <div className="ss-bar-wrap">
                       <div className="ss-bar-top"><span className="ss-label">{meta.label}{boosted && <span className="ss-up"> ▲</span>}</span><span className="ss-weight">peso {meta.w}</span></div>
-                      <div className="ss-track"><div className="ss-fill" style={{ width: animated ? v + "%" : "0%" }} /></div>
+                      <div className="ss-track"><div className="ss-fill" style={{ width: ssRevealed ? v + "%" : "0%" }} /></div>
                     </div>
-                    <span className="ss-val">{v}</span>
+                    <span className="ss-val">{ssRevealed ? v : 0}</span>
                     <svg className={"ss-chev" + (isOpen ? " open" : "")} width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </button>
                   {isOpen && (
