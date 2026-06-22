@@ -6,6 +6,7 @@ import { promptOpp, promptOppReal, promptPlano } from "@/lib/prompts";
 import { OppBody, OppShape, PorquesShape, PlanoShape } from "@/lib/validators";
 import { searchJobs } from "@/lib/jobs";
 import { extractSkills, matchScore } from "@/lib/skills-taxonomy";
+import { guardLLM, tooMany } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,14 +22,24 @@ export async function POST(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  let parsed;
+  const limit = guardLLM(req, { name: "opp", userId, perMinuteAnon: 3, perMinuteUser: 10 });
+  if (!limit.ok) return tooMany(limit);
+
+  let body;
   try {
-    parsed = OppBody.safeParse(await req.json());
+    body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Não consegui entender o que foi enviado. Tente de novo.", code: "BAD_JSON" },
+      { status: 400 }
+    );
   }
+  const parsed = OppBody.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Dados de busca de vagas inválidos. Recarregue a página e tente de novo.", code: "INVALID_INPUT" },
+      { status: 400 }
+    );
   }
   const { snapshotId, role: roleIn, perfil: perfilIn, gaps: gapsIn } = parsed.data;
 
@@ -39,7 +50,10 @@ export async function POST(req) {
       include: { gaps: true },
     });
     if (!snapshot) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Não encontrei esse diagnóstico no seu histórico.", code: "SNAPSHOT_NOT_FOUND" },
+        { status: 404 }
+      );
     }
   }
 
@@ -47,7 +61,13 @@ export async function POST(req) {
   const perfil = snapshot?.perfilJson || perfilIn;
   const gaps = snapshot ? snapshot.gaps.map((g) => g.habilidade) : gapsIn || [];
   if (!role || !perfil) {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    return NextResponse.json(
+      {
+        error: "Faltou seu cargo-alvo ou o perfil. Faça um diagnóstico em /meu-gemeo antes de buscar vagas.",
+        code: "PROFILE_REQUIRED",
+      },
+      { status: 400 }
+    );
   }
 
   const profileSkills = Array.isArray(perfil.skills) ? perfil.skills : [];
@@ -75,7 +95,7 @@ export async function POST(req) {
   let vagasOut;
   if (top.length > 0 && !allIllustrative) {
     try {
-      const raw = await completeJSON(promptOppReal(role, perfil, top, gaps));
+      const raw = await completeJSON(promptOppReal(role, perfil, top, gaps), { route: "opp.real", userId });
       const valid = PorquesShape.safeParse(raw);
       if (!valid.success) throw new Error("LLM shape porques invalido");
       const byId = new Map(valid.data.porques.map((p) => [p.id, p.porque]));
@@ -109,7 +129,7 @@ export async function POST(req) {
   } else {
     // Fallback: nenhuma vaga real disponivel → usa o LLM antigo (ilustrativas)
     try {
-      const raw = await completeJSON(promptOpp(role, perfil, gaps));
+      const raw = await completeJSON(promptOpp(role, perfil, gaps), { route: "opp.illustrative", userId });
       const valid = OppShape.safeParse(raw);
       if (!valid.success) throw new Error("LLM shape opp invalido");
       vagasOut = valid.data.vagas.map((v) => ({
@@ -139,7 +159,7 @@ export async function POST(req) {
   // Plano (independente das vagas) — sempre via LLM, validado por shape.
   let plano = [];
   try {
-    const raw = await completeJSON(promptPlano(role, perfil, gaps));
+    const raw = await completeJSON(promptPlano(role, perfil, gaps), { route: "opp.plano", userId });
     const valid = PlanoShape.safeParse(raw);
     if (!valid.success) throw new Error("LLM shape plano invalido");
     plano = valid.data.plano;

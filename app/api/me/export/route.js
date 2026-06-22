@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Você precisa estar logado para exportar seus dados. Acesse /entrar.", code: "UNAUTHORIZED" },
+      { status: 401 }
+    );
   }
 
   try {
@@ -24,6 +27,12 @@ export async function GET() {
     });
   } catch (e) {
     console.error("export: falhou", e?.message);
-    return NextResponse.json({ error: "Falha ao exportar." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Não consegui montar a exportação dos seus dados agora. Tente novamente em alguns segundos.",
+        code: "EXPORT_FAILED",
+      },
+      { status: 500 }
+    );
   }
 }

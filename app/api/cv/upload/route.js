@@ -18,7 +18,10 @@ export const dynamic = "force-dynamic";
 export async function POST(req) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Você precisa estar logado para enviar seu currículo. Acesse /entrar.", code: "UNAUTHORIZED" },
+      { status: 401 }
+    );
   }
   const userId = session.user.id;
 
@@ -26,7 +29,7 @@ export async function POST(req) {
   const lenHeader = Number(req.headers.get("content-length") || "0");
   if (lenHeader && lenHeader > MAX_PDF_BYTES) {
     return NextResponse.json(
-      { error: "Arquivo grande demais (limite 5 MB)." },
+      { error: "Arquivo grande demais. O limite é de 5 MB.", code: "PDF_TOO_LARGE" },
       { status: 413 }
     );
   }
@@ -35,16 +38,22 @@ export async function POST(req) {
   try {
     form = await req.formData();
   } catch {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Não consegui ler o arquivo enviado. Tente de novo.", code: "BAD_FORM" },
+      { status: 400 }
+    );
   }
   const file = form.get("file");
   if (!file || typeof file === "string") {
-    return NextResponse.json({ error: "Campo 'file' ausente." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Selecione um arquivo PDF antes de enviar.", code: "FILE_MISSING" },
+      { status: 400 }
+    );
   }
   // Limite tambem pelo size do File (defesa em camada com o header).
   if (file.size > MAX_PDF_BYTES) {
     return NextResponse.json(
-      { error: "Arquivo grande demais (limite 5 MB)." },
+      { error: "Arquivo grande demais. O limite é de 5 MB.", code: "PDF_TOO_LARGE" },
       { status: 413 }
     );
   }
@@ -56,10 +65,22 @@ export async function POST(req) {
     text = await extractPdfText(buf);
   } catch (e) {
     if (e instanceof PdfError) {
-      return NextResponse.json({ error: e.message }, { status: e.status });
+      // Mensagens do PdfError já são pt-BR; adicionamos um code amigável.
+      const code =
+        e.status === 413
+          ? "PDF_TOO_LARGE"
+          : e.status === 422
+            ? "PDF_NO_TEXT"
+            : e.status === 500
+              ? "PDF_PARSER_UNAVAILABLE"
+              : "PDF_INVALID";
+      return NextResponse.json({ error: e.message, code }, { status: e.status });
     }
     console.error("upload: pdf falhou", e?.message);
-    return NextResponse.json({ error: "Falha ao processar o PDF." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Não consegui processar este PDF. Tente outro arquivo.", code: "PDF_INVALID" },
+      { status: 400 }
+    );
   }
 
   // Salva no Profile do dono (sobrescreve, nao acumula).
@@ -81,7 +102,13 @@ export async function POST(req) {
     ]);
   } catch (e) {
     console.error("upload: persistencia falhou", e?.message);
-    return NextResponse.json({ error: "Falha ao salvar." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Li seu currículo, mas não consegui salvar agora. Atualize a página e tente de novo.",
+        code: "PERSIST_FAILED",
+      },
+      { status: 500 }
+    );
   }
 
   // Devolve o TEXTO (nao o binario) — o front segue para o fluxo de analyze.
