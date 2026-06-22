@@ -1,0 +1,117 @@
+/* Design lab — estilos isolados pra nao contaminar globals.css */
+
+.lab { max-width: 1400px; margin: 0 auto; padding: 28px 22px 80px; font-family: "Inter", system-ui, sans-serif; color: #171A16; }
+.lab-head { margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid #D4D6CA; }
+.lab-head h1 { font-family: "Bricolage Grotesque", sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; }
+.lab-head p { margin: 0; font-size: 14px; color: #4C5048; }
+.lab-head a { color: #171A16; text-decoration: underline; }
+
+.lab-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: start; }
+@media (max-width: 1100px) { .lab-grid { grid-template-columns: 1fr; } }
+
+.lab-foot { margin-top: 36px; font-size: 13px; color: #888C80; }
+
+.dir { padding: 22px; border-radius: 12px; overflow: hidden; min-height: 720px; }
+.dir-tag { display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; margin-bottom: 16px; }
+
+/* ===================================================================
+ * 1. DOSSIÊ
+ * =================================================================== */
+.dossier {
+  background: #FFF8F0;
+  color: #0F0F0E;
+  font-family: "Source Serif Pro", "Georgia", serif;
+}
+.dossier .dir-tag { background: #0F0F0E; color: #FFF8F0; }
+.dossier .meta { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: .18em; color: #6B6B66; margin-bottom: 10px; text-transform: uppercase; }
+.dossier .kicker { font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: .22em; color: #A33B20; text-transform: uppercase; margin: 14px 0 6px; }
+.dossier .head { font-family: "Bricolage Grotesque", "Georgia", serif; font-weight: 700; font-size: 26px; line-height: 1.18; letter-spacing: -.01em; margin: 0 0 14px; color: #0F0F0E; }
+.dossier .head em { font-style: italic; color: #A33B20; font-weight: 600; }
+.dossier .rule { border: none; border-top: 1px solid #E8DFD2; margin: 16px 0; }
+.dossier .rule-thick { border-top: 3px solid #0F0F0E; margin: 6px 0 12px; }
+.dossier .dos-cols { display: grid; grid-template-columns: 110px 1fr; gap: 22px; align-items: start; }
+.dossier .dos-eyebrow { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: .2em; color: #6B6B66; text-transform: uppercase; margin-bottom: 6px; }
+.dossier .dos-score { font-family: "Bricolage Grotesque", serif; font-weight: 800; font-size: 72px; line-height: .9; color: #0F0F0E; letter-spacing: -.04em; }
+.dossier .dos-sub { font-size: 11px; color: #6B6B66; margin-top: 4px; font-style: italic; }
+.dossier .dos-bars { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.dossier .dos-bars li { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: baseline; }
+.dossier .dos-bar-k { font-size: 13px; color: #0F0F0E; }
+.dossier .dos-bar-v { font-family: "JetBrains Mono", monospace; font-size: 12px; color: #0F0F0E; }
+.dossier .dos-bar { grid-column: 1 / -1; height: 2px; background: #E8DFD2; position: relative; }
+.dossier .dos-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: #0F0F0E; }
+.dossier .dos-pull { font-family: "Bricolage Grotesque", serif; font-size: 18px; line-height: 1.4; font-style: italic; color: #0F0F0E; padding: 0 14px; border-left: 3px solid #B9D90C; }
+.dossier .dos-pull mark { background: #B9D90C; color: #0F0F0E; padding: 0 4px; font-style: normal; font-weight: 700; }
+.dossier .dos-vaga-t { font-family: "Bricolage Grotesque", serif; font-size: 20px; font-weight: 700; margin: 4px 0; letter-spacing: -.01em; }
+.dossier .dos-vaga-m { font-size: 13px; color: #4C5048; }
+.dossier .dos-match { font-family: "JetBrains Mono", monospace; font-size: 12px; background: #B9D90C; color: #0F0F0E; padding: 2px 6px; border-radius: 3px; font-weight: 700; }
+
+/* ===================================================================
+ * 2. TERMINAL
+ * =================================================================== */
+.term {
+  background: #0A0B0D;
+  color: #E6E8EC;
+  font-family: "JetBrains Mono", "SF Mono", monospace;
+  border: 1px solid #2A2D36;
+  padding: 0;
+}
+.term .term-tag { display: inline-block; background: #B9D90C; color: #0A0B0D; margin: 22px 22px 0; }
+.term-tickers {
+  display: flex; gap: 22px; padding: 10px 22px; border-bottom: 1px solid #2A2D36; border-top: 1px solid #2A2D36;
+  font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .04em; margin-top: 16px;
+  background: #12141A; color: #E6E8EC; overflow-x: auto; white-space: nowrap;
+}
+.term-tickers b { color: #fff; font-weight: 600; }
+.term-tickers i.up { color: #B9D90C; font-style: normal; }
+.term-tickers .alert { color: #FF6A3D; }
+.term-head { display: flex; justify-content: space-between; align-items: center; padding: 22px; gap: 16px; }
+.term-id { font-size: 10px; color: #5B6072; letter-spacing: .14em; text-transform: uppercase; }
+.term-name { font-family: "Inter", sans-serif; font-size: 18px; font-weight: 600; margin: 4px 0; }
+.term-role { font-size: 12px; color: #9CA3AF; }
+.term-gauge { position: relative; width: 80px; height: 80px; flex: none; }
+.term-gauge svg { width: 100%; height: 100%; }
+.term-gauge-v { position: absolute; inset: 0; display: grid; place-items: center; font-size: 22px; font-weight: 700; color: #fff; }
+.term-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.term-table th { text-align: left; padding: 8px 22px; font-weight: 500; color: #5B6072; border-bottom: 1px solid #2A2D36; font-size: 10px; letter-spacing: .12em; }
+.term-table td { padding: 9px 22px; border-bottom: 1px solid #1A1D24; color: #E6E8EC; }
+.term-table tr:last-child td { border-bottom: none; }
+.term-table .num { font-variant-numeric: tabular-nums; text-align: right; }
+.term-table .up { color: #B9D90C; }
+.term-table .down { color: #FF6A3D; }
+.term-vaga { padding: 18px 22px; border-top: 1px solid #2A2D36; background: #12141A; }
+.term-vaga-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 10px; letter-spacing: .14em; }
+.term-tag-src { color: #5B8DEF; }
+.term-match { color: #B9D90C; font-weight: 600; }
+.term-vaga-t { font-family: "Inter", sans-serif; font-size: 15px; font-weight: 600; color: #fff; margin: 4px 0; }
+.term-vaga-m { font-size: 12px; color: #9CA3AF; }
+.term-kbd { padding: 12px 22px; border-top: 1px solid #2A2D36; font-size: 10px; color: #5B6072; letter-spacing: .12em; }
+
+/* ===================================================================
+ * 3. MEMORANDO
+ * =================================================================== */
+.memo {
+  background: #F4F1EA;
+  color: #111;
+  font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
+  border: 2px solid #111;
+  padding: 22px;
+  position: relative;
+}
+.memo .dir-tag { background: #111; color: #F4F1EA; border-radius: 0; }
+.memo .memo-from { font-size: 11px; line-height: 1.6; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #111; }
+.memo .memo-from div { display: flex; gap: 8px; }
+.memo .memo-stamp {
+  display: inline-block; padding: 4px 10px; border: 2px solid #C0392B; color: #C0392B;
+  font-weight: 800; font-size: 11px; letter-spacing: .12em; background: rgba(192, 57, 43, .05); margin: 6px 0;
+}
+.memo .memo-body { font-size: 13px; line-height: 1.6; margin: 12px 0; }
+.memo .memo-body b { background: #111; color: #F4F1EA; padding: 0 4px; font-weight: 700; }
+.memo .memo-formula { font-size: 11px; background: #111; color: #B9D90C; padding: 10px 12px; margin: 12px 0; line-height: 1.5; white-space: pre; overflow-x: auto; }
+.memo .memo-list { list-style: none; padding: 0; margin: 12px 0; font-size: 12px; line-height: 1.9; }
+.memo .memo-box { font-weight: 700; }
+.memo .memo-gap { margin: 18px 0; padding: 12px; border: 2px dashed #C0392B; }
+.memo .memo-gap p { margin: 8px 0 0; font-size: 12px; }
+.memo .memo-rule { border: none; border-top: 2px solid #111; margin: 18px 0; }
+.memo .memo-vaga-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.memo .memo-vaga-m { font-size: 11px; margin-top: 6px; color: #4C5048; }
+.memo .memo-foot { margin-top: 22px; font-size: 10px; text-align: center; color: #888; letter-spacing: .2em; }

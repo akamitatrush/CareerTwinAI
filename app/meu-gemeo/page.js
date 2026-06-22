@@ -33,13 +33,18 @@ export default async function MeuGemeoPage() {
     return (
       <main className="wrap" style={{ maxWidth: 720, paddingTop: 32 }}>
         <Header email={session.user.email} />
-        <h1 className="hero" style={{ fontSize: 36 }}>Seu gêmeo, ainda em branco</h1>
+        <h1 className="hero" style={{ fontSize: 36 }}>Seu gêmeo está em branco — vamos preencher?</h1>
         <p className="hero-lede">
-          Cole seu currículo na página inicial e gere o primeiro diagnóstico. A partir
-          do segundo, você terá histórico de score.
+          Quando você rodar o primeiro diagnóstico, esta página vai mostrar seu <b>score geral</b>,
+          as <b>lacunas priorizadas</b> com o porquê de cada uma, <b>vagas reais</b> que dão match
+          e um <b>plano de 3 semanas</b> pra você fechar as lacunas que mais movem a agulha.
+        </p>
+        <p className="hero-lede" style={{ marginTop: 8, opacity: 0.85 }}>
+          A partir do segundo diagnóstico, aparece também o histórico de score — pra ver evolução
+          real conforme você atualiza o CV.
         </p>
         <Link href="/" className="btn btn-primary" style={{ marginTop: 16, display: "inline-block" }}>
-          Construir meu gêmeo →
+          Gerar meu primeiro diagnóstico →
         </Link>
         <Footer onLogout={logoutAction} />
       </main>
@@ -121,6 +126,7 @@ function Header({ email }) {
         </div>
       </Link>
       <div style={{ display: "flex", gap: 8 }}>
+        <Link href="/candidaturas" className="tool-btn" style={{ textDecoration: "none" }}>Candidaturas</Link>
         <Link href="/meus-dados" className="tool-btn" style={{ textDecoration: "none" }}>Meus dados</Link>
         <Link href="/" className="tool-btn" style={{ textDecoration: "none" }}>Novo diagnóstico</Link>
       </div>
@@ -137,7 +143,31 @@ function Footer({ onLogout }) {
 }
 
 function ScoreHistory({ snapshots }) {
-  if (snapshots.length < 2) return null;
+  if (snapshots.length === 0) return null;
+  if (snapshots.length < 2) {
+    const s = snapshots[0];
+    return (
+      <div className="sec" style={{ marginBottom: 32 }}>
+        <div className="sec-head">
+          <span className="sec-no">⌀</span>
+          <h2 className="sec-title">Histórico do seu score</h2>
+          <p className="sec-sub">Você tem 1 diagnóstico salvo até agora. Refaça daqui a uma ou duas semanas com o CV atualizado — é aí que o histórico vira gráfico de evolução de verdade.</p>
+        </div>
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
+          <div title={new Date(s.createdAt).toLocaleString("pt-BR") + " · " + s.role} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+            <div style={{ fontSize: 12, opacity: 0.7 }}>{s.overall}</div>
+            <div style={{ width: 14, height: 60, background: "#B9D90C", borderRadius: 4 }} />
+            <div style={{ fontSize: 10, opacity: 0.5 }}>{new Date(s.createdAt).toLocaleDateString("pt-BR")}</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, opacity: 0.4 }}>
+            <div style={{ fontSize: 12 }}>?</div>
+            <div style={{ width: 14, height: 30, background: "#ccc", borderRadius: 4, borderStyle: "dashed", borderWidth: 1 }} />
+            <div style={{ fontSize: 10 }}>próximo</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const max = Math.max(...snapshots.map((s) => s.overall), 100);
   return (
     <div className="sec" style={{ marginBottom: 32 }}>

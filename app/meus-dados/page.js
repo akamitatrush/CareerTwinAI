@@ -11,6 +11,10 @@ const SOURCE_LABEL = {
   CV_PDF: "Currículo em PDF",
   LINKEDIN_EXPORT: "Export do LinkedIn",
   LINKEDIN_OIDC: "LinkedIn (login OIDC)",
+  LINKEDIN_PASTE: "LinkedIn colado",
+  PORTFOLIO_GITHUB: "Portfólio GitHub",
+  PORTFOLIO_URL: "Portfólio (URL)",
+  WEEKLY_DIGEST: "Email semanal",
 };
 
 async function eraseAction(formData) {
@@ -27,13 +31,25 @@ async function eraseAction(formData) {
   await signOut({ redirectTo: "/?apagado=1" });
 }
 
+async function toggleDigestAction(formData) {
+  "use server";
+  const session = await auth();
+  if (!session?.user?.id) redirect("/entrar");
+  const enabled = String(formData.get("enabled")) === "on";
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { digestEnabled: enabled },
+  });
+  redirect("/meus-dados");
+}
+
 export default async function MeusDadosPage({ searchParams }) {
   const session = await auth();
   if (!session?.user?.id) redirect("/entrar");
   const userId = session.user.id;
 
   // Tudo escopado por userId (sem IDOR).
-  const [profile, snapshots, consents, dataSources] = await Promise.all([
+  const [profile, snapshots, consents, dataSources, user, appsCount] = await Promise.all([
     prisma.profile.findUnique({
       where: { userId },
       select: { id: true, createdAt: true, updatedAt: true, targetRole: true, skills: true },
@@ -41,6 +57,11 @@ export default async function MeusDadosPage({ searchParams }) {
     prisma.scoreSnapshot.count({ where: { userId } }),
     prisma.consent.findMany({ where: { userId }, orderBy: { grantedAt: "desc" } }),
     prisma.dataSource.findMany({ where: { userId }, orderBy: { ingestedAt: "desc" } }),
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { digestEnabled: true, lastDigestAt: true },
+    }),
+    prisma.application.count({ where: { userId } }),
   ]);
 
   const erroConfirmar = searchParams?.erro === "confirme";
@@ -74,14 +95,72 @@ export default async function MeusDadosPage({ searchParams }) {
         <ul style={{ paddingLeft: 16, lineHeight: 1.8 }}>
           <li>
             <b>Perfil vigente:</b>{" "}
-            {profile
-              ? `${profile.skills?.length || 0} skills · cargo-alvo "${profile.targetRole || "não definido"}" · atualizado em ${new Date(profile.updatedAt).toLocaleString("pt-BR")}`
-              : "ainda em branco"}
+            {profile ? (
+              `${profile.skills?.length || 0} skills · cargo-alvo "${profile.targetRole || "não definido"}" · atualizado em ${new Date(profile.updatedAt).toLocaleString("pt-BR")}`
+            ) : (
+              <span style={{ opacity: 0.75 }}>
+                ainda em branco — <Link href="/">gere seu primeiro diagnóstico</Link> pra começar a popular.
+              </span>
+            )}
           </li>
-          <li><b>Diagnósticos (snapshots):</b> {snapshots}</li>
-          <li><b>Fontes de dado registradas:</b> {dataSources.length}</li>
-          <li><b>Consentimentos:</b> {consents.length}</li>
+          <li>
+            <b>Diagnósticos (snapshots):</b> {snapshots}
+            {snapshots === 0 && (
+              <span style={{ opacity: 0.7, marginLeft: 6 }}>
+                — nenhum por enquanto. Cada diagnóstico vira um snapshot fotografado no tempo.
+              </span>
+            )}
+          </li>
+          <li>
+            <b>Candidaturas no funil:</b> {appsCount}
+            {appsCount === 0 && (
+              <span style={{ opacity: 0.7, marginLeft: 6 }}>
+                — funil vazio. Salve vagas em <Link href="/meu-gemeo">Meu gêmeo</Link> ou crie em <Link href="/candidaturas">Candidaturas</Link>.
+              </span>
+            )}
+          </li>
+          <li>
+            <b>Fontes de dado registradas:</b> {dataSources.length}
+            {dataSources.length === 0 && (
+              <span style={{ opacity: 0.7, marginLeft: 6 }}>
+                — nada ingerido ainda. Cada CV, LinkedIn ou portfólio que você importar aparece listado abaixo.
+              </span>
+            )}
+          </li>
+          <li>
+            <b>Consentimentos:</b> {consents.length}
+            {consents.length === 0 && (
+              <span style={{ opacity: 0.7, marginLeft: 6 }}>
+                — nenhum registrado. Aparecem aqui conforme você autoriza fontes externas (LinkedIn, GitHub, etc.).
+              </span>
+            )}
+          </li>
         </ul>
+      </div>
+
+      <div className="sec">
+        <div className="sec-head">
+          <span className="sec-no">⎘</span>
+          <h2 className="sec-title">Email semanal de vagas</h2>
+          <p className="sec-sub">
+            Toda segunda às 9h, mandamos um digest com vagas novas que dão match com seu perfil.
+            {user?.lastDigestAt && (
+              <> Último envio em <b>{new Date(user.lastDigestAt).toLocaleDateString("pt-BR")}</b>.</>
+            )}
+          </p>
+        </div>
+        <form action={toggleDigestAction} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <label style={{ display: "flex", gap: 8, alignItems: "center", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              name="enabled"
+              defaultChecked={user?.digestEnabled ?? true}
+              style={{ width: 16, height: 16 }}
+            />
+            Receber digest semanal por email
+          </label>
+          <button className="tool-btn" type="submit">Salvar</button>
+        </form>
       </div>
 
       <div className="sec">
@@ -91,7 +170,10 @@ export default async function MeusDadosPage({ searchParams }) {
           <p className="sec-sub">Cada item aqui só entrou com seu consentimento expresso. Em produção, listará também o consentimento por origem.</p>
         </div>
         {dataSources.length === 0 ? (
-          <p style={{ opacity: 0.7 }}>Nenhuma fonte registrada ainda.</p>
+          <p style={{ opacity: 0.7 }}>
+            Nada registrado ainda. Quando você importar um CV, conectar o LinkedIn ou colar um portfólio,
+            cada origem aparece aqui — com data, tamanho e o consentimento que você deu.
+          </p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>

@@ -230,6 +230,7 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
                     <button className="vagac-tailor" onClick={() => setTailorVaga(v)}>
                       Adaptar currículo →
                     </button>
+                    <SaveJobButton vaga={v} />
                   </div>
                 </div>
               );
@@ -284,4 +285,42 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
       {tailorVaga && cv && <TailorModal role={role} cv={cv} vaga={tailorVaga} onClose={() => setTailorVaga(null)} />}
     </div>
   );
+}
+
+function SaveJobButton({ vaga }) {
+  const [state, setState] = useState("idle");
+  async function save() {
+    setState("busy");
+    try {
+      const r = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          titulo: vaga.titulo,
+          empresa: vaga.empresa,
+          local: vaga.local || undefined,
+          url: vaga.url || undefined,
+          salario: vaga.salario || undefined,
+          source: vaga.source || undefined,
+          status: "SAVED",
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        if (r.status === 401) {
+          setState("login");
+          return;
+        }
+        throw new Error(data.error || "erro");
+      }
+      setState(data.duplicated ? "dup" : "saved");
+    } catch {
+      setState("err");
+    }
+  }
+  if (state === "saved") return <span className="vagac-tailor" style={{ opacity: .7 }}>✓ Salva nas candidaturas</span>;
+  if (state === "dup") return <span className="vagac-tailor" style={{ opacity: .7 }}>✓ Já estava salva</span>;
+  if (state === "login") return <a className="vagac-tailor" href="/entrar">Entrar pra salvar →</a>;
+  if (state === "err") return <button className="vagac-tailor" onClick={save}>Falhou — tentar de novo</button>;
+  return <button className="vagac-tailor" onClick={save} disabled={state === "busy"}>{state === "busy" ? "Salvando…" : "+ Salvar candidatura"}</button>;
 }
