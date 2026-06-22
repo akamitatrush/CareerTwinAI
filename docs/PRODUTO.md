@@ -13,9 +13,10 @@
 5. [Funcionalidades em detalhe](#funcionalidades-em-detalhe)
 6. [Princípios editoriais](#princípios-editoriais)
 7. [Diferenciais](#diferenciais)
-8. [Limitações conhecidas](#limitações-conhecidas)
-9. [Modelo de negócio (planejado)](#modelo-de-negócio-planejado)
-10. [FAQ](#faq)
+8. [Concorrência](#concorrência)
+9. [Limitações conhecidas](#limitações-conhecidas)
+10. [Modelo de negócio (planejado)](#modelo-de-negócio-planejado)
+11. [FAQ](#faq)
 
 ---
 
@@ -241,6 +242,127 @@ Comparado a alternativas no mercado brasileiro:
 
 ---
 
+## Concorrência
+
+Mapeamento de produtos que dividem espaço com o CareerTwin AI. Levantado em **2026-06-22**. Nenhum cobre exatamente o mesmo recorte (diagnóstico auditável + matching com vagas BR + plano executável + LGPD), mas vários se sobrepõem em pedaços.
+
+### Risco de marca — colisão direta de nome
+
+Dois produtos usam o mesmo nome "CareerTwin" em domínios premium:
+
+| Domínio | Empresa | Recorte | Preço | Mercado |
+|---|---|---|---|---|
+| **careertwin.io** | headwayOS Labs Inc. | Marketplace de talentos com "TWiN Passport" — verificação criptográfica de skills via análise de GitHub/GitLab, prova em blockchain Ethereum, auto-apply | ₹499-1999/mês candidato · ₹24.999/mês empresa | Índia, foco dev |
+| **careertwin.ai** | (não-identificada) | "Interview Twin" — simulador de entrevista em áudio (3-5 rodadas, behavioral/system design/technical), CV vira IA que simula respostas | Free (3 sessões) · $8,33-16,67/mês | EUA, eng. FAANG-bound |
+
+**Sobreposição com nosso produto:**
+- careertwin.io usa "gêmeo digital" no mesmo sentido (avatar de carreira), mas o vetor é **verificação cripto + matching**, não **diagnóstico + plano**.
+- careertwin.ai usa "Twin" como voz simulada do candidato, vertical de **mock interview** apenas — sobrepõe com nosso `/api/interview`, não com o resto.
+
+**Implicação prática:** não conseguimos `.com`, `.io`, `.ai` nem `careertwin.app`. Antes de qualquer investimento em marca, **busca no INPI (BR) e USPTO** é obrigatória — se um dos dois depositar marca nominativa em classes 9/41/42 (software/educação/SaaS), pode forçar rebrand pós-tração.
+
+### Categoria 1 — "Career copilots" all-in-one (concorrência mais próxima)
+
+São plataformas que misturam análise de CV + matching de vagas + tracking + às vezes coaching. É a categoria com maior sobreposição funcional.
+
+| Produto | Recorte | Diferencial deles | Preço | Onde batemos / perdemos |
+|---|---|---|---|---|
+| **[Careerflow](https://www.careerflow.ai/)** | Job Fit Analyzer + LinkedIn optimizer + CV builder + tracking | LinkedIn optimization profunda; freemium agressivo (1 CV tailored grátis, 10 jobs tracked) | Free · ~$24/mês | Eles vencem em LinkedIn; perdemos em score auditável e vagas BR |
+| **[Jobright](https://jobright.ai/)** | Matching engine sobre 10M+ vagas + Orion AI Copilot 24/7 + auto-apply | Volume de vagas + filtro anti-spam em real-time | $29-59/mês | Eles vencem em volume; perdemos em transparência do match e foco BR |
+| **[Wobo](https://www.wobo.ai/)** | "Persona" (digital twin que responde forms de recrutador) + Swipe-to-Apply + Autopilot | Auto-aplicar em background, sem revisão manual | Free · $44,99/mês (Autopilot) | Eles ganham em automação cega; perdemos no princípio "autenticidade" — eles inventam pra responder forms, nós nos recusamos |
+| **[JobCopilot](https://jobcopilot.com/)** | Auto-apply em massa + tracking | Volume de candidaturas automáticas | Não detalhado | Mesmo trade-off: spray-and-pray vs. autenticidade |
+| **[Career CoPilot](https://www.aicareercopilot.com/) / [Careera AI](https://usecareera.io/)** | Skill gap analysis + career trajectory mapping | Análise de skills contra demanda do mercado | Não detalhado | Sobreposição direta com nosso diagnóstico — vale monitorar |
+
+**Onde nosso produto diferencia:**
+- **Score auditável** (fórmula em código, não LLM) — nenhum dos cinco mostra a fórmula.
+- **Vagas BR reais** (Adzuna/Jooble/Greenhouse) — todos focam vagas EUA.
+- **Princípio antiautomação cega** — nós recusamos inventar resposta pro recrutador; Wobo e JobCopilot fazem isso como feature.
+- **LGPD por construção** — irrelevante pra esses produtos americanos.
+
+### Categoria 2 — Otimização de CV / ATS (sobreposição parcial)
+
+Foca em "passar pelo ATS". Sobrepõe com nosso **Adaptador de currículo** (`/api/tailor`), não com diagnóstico nem matching.
+
+| Produto | Recorte | Preço aprox. |
+|---|---|---|
+| **[Teal](https://www.tealhq.com/)** | CV builder + tailoring + tracking — workbench completo | Free + Premium |
+| **[Jobscan](https://www.jobscan.co/)** | Keyword-matching ATS + 20+ checks por CV (diagnóstico granular) | Free limitado + paid |
+| **[Rezi](https://www.rezi.ai/)** | CV ATS-otimizado + tailoring por descrição de vaga | Free + paid |
+| **[Kickresume](https://www.kickresume.com/)** | CV builder com templates + ATS checks básicos | Free + paid |
+
+**Onde nosso produto diferencia:**
+- Nosso `/api/tailor` marca bullets como `"nova"` vs `"reorganizacao"` — força o usuário a confirmar fato novo. Nenhum dos quatro faz essa distinção.
+- Nosso adaptador está embutido no fluxo "vaga → CV adaptado", não é produto standalone.
+
+### Categoria 3 — Application tracking puro
+
+| Produto | Recorte | Preço |
+|---|---|---|
+| **[Huntr](https://huntr.co/)** | Kanban + tracking + extensão Chrome pra capturar vagas + AI resume features secundárias | $40/mês |
+
+**Onde nosso produto diferencia:**
+- Nosso `/candidaturas` cumpre o tracking básico (kanban + ApplicationEvent + métricas), mas não tem extensão Chrome — Huntr ganha em ergonomia de captura.
+- Nossa vantagem: tracking acoplado ao diagnóstico (vaga → match score → CV adaptado → candidatura).
+
+### Categoria 4 — Mock interview (sobreposição com `/api/interview`)
+
+| Produto | Recorte | Preço |
+|---|---|---|
+| **[Final Round AI](https://www.finalroundai.com/)** | Mock interview imersivo + copiloto durante entrevista real (controverso) | Paid |
+| **[Sensei AI](https://www.senseicopilot.com/)** | Mock + scoring de clareza/estrutura/correção | Paid |
+| **[Verve AI](https://www.vervecopilot.com/)** | Copiloto real-time durante entrevista ao vivo | Paid |
+| **[Interview Sidekick](https://interviewsidekick.com/)** | Mock all-in-one | Paid |
+| **[Skillora](https://skillora.ai/)** | Mock por papel/indústria | Paid |
+| **careertwin.ai** | Áudio + 3-5 rodadas + sotaque configurável | $8-17/mês |
+
+**Onde nosso produto diferencia:**
+- Nosso simulador tem **alerta de autenticidade**: se a versão sugerida assumiu algo que o usuário não disse, marca como "inventado, confirme antes de usar". Nenhum concorrente tem essa salvaguarda explícita — todos otimizam pra "soar bem", não pra "soar verdadeiro".
+- Trade-off: nossos mocks são texto, não áudio. Final Round AI e careertwin.ai ganham em fidelidade de simulação.
+
+### Categoria 5 — Mercado brasileiro (concorrência indireta)
+
+Não há concorrente BR direto com o nosso recorte. Quem ocupa o espaço hoje:
+
+| Produto/categoria | Recorte | Limitação vs. nosso |
+|---|---|---|
+| **LinkedIn Premium** | Vagas + perfil + visibilidade | Não diagnostica, não dá score, não monta plano |
+| **Catho / InfoJobs / Vagas.com** | Job boards tradicionais | Sem IA, sem matching com perfil, sem plano |
+| **Coaches humanos de carreira** (Márcia Mattiollo etc.) | Consultoria 1:1 | Caro (R$ 500-3000/sessão), não escala, subjetivo |
+| **driverh, Gi Group, ManpowerGroup** | Outplacement corporativo B2B | Vendido pra empresa em layoffs, não pra pessoa física |
+| **Ferramentas genéricas (ChatGPT/Claude)** | 65% dos candidatos BR já usam IA pra carreira ([Fast Company BR](https://fastcompanybrasil.com/worklife/conheca-novo-coach-carreira-bot-ia/)) | Sem persistência, sem vagas reais, sem fórmula — usuário precisa saber prompt-engineer |
+
+**Onde nosso produto diferencia (em BR):**
+- **Único produto pt-BR** com diagnóstico estruturado + vagas BR + plano + LGPD.
+- Preço-alvo (R$ 29-49/mês) vs. coach humano (R$ 500-3000/sessão).
+- Comparado a Claude/ChatGPT crus: persistência, vagas reais, fórmula auditável, sem precisar saber escrever prompt.
+
+### Resumo executivo de posicionamento
+
+```
+                     Diagnóstico  +  Matching BR  +  Plano  +  Mock  +  Tracking  +  LGPD
+careertwin.io                          ✗ (vaga US)                                    ✗
+careertwin.ai             ✗                ✗            ✗      ✅✅      ✗            ✗
+Careerflow / Jobright    ~ (sem fórmula)  ✗ (vaga US)   ✗      ~        ✅            ✗
+Teal / Rezi / Jobscan     ✗                ✗            ✗      ✗        ~             ✗
+Huntr                     ✗                ✗            ✗      ✗        ✅✅          ✗
+Final Round / Sensei      ✗                ✗            ✗      ✅✅     ✗             ✗
+LinkedIn / Catho          ✗                ✅ (BR)      ✗      ✗        ~             ✗
+Coach humano              ✅ (manual)      ~            ✅     ✅       ✗             n/a
+─────────────────────────────────────────────────────────────────────────────────
+CareerTwin AI (nosso)     ✅ (auditável)   ✅ (BR)      ✅     ✅       ✅            ✅
+```
+
+Ninguém cobre os 6 eixos. Nosso fosso é **a combinação**, não nenhum eixo isolado.
+
+### Riscos de concorrência
+
+1. **Nome:** dois produtos no mundo com o mesmo nome em domínios premium. **Ação:** consulta INPI + USPTO antes de marketing pago.
+2. **Wobo / JobCopilot escalam volume.** Se usuário quiser quantidade > qualidade, perdem pra eles. **Resposta:** nosso pitch é antiautomação cega — "candidatar com critério".
+3. **Careerflow / Jobright vão pra LATAM em algum momento.** Têm capital. **Resposta:** velocidade + pt-BR nativo + integração com fontes brasileiras (Adzuna BR, Greenhouse BR-friendly) + LGPD.
+4. **LinkedIn pode embutir tudo isso.** Resposta: não compita em escala — compita em transparência (fórmula visível) e autenticidade (alertas).
+
+---
+
 ## Limitações conhecidas
 
 São transparentes — vale o usuário saber.
@@ -313,4 +435,4 @@ Ver [CHANGELOG.md](../CHANGELOG.md) pro histórico e [README.md#roadmap](../READ
 
 ---
 
-*Documentação atualizada com a release v0.4. Última revisão: 2026-06-22.*
+*Documentação atualizada com a release v0.4. Última revisão: 2026-06-22 (inclui mapeamento de concorrência).*
