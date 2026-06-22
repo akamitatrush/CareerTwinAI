@@ -1,5 +1,13 @@
 import "./globals.css";
 
+// Forca renderizacao dinamica em todas as paginas. Necessario porque o
+// middleware gera um nonce CSP novo a cada request — se a Vercel servir
+// HTML cacheado, o nonce do header NAO bate com o do HTML, e o browser
+// bloqueia TODOS os scripts inline (incluindo a hidratacao do Next).
+// Resultado pratico: sem isso, paginas estaticas como `/` ficam sem JS
+// em producao apos o primeiro request cacheado.
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "CareerTwin AI — seu gêmeo de carreira",
   description:
