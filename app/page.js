@@ -5,6 +5,7 @@ import { SAMPLE_CV, SAMPLE_ROLE } from "@/lib/sample";
 import Report from "@/components/Report";
 import LinkedinImportButton from "@/components/LinkedinImportButton";
 import PortfolioImportButton from "@/components/PortfolioImportButton";
+import { track } from "@/components/PostHogProvider";
 
 export default function Home() {
   const [stage, setStage] = useState("input");
@@ -91,6 +92,15 @@ export default function Home() {
       setOpp(o);
       setSnapshotId(d?.snapshotId || null);
       setStage("report");
+      track("diagnosis_completed", {
+        cv_chars: cv.trim().length,
+        role_len: role.trim().length,
+        elapsed_seconds: procElapsed,
+        overall_score: d?.overall,
+        jobs_returned: (o?.vagas || []).length,
+        jobs_illustrative: !!o?.illustrative,
+        is_logged: isLogged,
+      });
     } catch (e) {
       const msg = String(e?.message || "").toLowerCase();
       let friendly;
@@ -283,7 +293,11 @@ export default function Home() {
                 <h2 className="proc-title">{procMessages[procStep]?.title || "Quase lá"}</h2>
                 <p className="proc-sub">{procMessages[procStep]?.sub || ""}</p>
                 <p className="proc-meta">
-                  Normalmente leva entre 10 e 15 segundos · {procElapsed}s decorridos
+                  {procElapsed > estSec + 5
+                    ? `Mais lento que o normal — o servidor de IA pode estar em fila. Aguenta só mais um pouco · ${procElapsed}s decorridos`
+                    : procElapsed > estSec
+                      ? `Já passou da estimativa, mas chega lá · ${procElapsed}s decorridos`
+                      : `Normalmente leva entre ${estSec - 4} e ${estSec + 3} segundos · ${procElapsed}s decorridos`}
                 </p>
               </div>
               <div className="proc-steps">

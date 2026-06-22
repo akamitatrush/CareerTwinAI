@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { track } from "@/components/PostHogProvider";
 
 const STATUS_NEXT = {
   SAVED: ["APPLIED", "WITHDRAWN"],
@@ -106,6 +107,12 @@ export default function KanbanClient({ initialItems, columns }) {
       setItems((prev) => [data.item, ...prev]);
       setShowNew(false);
       form.reset();
+      track("application_saved", {
+        status: body.status,
+        has_url: !!body.url,
+        has_local: !!body.local,
+        origin: "manual",
+      });
     } catch (e) {
       setError("Falha de rede ao salvar. Verifica a conexão e tenta de novo.");
     }

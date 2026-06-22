@@ -5,6 +5,7 @@ import { WEIGHTS, SS_META } from "@/lib/score";
 import InterviewModal from "@/components/InterviewModal";
 import TailorModal from "@/components/TailorModal";
 import ChatModal from "@/components/ChatModal";
+import { track } from "@/components/PostHogProvider";
 
 const CIRC = 2 * Math.PI * 52;
 const SS_KEYS = ["aderencia_vagas", "relevancia_habilidades", "otimizacao_perfil", "experiencia_mercado"];
@@ -172,6 +173,25 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
         </div>
       </div>
 
+      {opp?.vagas && opp.vagas.length === 0 && opp?.sources != null && (
+        <div className="sec">
+          <div className="sec-head">
+            <span className="sec-no">03</span>
+            <h2 className="sec-title">Nenhuma vaga voltou agora pra esse cargo</h2>
+            <p className="sec-sub">
+              As três fontes que consultamos (Adzuna, Jooble, Greenhouse) não trouxeram resultado
+              compatível agora. Pode ser cargo muito específico, momento ruim do mercado, ou
+              fontes temporariamente fora. Tente:
+            </p>
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.7, color: "#4C5048" }}>
+            <li>Refazer o diagnóstico com um cargo-alvo mais comum (ex.: "engenheiro de software" em vez de "engenheiro de plataforma sênior em fintech")</li>
+            <li>Voltar daqui a algumas horas — a base atualiza periodicamente</li>
+            <li>Cadastrar candidaturas manualmente em <a href="/candidaturas" style={{ color: "#2563EB" }}>/candidaturas</a> enquanto isso</li>
+          </ul>
+        </div>
+      )}
+
       {opp?.vagas && opp.vagas.length > 0 && (
         <div className="sec">
           <div className="sec-head">
@@ -314,6 +334,16 @@ function SaveJobButton({ vaga }) {
         throw new Error(data.error || "erro");
       }
       setState(data.duplicated ? "dup" : "saved");
+      if (!data.duplicated) {
+        track("application_saved", {
+          status: "SAVED",
+          has_url: !!vaga.url,
+          has_local: !!vaga.local,
+          has_salario: !!vaga.salario,
+          source: vaga.source || "unknown",
+          origin: "from_jobs",
+        });
+      }
     } catch {
       setState("err");
     }

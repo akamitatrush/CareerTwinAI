@@ -18,4 +18,18 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+let exported = nextConfig;
+
+if (process.env.SENTRY_ORG && process.env.SENTRY_PROJECT) {
+  const { withSentryConfig } = await import("@sentry/nextjs");
+  exported = withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    silent: true,
+    widenClientFileUpload: true,
+    tunnelRoute: "/monitoring",
+    disableLogger: true,
+  });
+}
+
+export default exported;
