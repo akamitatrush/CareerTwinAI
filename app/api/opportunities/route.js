@@ -41,7 +41,22 @@ export async function POST(req) {
       { status: 400 }
     );
   }
-  const { snapshotId, role: roleIn, perfil: perfilIn, gaps: gapsIn } = parsed.data;
+  const {
+    snapshotId,
+    role: roleIn,
+    perfil: perfilIn,
+    gaps: gapsIn,
+    seniority: senIn,
+    model: modIn,
+    minMatch: minMatchIn,
+  } = parsed.data;
+
+  // Filtros vem do body (UI nova) ou da querystring (legado/GET-like). Body manda.
+  const url = new URL(req.url);
+  const seniority = String(senIn ?? url.searchParams.get("seniority") ?? "").trim();
+  const model = String(modIn ?? url.searchParams.get("model") ?? "").trim();
+  const minMatchRaw = minMatchIn ?? url.searchParams.get("minMatch");
+  const minMatch = Math.max(0, Math.min(100, Number(minMatchRaw) || 0));
 
   let snapshot = null;
   if (snapshotId && userId) {
@@ -73,9 +88,10 @@ export async function POST(req) {
   const profileSkills = Array.isArray(perfil.skills) ? perfil.skills : [];
 
   // Busca vagas reais (ou fixtures se sem chave); match e falta calculados em codigo.
+  // limit=24 (era 5) pra alimentar a UI nova com lista expandida.
   let payloadJobs = { jobs: [], sources: [] };
   try {
-    payloadJobs = await searchJobs({ role, location: "Brasil", limit: 5 });
+    payloadJobs = await searchJobs({ role, location: "Brasil", limit: 24 });
   } catch (e) {
     console.error("jobs busca falhou:", e?.message);
   }
@@ -87,48 +103,106 @@ export async function POST(req) {
   // Filtra vagas com match=0 — "0% match" exibido no mesmo pill verde-limão
   // dos matches altos confunde o usuario e parece bug. Se sobrar zero apos
   // o filtro, o fluxo "nenhuma vaga voltou" do componente Report cuida.
-  const withMatch = enriched.filter((j) => j.match > 0);
+  let withMatch = enriched.filter((j) => j.match > 0);
+
+  // ---- Filtros opcionais (UI nova) ----------------------------------------
+  // Senioridade: bate no titulo (case + acentos normalizados). Aceita
+  // "Junior"/"Pleno"/"Senior" + variacoes comuns em vagas BR. "" = qualquer.
+  const norm = (s) =>
+    String(s || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "");
+  if (seniority) {
+    const sNorm = norm(seniority);
+    const aliases = {
+      junior: ["junior", "jr", "trainee"],
+      pleno: ["pleno", "mid", "mid-level", "mid level"],
+      senior: ["senior", "sr", "lead", "principal", "staff"],
+    };
+    const target = aliases[sNorm] || [sNorm];
+    withMatch = withMatch.filter((j) => {
+      const t = norm(j.titulo);
+      return target.some((a) => t.includes(a));
+    });
+  }
+  // Modelo: bate no titulo + descricao. "" = qualquer.
+  if (model) {
+    const mNorm = norm(model);
+    const aliases = {
+      remoto: ["remoto", "remote", "home office", "home-office"],
+      hibrido: ["hibrido", "hybrid"],
+      presencial: ["presencial", "on-site", "on site", "onsite"],
+    };
+    const target = aliases[mNorm] || [mNorm];
+    withMatch = withMatch.filter((j) => {
+      const t = norm(`${j.titulo} ${j.descricao || ""} ${j.local || ""}`);
+      return target.some((a) => t.includes(a));
+    });
+  }
+  // Match minimo: default 0 (sem filtro). UI envia 0-100.
+  if (minMatch > 0) {
+    withMatch = withMatch.filter((j) => j.match >= minMatch);
+  }
+  // -------------------------------------------------------------------------
+
   withMatch.sort((a, b) => b.match - a.match);
-  const top = withMatch.slice(0, 3);
+  // Lista completa pra UI (ate 24). LLM so processa as 5 primeiras pra
+  // controlar custo — ver bloco de enriquecimento abaixo.
+  const top = withMatch.slice(0, 24);
+  const topForLLM = top.slice(0, 5);
 
   // Se todas as vagas exibidas sao fixtures, marcamos a resposta como ilustrativa.
   const allIllustrative = top.length > 0 && top.every((j) => j.source === "fixtures");
 
   // LLM justifica cada vaga (sem mexer em numero) — so para vagas REAIS.
   // Para fixtures (ja somos os autores), caimos no fluxo antigo (promptOpp).
+  //
+  // CUSTO: o LLM so processa as top 5 (topForLLM). As demais 19 (se houver)
+  // saem com porque determinitistico baseado nas skills comuns. Isso evita
+  // estourar prompt budget — antes processavamos 3, agora 5 (custo ~+66%).
   let vagasOut;
   if (top.length > 0 && !allIllustrative) {
+    // Helper: porque determinitistico — usado pras vagas fora do top 5 e como
+    // fallback quando o LLM falha.
+    const porqueFallback = (j) =>
+      `Voce cobre ${(j.comuns || []).length} requisitos chave (${
+        (j.comuns || []).slice(0, 3).join(", ") || "—"
+      }). [Base de Vagas]`;
+
+    const formatJob = (j, porque) => ({
+      titulo: j.titulo,
+      empresa: j.empresa,
+      local: j.local || "",
+      match: j.match,
+      porque,
+      falta: j.falta || [],
+      source: j.source,
+      sourceLabel: SOURCE_LABEL[j.source] || j.source,
+      url: j.url || null,
+      salario: j.salario || null,
+    });
+
     try {
-      const raw = await completeJSON(promptOppReal(role, perfil, top, gaps), { route: "opp.real", userId });
+      // LLM so ve as top 5 — economiza tokens.
+      const raw = await completeJSON(promptOppReal(role, perfil, topForLLM, gaps), {
+        route: "opp.real",
+        userId,
+      });
       const valid = PorquesShape.safeParse(raw);
       if (!valid.success) throw new Error("LLM shape porques invalido");
       const byId = new Map(valid.data.porques.map((p) => [p.id, p.porque]));
-      vagasOut = top.map((j) => ({
-        titulo: j.titulo,
-        empresa: j.empresa,
-        local: j.local || "",
-        match: j.match,
-        porque: byId.get(j.id) || `Skills compartilhadas: ${(j.comuns || []).slice(0, 3).join(", ")}. [Base de Vagas]`,
-        falta: j.falta || [],
-        source: j.source,
-        sourceLabel: SOURCE_LABEL[j.source] || j.source,
-        url: j.url || null,
-        salario: j.salario || null,
-      }));
+      vagasOut = top.map((j, idx) => {
+        const porque =
+          idx < topForLLM.length
+            ? byId.get(j.id) ||
+              `Skills compartilhadas: ${(j.comuns || []).slice(0, 3).join(", ")}. [Base de Vagas]`
+            : porqueFallback(j);
+        return formatJob(j, porque);
+      });
     } catch (e) {
       console.error("opp: porques falharam, usando fallback determinico:", e?.message);
-      vagasOut = top.map((j) => ({
-        titulo: j.titulo,
-        empresa: j.empresa,
-        local: j.local || "",
-        match: j.match,
-        porque: `Voce cobre ${(j.comuns || []).length} requisitos chave (${(j.comuns || []).slice(0, 3).join(", ") || "—"}). [Base de Vagas]`,
-        falta: j.falta || [],
-        source: j.source,
-        sourceLabel: SOURCE_LABEL[j.source] || j.source,
-        url: j.url || null,
-        salario: j.salario || null,
-      }));
+      vagasOut = top.map((j) => formatJob(j, porqueFallback(j)));
     }
   } else {
     // Fallback: nenhuma vaga real disponivel → usa o LLM antigo (ilustrativas)

@@ -1470,3 +1470,118 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   .app-container { padding: 18px 16px; }
 }
 
+/* ===== /transparencia ===== */
+.ct-principle-card {
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 26px 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-top: 12px;
+}
+@media (max-width: 720px) {
+  .ct-principle-card { grid-template-columns: 1fr; gap: 18px; }
+}
+.ct-principle-col {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.ct-principle-icon {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.14);
+  display: flex; align-items: center; justify-content: center;
+  flex: none;
+}
+.ct-principle-title { font-size: 15px; font-weight: 800; }
+.ct-principle-text { font-size: 12.5px; color: rgba(214,214,242,1); line-height: 1.55; margin-top: 5px; }
+
+.ct-formula-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 4px 22px;
+  box-shadow: var(--shadow-sm);
+  margin-top: 4px;
+}
+.ct-formula-row {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.ct-formula-row:last-of-type { border-bottom: 0; }
+.ct-formula-weight { width: 56px; flex: none; text-align: center; }
+.ct-formula-weight-label { font-size: 11px; font-weight: 700; color: var(--text-faint); }
+.ct-formula-weight-value { font-size: 18px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+.ct-formula-main { flex: 1; min-width: 220px; }
+.ct-formula-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.ct-formula-label { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.ct-formula-value { margin-left: auto; font-size: 16px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+.ct-formula-bar { height: 6px; border-radius: 5px; background: var(--primary-soft); overflow: hidden; margin-bottom: 7px; }
+.ct-formula-bar-fill { height: 100%; background: var(--primary); border-radius: 5px; transition: width 600ms ease; }
+.ct-formula-text { font-size: 11.5px; color: var(--text-soft); line-height: 1.5; margin: 0; }
+.ct-formula-total {
+  padding: 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+}
+.ct-formula-total-label { font-size: 13.5px; font-weight: 800; color: var(--text); }
+.ct-formula-total-value {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.ct-formula-total-value span:first-child {
+  font-size: 30px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums;
+}
+
+.ct-source-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+@media (max-width: 720px) { .ct-source-grid { grid-template-columns: 1fr; } }
+.ct-source-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.ct-source-icon {
+  width: 38px; height: 38px;
+  border-radius: 11px;
+  background: var(--primary-soft);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 11px;
+}
+.ct-source-title { font-size: 14px; font-weight: 800; color: var(--text); }
+.ct-source-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-top: 5px; }
+
+.ct-lgpd-banner {
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-tint);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+}
+.ct-lgpd-banner p {
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+}
+.ct-lgpd-banner a { color: var(--primary); font-weight: 600; }
+
