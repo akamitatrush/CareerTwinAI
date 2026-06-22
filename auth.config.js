@@ -4,6 +4,7 @@
 const PROTECTED_PREFIXES = [
   "/meu-gemeo",
   "/meus-dados",
+  "/conta",
   "/api/analyze",
   "/api/opportunities",
   "/api/interview",

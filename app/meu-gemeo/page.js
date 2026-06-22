@@ -127,6 +127,7 @@ function Header({ email }) {
       </Link>
       <div style={{ display: "flex", gap: 8 }}>
         <Link href="/candidaturas" className="tool-btn" style={{ textDecoration: "none" }}>Candidaturas</Link>
+        <Link href="/conta" className="tool-btn" style={{ textDecoration: "none" }}>Conta</Link>
         <Link href="/meus-dados" className="tool-btn" style={{ textDecoration: "none" }}>Meus dados</Link>
         <Link href="/" className="tool-btn" style={{ textDecoration: "none" }}>Novo diagnóstico</Link>
       </div>
