@@ -84,8 +84,12 @@ export async function POST(req) {
     const { match, comuns, falta } = matchScore({ profileSkills, jobSkills });
     return { ...j, comuns, falta: falta.slice(0, 3), match };
   });
-  enriched.sort((a, b) => b.match - a.match);
-  const top = enriched.slice(0, 3);
+  // Filtra vagas com match=0 — "0% match" exibido no mesmo pill verde-limão
+  // dos matches altos confunde o usuario e parece bug. Se sobrar zero apos
+  // o filtro, o fluxo "nenhuma vaga voltou" do componente Report cuida.
+  const withMatch = enriched.filter((j) => j.match > 0);
+  withMatch.sort((a, b) => b.match - a.match);
+  const top = withMatch.slice(0, 3);
 
   // Se todas as vagas exibidas sao fixtures, marcamos a resposta como ilustrativa.
   const allIllustrative = top.length > 0 && top.every((j) => j.source === "fixtures");

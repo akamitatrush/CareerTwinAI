@@ -19,17 +19,20 @@
   --transition-theme: background-color 200ms ease, color 200ms ease, border-color 200ms ease;
 }
 
-/* Dark é o default — aplica em :root sem data-theme E em data-theme="dark" */
+/* Dark é o default — aplica em :root sem data-theme E em data-theme="dark"
+   Paleta recalibrada (2026-06-22) pra passar WCAG AA em texto pequeno:
+   - surface bumpado pra criar elevação real sobre bg (era 1.07:1, agora 1.50:1)
+   - text-subtle bumpado pra passar AA em texto pequeno (era 666, agora 909090) */
 :root,
 :root[data-theme="dark"] {
   --bg: #0A0A0A;
-  --surface: #141414;
-  --surface-2: #1F1F1F;
-  --border: #2A2A2A;
-  --border-strong: #3A3A3A;
+  --surface: #1A1A1A;
+  --surface-2: #242424;
+  --border: #333333;
+  --border-strong: #454545;
   --text: #EDEDED;
-  --text-muted: #A3A3A3;
-  --text-subtle: #666666;
+  --text-muted: #B5B5B5;
+  --text-subtle: #909090;
   --scrim: rgba(0, 0, 0, 0.6);
 
   /* tokens da paleta editorial — reescritos pra dark */
@@ -531,7 +534,10 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 .ss-label{font-size:13.5px; font-weight:600;}
 .ss-weight{font-family:var(--font-mono); font-size:10.5px; color:var(--text-subtle); letter-spacing:.04em;}
 .ss-track{height:3px; border-radius:2px; background:var(--border-strong); overflow:hidden;}
+/* Animação 100% CSS — valor real fica sempre no DOM (acessível pra SEO, screen reader, copy-paste).
+   --ss-target vem inline do componente (style={{"--ss-target": v+"%"}}). */
 .ss-fill{height:100%; background:var(--accent); width:0; transition:width .9s cubic-bezier(.4,0,.2,1);}
+.ss.ss-revealed .ss-fill{width:var(--ss-target);}
 .ss-val{
   font-family:var(--font-serif);
   font-weight:800;
@@ -811,6 +817,8 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   max-width:62ch;
   margin:0;
   line-height:1.55;
+  flex:1 1 320px;
+  overflow-wrap:anywhere;
 }
 .transp b{color:var(--text-muted); font-style:normal; font-weight:600;}
 
@@ -1224,3 +1232,45 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 .saved-text b{color:var(--text);}
 .saved-text span{color:var(--text-muted); font-size:14px;}
 .saved-cta{padding:8px 14px; font-size:13px; text-decoration:none;}
+
+/* ===========================================================
+ * Dark mode overrides — .instrument
+ * ===========================================================
+ * Em light mode, .instrument é uma caixa preta dramática (preserva
+ * identidade editorial). Em dark mode, inverter pra branco quebra a
+ * fórmula auditável (verde-limão pequeno sobre branco = WCAG fail).
+ * Solução: em dark, .instrument vira surface-2 (eleva sobre bg sem
+ * inverter), e os filhos voltam pra cores do tema dark.
+ * =========================================================== */
+:root[data-theme="dark"] .instrument,
+:root:not([data-theme="light"]) .instrument {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+:root[data-theme="dark"] .gauge-num,
+:root:not([data-theme="light"]) .gauge-num {
+  color: var(--text);
+}
+:root[data-theme="dark"] .inst-headline h3,
+:root:not([data-theme="light"]) .inst-headline h3 {
+  color: var(--text);
+}
+:root[data-theme="dark"] .inst-headline p,
+:root:not([data-theme="light"]) .inst-headline p {
+  color: var(--text-muted);
+}
+:root[data-theme="dark"] .formula,
+:root:not([data-theme="light"]) .formula {
+  color: var(--text-muted);
+  background: var(--accent-soft);
+  border-color: var(--border);
+}
+:root[data-theme="dark"] .formula b,
+:root:not([data-theme="light"]) .formula b {
+  color: var(--accent-deep);
+}
+:root[data-theme="dark"] .inst-delta,
+:root:not([data-theme="light"]) .inst-delta {
+  color: var(--accent-deep);
+}

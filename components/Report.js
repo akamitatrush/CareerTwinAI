@@ -135,9 +135,9 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
                   <button className="ss-head" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [k]: !o[k] }))}>
                     <div className="ss-bar-wrap">
                       <div className="ss-bar-top"><span className="ss-label">{meta.label}{boosted && <span className="ss-up"> ▲</span>}</span><span className="ss-weight">peso {meta.w}</span></div>
-                      <div className="ss-track"><div className="ss-fill" style={{ width: ssRevealed ? v + "%" : "0%" }} /></div>
+                      <div className="ss-track"><div className="ss-fill" style={{ "--ss-target": v + "%" }} /></div>
                     </div>
-                    <span className="ss-val">{ssRevealed ? v : 0}</span>
+                    <span className="ss-val">{v}</span>
                     <svg className={"ss-chev" + (isOpen ? " open" : "")} width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </button>
                   {isOpen && (
