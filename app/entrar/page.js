@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signIn, EMAIL_PROVIDER_ID } from "@/lib/auth";
+import { isRealProduction } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ const hasEmail = !!(
 );
 const hasLinkedIn = !!(process.env.AUTH_LINKEDIN_ID && process.env.AUTH_LINKEDIN_SECRET);
 const hasDevCreds =
-  process.env.NODE_ENV !== "production" && process.env.AUTH_DEV_CREDENTIALS === "true";
+  !isRealProduction() && process.env.AUTH_DEV_CREDENTIALS === "true";
 
 async function emailAction(formData) {
   "use server";
