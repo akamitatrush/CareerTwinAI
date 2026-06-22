@@ -6,19 +6,26 @@ const { auth: authMiddleware } = NextAuth(authConfig);
 
 const PROTECTED = [/^\/meu-gemeo(\/|$)/, /^\/meus-dados(\/|$)/];
 
-// CSP por requisicao com nonce — script-src restrito; style-src ainda com
-// 'unsafe-inline' (limitacao do Next 14: ele injeta estilos inline durante a
-// hidratacao e nao ha API estavel pra nonce em styles).
+// CSP. Trade-off pragmatico:
+//  - Next 14 + Vercel + chunks estaticos = nonce + strict-dynamic NAO funciona
+//    consistentemente (o Next nao propaga o nonce pros chunks externos do
+//    _next/static). Tentativa de seguir a receita oficial nao funcionou em prod.
+//  - Decisao: 'self' + 'unsafe-inline' em script-src. Perde protecao contra
+//    XSS via inline script injection, mas:
+//      * React escapa interpolacoes por default
+//      * Nao usamos dangerouslySetInnerHTML
+//      * Input validado por Zod nas bordas
+//      * frame-ancestors 'none' + X-Frame-Options DENY
+//      * Quando migrar pra Next 15 com suporte estavel a nonce, voltamos.
 //
-// Em DEV o Next usa eval() pro React Fast Refresh (HMR) e abre WebSocket pra
-// hot reload — sem unsafe-eval e connect-src ws:, o app trava. Em PROD essas
-// concessoes nao entram.
+// Em DEV o Next ainda usa eval() pro Fast Refresh — mantemos unsafe-eval +
+// ws: pra HMR funcionar. Em PROD nao tem unsafe-eval nem ws:.
 const IS_DEV = process.env.NODE_ENV !== "production";
 
-function buildCsp(nonce) {
+function buildCsp() {
   const scriptSrc = IS_DEV
-    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval'`
-    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`;
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+    : "script-src 'self' 'unsafe-inline'";
   const connectSrc = IS_DEV
     ? "connect-src 'self' ws: wss:"
     : "connect-src 'self'";
@@ -36,45 +43,24 @@ function buildCsp(nonce) {
   ].join("; ");
 }
 
-function setSecurityHeaders(res, nonce) {
-  res.headers.set("Content-Security-Policy", buildCsp(nonce));
-  res.headers.set("x-nonce", nonce);
-}
-
-function nonceFromRequest(req) {
-  // Propaga o nonce para o app via header de request — o root layout le com
-  // headers() do next/headers e injeta como atributo nos <Script>.
-  const buf = new Uint8Array(16);
-  crypto.getRandomValues(buf);
-  return Buffer.from(buf).toString("base64");
+function setSecurityHeaders(res) {
+  res.headers.set("Content-Security-Policy", buildCsp());
 }
 
 export default async function middleware(req) {
-  const nonce = nonceFromRequest(req);
   const isProtected = PROTECTED.some((re) => re.test(req.nextUrl.pathname));
 
   if (isProtected) {
     // Delega ao NextAuth (que pode retornar redirect pra /entrar).
     const authRes = await authMiddleware(req);
     if (authRes) {
-      setSecurityHeaders(authRes, nonce);
-      authRes.headers.set("x-nonce", nonce);
+      setSecurityHeaders(authRes);
       return authRes;
     }
   }
 
-  // Clona os headers preservando duplicados (importante pra cookies do NextAuth).
-  // O CSP precisa ir TAMBEM no request header — eh assim que o Next 14 sabe que
-  // tem nonce e propaga ele automaticamente pra todos os <script> internos.
-  // So no response (que faziamos antes) NAO basta — os scripts saem sem nonce.
-  // Ref: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
-  const csp = buildCsp(nonce);
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set("x-nonce", nonce);
-  requestHeaders.set("Content-Security-Policy", csp);
-  const res = NextResponse.next({ request: { headers: requestHeaders } });
-  res.headers.set("Content-Security-Policy", csp);
-  res.headers.set("x-nonce", nonce);
+  const res = NextResponse.next();
+  setSecurityHeaders(res);
   return res;
 }
 
