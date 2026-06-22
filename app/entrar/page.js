@@ -2,7 +2,12 @@ import { signIn } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-const hasEmail = !!(process.env.EMAIL_SERVER && process.env.EMAIL_FROM);
+// Email login pode vir via Resend (prod) ou Nodemailer SMTP (dev). Qualquer um
+// dos dois habilita a opcao "magic link" pro usuario.
+const hasEmail = !!(
+  process.env.EMAIL_FROM &&
+  (process.env.AUTH_RESEND_KEY || process.env.EMAIL_SERVER)
+);
 const hasLinkedIn = !!(process.env.AUTH_LINKEDIN_ID && process.env.AUTH_LINKEDIN_SECRET);
 const hasDevCreds =
   process.env.NODE_ENV !== "production" && process.env.AUTH_DEV_CREDENTIALS === "true";
@@ -89,10 +94,14 @@ export default function EntrarPage({ searchParams }) {
       )}
 
       {!hasEmail && !hasLinkedIn && !hasDevCreds && (
-        <p className="err">
-          Nenhum provider de login configurado. Defina <code>EMAIL_SERVER</code>
-          + <code>EMAIL_FROM</code> ou <code>AUTH_LINKEDIN_ID/SECRET</code> no .env.
-        </p>
+        <div style={{ padding: 16, border: "1px solid var(--rule)", borderRadius: 6, background: "var(--surface)" }}>
+          <p style={{ marginTop: 0, fontWeight: 600 }}>Login em modo demo.</p>
+          <p style={{ fontSize: 14, color: "var(--ink-soft)", margin: 0 }}>
+            Esta versão está em modo experimentar — você pode rodar o
+            diagnóstico em <a href="/">/</a> sem salvar nada. Pra ativar conta e
+            histórico, o admin precisa configurar um provider de email.
+          </p>
+        </div>
       )}
     </main>
   );
