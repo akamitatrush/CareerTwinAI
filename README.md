@@ -377,6 +377,8 @@ Cobertura:
 
 ## 📚 Documentação complementar
 
+- **[docs/PRODUTO.md](docs/PRODUTO.md)** — o que o produto faz, pra quem, jornada do usuário, princípios editoriais, FAQ
+- **[docs/API.md](docs/API.md)** — referência técnica de todas as rotas API (request/response/erros)
 - [ARCHITECTURE.md](ARCHITECTURE.md) — visão técnica enxuta (stack, modelos, fluxos)
 - [CHANGELOG.md](CHANGELOG.md) — histórico de versões (v0.1 → v0.4)
 - [.env.example](.env.example) — todas as envs documentadas
