@@ -2578,25 +2578,300 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 button.ct-action-cta { background: transparent; border: 0; padding: 0; cursor: pointer; font-family: inherit; }
 button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 
-/* ===== /gaps microactions ===== */
+/* ===== /gaps — redesign em 3 atos =====
+   Ato 1: GapsKpiStrip (Onde voce esta)
+   Ato 2: SkillMap + RequirementsFrequency (O que falta)
+   Ato 3: MicroactionCard com cursos inline (O que fazer)
+   Antiga estrutura (.ct-section-title/.ct-microactions-list flat) foi
+   substituida por sections numerados .ct-gaps-act. Mantemos .ct-microactions-list
+   pro layout, mas cards agora tem leftrail + body. */
+
 .ct-section-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -.4px; color: var(--text); margin: 0 0 4px; }
 .ct-section-sub { font-size: 13.5px; color: var(--text-muted); margin: 0 0 16px; }
 
-.ct-microactions-list { display: flex; flex-direction: column; gap: 12px; }
+/* Section "ato" — header numerado + corpo. Espaco generoso pra dar
+   respiro entre os 3 atos da narrativa. */
+.ct-gaps-act { margin-top: 36px; }
+.ct-gaps-act:first-of-type { margin-top: 24px; }
+.ct-gaps-act-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.ct-gaps-act-num {
+  flex: none;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--primary-light), var(--primary-deep));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm), inset 0 1px 0 0 rgba(255,255,255,0.18);
+  letter-spacing: 0;
+}
+.ct-gaps-act-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -.3px; color: var(--text); margin: 1px 0 2px; }
+.ct-gaps-act-sub { font-size: 13px; color: var(--text-muted); margin: 0; max-width: 64ch; line-height: 1.55; }
+.ct-gaps-act-sub strong { color: var(--text); font-weight: 700; }
 
-.ct-microaction-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px 24px; box-shadow: var(--shadow-sm); }
-.ct-microaction-card.done { opacity: .65; background: var(--positive-soft); border-color: var(--positive-tint); }
+/* Ato 1 celebrate state — KPIs ficam em tom positivo + banner CTA. */
+.ct-gaps-act-1.celebrate .ct-gaps-act-num {
+  background: linear-gradient(140deg, #2BB390, var(--positive-deep));
+}
+.ct-kpi-celebrate { background: linear-gradient(180deg, var(--positive-soft), transparent 70%); border-radius: var(--radius-lg); padding: 10px; margin-left: -10px; margin-right: -10px; }
+.ct-kpi-value.ct-kpi-positive { color: var(--positive-deep); }
+.ct-gaps-celebrate-banner {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: linear-gradient(180deg, var(--positive-soft) 0%, rgba(207,232,219,0.5) 100%);
+  border: 1px solid var(--positive-tint);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  font-size: 13.5px;
+  color: var(--positive-deep);
+  box-shadow: var(--shadow-sm);
+}
+.ct-gaps-celebrate-cta {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--positive-deep);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid var(--positive-tint);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard);
+}
+.ct-gaps-celebrate-cta:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+/* Ato 2 — grid 2-col em desktop, empilha mobile */
+.ct-gaps-act-2-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 880px) {
+  .ct-gaps-act-2-cols { grid-template-columns: 1fr; gap: 14px; }
+}
+
+/* ===== Ato 2 — Skill Map ===== */
+.ct-skill-map {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 240ms ease-out, box-shadow 240ms ease-out;
+}
+.ct-skill-map:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+.ct-skill-map-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.ct-skill-map-title { font-size: 14px; font-weight: 800; color: var(--text); margin: 0; letter-spacing: -.1px; }
+.ct-skill-map-sub { font-size: 11.5px; color: var(--text-faint); margin: 4px 0 0; line-height: 1.5; }
+
+.ct-skill-map-legend {
+  list-style: none;
+  margin: 14px 0 6px;
+  padding: 0;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+.ct-skill-map-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.ct-skill-map-legend-item .ct-skill-pill { font-size: 0; padding: 0; width: 10px; height: 10px; border-radius: 50%; }
+
+.ct-skill-map-groups { display: flex; flex-direction: column; gap: 14px; margin-top: 10px; }
+.ct-skill-map-group { padding-top: 12px; border-top: 1px dashed var(--border); }
+.ct-skill-map-group:first-child { padding-top: 0; border-top: 0; }
+.ct-skill-map-group-head { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+.ct-skill-map-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ct-skill-map-dot.covered { background: var(--positive); }
+.ct-skill-map-dot.rare { background: var(--attention); }
+.ct-skill-map-dot.unknown { background: var(--text-soft); }
+.ct-skill-map-group-label { font-size: 12px; font-weight: 800; color: var(--text); letter-spacing: -.1px; }
+.ct-skill-map-group-count { font-size: 11px; font-weight: 700; color: var(--text-faint); margin-left: auto; font-variant-numeric: tabular-nums; }
+.ct-skill-map-group-hint { font-size: 11px; color: var(--text-faint); margin: 0 0 8px; line-height: 1.45; }
+.ct-skill-map-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Variantes de pill — gradient sutil + border colorida pra cada estado */
+.ct-skill-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+  transition: transform 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard);
+  cursor: default;
+}
+.ct-skill-pill:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.ct-skill-pill.covered {
+  color: var(--positive-deep);
+  background: linear-gradient(180deg, var(--positive-soft) 0%, rgba(207,232,219,0.6) 100%);
+  border-color: var(--positive-tint);
+}
+.ct-skill-pill.rare {
+  color: var(--attention-deep);
+  background: linear-gradient(180deg, var(--attention-soft) 0%, rgba(240,228,201,0.55) 100%);
+  border-color: var(--attention-tint);
+}
+.ct-skill-pill.unknown {
+  color: var(--text-muted);
+  background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface-3) 100%);
+  border-color: var(--border);
+}
+
+/* ===== Ato 2 — Requirements Frequency ===== */
+.ct-req-freq {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 240ms ease-out, box-shadow 240ms ease-out;
+}
+.ct-req-freq:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+.ct-req-freq-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.ct-req-freq-title { font-size: 14px; font-weight: 800; color: var(--text); margin: 0; letter-spacing: -.1px; }
+.ct-req-freq-sub { font-size: 11.5px; color: var(--text-faint); margin: 4px 0 0; line-height: 1.5; }
+
+.ct-req-freq-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 11px; }
+.ct-req-freq-row { padding: 8px 0; border-top: 1px dashed var(--border); }
+.ct-req-freq-row:first-child { border-top: 0; padding-top: 2px; }
+.ct-req-freq-row-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.ct-req-freq-name { font-size: 13px; font-weight: 700; color: var(--text); text-transform: capitalize; letter-spacing: -.1px; }
+.ct-req-freq-tag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.ct-req-freq-tag.have { color: var(--positive-deep); background: var(--positive-soft); border-color: var(--positive-tint); }
+.ct-req-freq-tag.missing { color: var(--attention-deep); background: var(--attention-soft); border-color: var(--attention-tint); }
+.ct-req-freq-bar-wrap { display: flex; align-items: center; gap: 10px; }
+.ct-req-freq-bar { flex: 1; height: 5px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.ct-req-freq-bar-fill { height: 100%; border-radius: 4px; transition: width 600ms var(--ease-out-quart); }
+.ct-req-freq-bar-fill.have { background: linear-gradient(90deg, var(--positive-deep), var(--positive)); }
+.ct-req-freq-bar-fill.missing { background: linear-gradient(90deg, var(--attention), var(--attention-deep)); }
+.ct-req-freq-pct { font-size: 11px; font-weight: 700; color: var(--text-faint); white-space: nowrap; font-variant-numeric: tabular-nums; min-width: 30px; text-align: right; }
+.ct-req-freq-empty { font-size: 12px; color: var(--text-faint); padding: 12px 0; }
+
+/* ===== Ato 3 — Microacao expandida ===== */
+.ct-microactions-list { display: flex; flex-direction: column; gap: 14px; }
+
+.ct-microaction-card {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px 20px 18px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.ct-microaction-card.priority-top {
+  border-color: var(--primary-tint);
+  border-left-color: var(--primary-deep);
+  background: linear-gradient(180deg, var(--primary-soft) 0%, transparent 50%), var(--surface);
+}
+.ct-microaction-card.done {
+  opacity: .72;
+  border-left-color: var(--positive);
+  background: var(--positive-soft);
+  border-color: var(--positive-tint);
+}
 .ct-microaction-card.done .ct-microaction-skill { text-decoration: line-through; }
 
-.ct-microaction-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.ct-microaction-skill { font-size: 15px; font-weight: 700; letter-spacing: -.2px; color: var(--text); }
-.ct-microaction-impact { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-soft); border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
+/* Leftrail com check grande, usado pra dar feedback visual claro do estado done */
+.ct-microaction-leftrail { display: flex; align-items: flex-start; justify-content: center; padding-top: 4px; }
+.ct-microaction-check {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: var(--surface);
+  color: transparent;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 160ms var(--ease-standard),
+              background 160ms var(--ease-standard),
+              color 160ms var(--ease-standard),
+              transform 160ms var(--ease-standard);
+}
+.ct-microaction-check:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); }
+.ct-microaction-check:focus-visible { outline: 0; box-shadow: var(--shadow-focus); }
+.ct-microaction-check.done {
+  background: linear-gradient(180deg, #2BB390 0%, var(--positive) 100%);
+  border-color: var(--positive-deep);
+  color: #fff;
+}
+.ct-microaction-check.done:hover:not(:disabled) { transform: scale(1.05); }
+.ct-microaction-check:disabled { cursor: progress; opacity: .6; }
 
-.ct-microaction-why { font-size: 12.5px; color: var(--text-muted); line-height: 1.55; margin: 0 0 6px; }
-.ct-microaction-action { font-size: 12.5px; color: var(--text); line-height: 1.55; margin: 0 0 12px; padding: 8px 11px; background: var(--surface-2); border-left: 3px solid var(--primary); border-radius: var(--radius-sm); }
-.ct-microaction-error { font-size: 11.5px; color: var(--attention-deep); margin: 0 0 8px; }
+.ct-microaction-body { min-width: 0; }
 
-.ct-microaction-foot { display: flex; justify-content: flex-end; }
+.ct-microaction-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.ct-microaction-head-left { min-width: 0; }
+.ct-microaction-head-right { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.ct-microaction-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); display: block; margin-bottom: 2px; }
+.ct-microaction-skill { font-size: 17px; font-weight: 700; letter-spacing: -.3px; color: var(--text); margin: 0; line-height: 1.3; }
+.ct-microaction-impact { font-size: 11px; font-weight: 800; color: var(--primary); background: var(--primary-soft); border: 1px solid var(--primary-tint); border-radius: var(--radius-pill); padding: 4px 10px; white-space: nowrap; }
+.ct-microaction-priority { font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--attention-deep); background: var(--attention-soft); border: 1px solid var(--attention-tint); border-radius: var(--radius-pill); padding: 4px 10px; white-space: nowrap; }
+
+.ct-microaction-block { margin: 0 0 12px; }
+.ct-microaction-block-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); display: block; margin-bottom: 4px; }
+.ct-microaction-why { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+.ct-microaction-action { font-size: 13px; color: var(--text); line-height: 1.6; margin: 0; padding: 10px 13px; background: var(--surface-2); border-left: 3px solid var(--primary); border-radius: var(--radius-sm); }
+
+/* Cursos inline */
+.ct-microaction-courses { margin: 14px 0 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.ct-microaction-courses-head { margin-bottom: 9px; }
+.ct-microaction-courses-label { font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
+.ct-microaction-courses-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+@media (max-width: 720px) { .ct-microaction-courses-grid { grid-template-columns: 1fr; } }
+.ct-microaction-course {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-decoration: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 11px 13px;
+  color: var(--text);
+  transition: border-color 160ms var(--ease-standard),
+              box-shadow 160ms var(--ease-standard),
+              transform 160ms var(--ease-standard);
+}
+.ct-microaction-course:hover { border-color: var(--primary-tint); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.ct-microaction-course-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ct-microaction-course-provider { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--primary); }
+.ct-microaction-course-free { font-size: 9.5px; font-weight: 800; color: var(--positive-deep); background: var(--positive-soft); border: 1px solid var(--positive-tint); border-radius: var(--radius-pill); padding: 2px 7px; letter-spacing: 0.04em; text-transform: uppercase; }
+.ct-microaction-course-title { font-size: 12.5px; font-weight: 700; color: var(--text); line-height: 1.4; letter-spacing: -.1px; }
+.ct-microaction-course-meta { font-size: 10.5px; color: var(--text-faint); font-weight: 600; }
+.ct-microaction-course-cta { font-size: 11px; color: var(--primary); font-weight: 700; margin-top: 4px; }
+
+.ct-microaction-error { font-size: 12px; color: var(--attention-deep); margin: 0 0 8px; }
+.ct-microaction-foot { display: flex; justify-content: flex-end; margin-top: 4px; }
 .ct-microaction-cta {
   background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary) 100%);
   color: #fff;
@@ -2627,8 +2902,31 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   background: linear-gradient(180deg, var(--positive) 0%, var(--positive-deep) 100%);
 }
 
+/* Hover do card inteiro — sutil pra nao competir com hover dos elementos internos */
+.ct-microaction-card {
+  transition: border-color 240ms ease-out,
+              box-shadow 240ms ease-out,
+              transform 240ms ease-out;
+}
+.ct-microaction-card:hover:not(.done) {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 720px) {
+  .ct-microaction-card { grid-template-columns: 36px 1fr; gap: 14px; padding: 18px 16px 18px 14px; }
+  .ct-microaction-check { width: 26px; height: 26px; font-size: 14px; }
+  .ct-microaction-skill { font-size: 16px; }
+  .ct-microaction-head { gap: 8px; }
+  .ct-microaction-head-right { width: 100%; justify-content: flex-start; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ct-microaction-card { transition: none !important; transform: none !important; }
+  .ct-microaction-card,
+  .ct-microaction-check,
+  .ct-microaction-course,
+  .ct-skill-pill { transition: none !important; transform: none !important; }
+  .ct-req-freq-bar-fill { transition: none !important; }
 }
 
 /* ===== Onboarding split-panel — landing hero premium ===== */

@@ -3,19 +3,22 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { searchJobs } from "@/lib/jobs";
-import { extractSkills } from "@/lib/skills-taxonomy";
-import { suggestCoursesForGaps } from "@/lib/knowledge/course-retrieval";
+import { extractSkills, SKILLS } from "@/lib/skills-taxonomy";
+import { suggestCoursesForSkill } from "@/lib/knowledge/course-retrieval";
+import GapsKpiStrip from "./GapsKpiStrip";
+import SkillMap from "./SkillMap";
+import RequirementsFrequency from "./RequirementsFrequency";
 import MicroactionCard from "./MicroactionCard";
 
-// Render dinâmico: auth() (cookies) + Prisma + chamada a provedores externos
+// Render dinamico: auth() (cookies) + Prisma + chamada a provedores externos
 // de vagas. Nada disso pode ser cacheado estaticamente.
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Análise de gaps — CareerTwin AI" };
+export const metadata = { title: "Análise de lacunas — CareerTwin AI" };
 
-// Espelha exatamente a lógica de /api/gaps/summary e /api/gaps/requirements
+// Espelha exatamente a logica de /api/gaps/summary e /api/gaps/requirements
 // pra evitar chamada HTTP interna num server component (URL absoluta chata
-// em dev/preview/prod). Mesma fórmula, mesmo top-18, mesma definição de
-// "high priority" e aderência ponderada.
+// em dev/preview/prod). Mesma formula, mesmo top-18, mesma definicao de
+// "high priority" e aderencia ponderada.
 //
 // Tambem traz o snapshot mais recente do usuario com seus Gap reais (vindos
 // do /api/analyze). Esses gaps tem microacao concreta + impactoPontos e sao
@@ -38,8 +41,8 @@ async function getGapsData(userId) {
     (profile.skills || []).map((s) => String(s).toLowerCase()),
   );
 
-  // Pool grande pra agregação estatística (limit 200). Tolerante a falha:
-  // se provedores caírem, mostramos empty state ao invés de quebrar.
+  // Pool grande pra agregacao estatistica (limit 200). Tolerante a falha:
+  // se provedores cairem, mostramos empty state ao inves de quebrar.
   let jobsPayload = { jobs: [], sources: [] };
   try {
     jobsPayload = await searchJobs({
@@ -74,12 +77,12 @@ async function getGapsData(userId) {
     .slice(0, 18);
 
   const skillsHave = requirements.filter((r) => r.status === "have").length;
-  // "High priority" = skill em 70%+ das vagas que o usuário ainda não tem.
+  // "High priority" = skill em 70%+ das vagas que o usuario ainda nao tem.
   const highPriorityGaps = requirements.filter(
     (r) => r.status === "missing" && r.pct >= 70,
   ).length;
 
-  // Aderência ponderada por frequência: skills muito pedidas pesam mais.
+  // Aderencia ponderada por frequencia: skills muito pedidas pesam mais.
   const totalWeight = requirements.reduce((s, r) => s + r.pct, 0);
   const matchedWeight = requirements
     .filter((r) => r.status === "have")
@@ -87,16 +90,23 @@ async function getGapsData(userId) {
   const adherence =
     totalWeight > 0 ? Math.round((matchedWeight / totalWeight) * 100) : 0;
 
-  // Rail direita: até 12 skills do usuário + 4 maiores gaps faltantes.
-  const haveList = Array.from(userSkills).slice(0, 12);
-  const missingList = requirements
-    .filter((r) => r.status === "missing")
-    .slice(0, 4);
-
-  // Bandeira de transparência: se a única fonte foi fixtures, é ilustrativo.
+  // Bandeira de transparencia: se a unica fonte foi fixtures, eh ilustrativo.
   const isIllustrative =
     jobsPayload.sources.includes("fixtures") &&
     jobsPayload.sources.length === 1;
+
+  // === Conjuntos derivados para o SkillMap ===
+  // requirementSet: skills (lowercase) que estao nos requirements top-18.
+  // canonicalSet: TODAS as habilidades canonicas + aliases da taxonomy
+  // (lowercase), pra classificar uma habilidade do perfil como "rare"
+  // (dentro da taxonomy mas fora do pool) versus "unknown" (fora da
+  // taxonomy completamente).
+  const requirementSet = new Set(requirements.map((r) => r.name.toLowerCase()));
+  const canonicalSet = new Set();
+  for (const [canon, aliases] of Object.entries(SKILLS)) {
+    canonicalSet.add(canon.toLowerCase());
+    for (const a of aliases) canonicalSet.add(String(a).toLowerCase());
+  }
 
   return {
     profile,
@@ -111,8 +121,8 @@ async function getGapsData(userId) {
       isIllustrative,
     },
     requirements,
-    haveList,
-    missingList,
+    requirementSet,
+    canonicalSet,
   };
 }
 
@@ -121,14 +131,35 @@ export default async function GapsPage() {
   if (!session?.user?.id) redirect("/entrar");
 
   const data = await getGapsData(session.user.id);
+  const snapshot = data.latestSnapshot;
+  const gaps = Array.isArray(snapshot?.gaps) ? snapshot.gaps : [];
+  const hasGaps = gaps.length > 0;
+
+  // Pre-calcula cursos por gap pra renderizar inline em cada microacao
+  // (em vez de uma secao "Cursos sugeridos" separada no final, que perdia
+  // contexto). limit 2 = nao polui o card, deixa decisao rapida.
+  const coursesByGapId = new Map();
+  for (const g of gaps) {
+    const sk = g.habilidade || g.skill || g.name;
+    if (!sk) continue;
+    const found = suggestCoursesForSkill(sk, { limit: 2 });
+    if (found.length > 0) coursesByGapId.set(g.id, found);
+  }
+
+  // Ordena por impactoPontos desc; marca o primeiro pendente como "top".
+  const sortedGaps = [...gaps].sort(
+    (a, b) => (b.impactoPontos || 0) - (a.impactoPontos || 0),
+  );
+  const firstPendingId = sortedGaps.find((g) => !g.completedAt)?.id;
 
   return (
     <main id="main-content" className="app-container">
       <div className="ct-gaps-header">
         <div>
-          <h1 className="ct-gaps-title">Análise de gaps</h1>
+          <h1 className="ct-gaps-title">Análise de lacunas</h1>
           <p className="ct-gaps-sub">
-            O que o mercado pede para o seu cargo-alvo vs. o que você já tem.
+            Três atos: <strong>onde você está</strong>,{" "}
+            <strong>o que falta</strong> e <strong>o que fazer</strong>.
           </p>
         </div>
         {data.profile?.targetRole && (
@@ -157,117 +188,83 @@ export default async function GapsPage() {
         )}
       </div>
 
-      <MicroactionsSection snapshot={data.latestSnapshot} />
-
-      <CourseSuggestionsSection snapshot={data.latestSnapshot} />
-
       {data.noTarget ? (
         <NoTargetState />
-      ) : data.summary.totalJobs === 0 ? (
+      ) : data.summary && data.summary.totalJobs === 0 && !hasGaps ? (
         <NoJobsState />
       ) : (
         <>
-          <KPIStrip summary={data.summary} />
-          <div className="ct-gaps-cols">
-            <RequirementsList
-              requirements={data.requirements}
-              isIllustrative={data.summary.isIllustrative}
-            />
-            <SkillRail
-              haveList={data.haveList}
-              missingList={data.missingList}
-            />
-          </div>
+          {/* Ato 1 — Onde voce esta */}
+          <GapsKpiStrip
+            summary={data.summary}
+            snapshot={snapshot}
+            targetRole={data.profile?.targetRole}
+          />
+
+          {/* Ato 2 — O que falta */}
+          {data.summary && data.summary.totalJobs > 0 && (
+            <section className="ct-gaps-act ct-gaps-act-2" aria-labelledby="gaps-act-2">
+              <header className="ct-gaps-act-head">
+                <span className="ct-gaps-act-num" aria-hidden="true">
+                  2
+                </span>
+                <div>
+                  <h2 id="gaps-act-2" className="ct-gaps-act-title">
+                    O que falta
+                  </h2>
+                  <p className="ct-gaps-act-sub">
+                    Lado a lado: suas habilidades cruzadas com o mercado e o
+                    que aparece mais nas vagas reais.
+                  </p>
+                </div>
+              </header>
+              <div className="ct-gaps-act-2-cols">
+                <SkillMap
+                  skills={data.profile?.skills || []}
+                  requirementSet={data.requirementSet}
+                  canonicalSet={data.canonicalSet}
+                />
+                <RequirementsFrequency
+                  requirements={data.requirements}
+                  isIllustrative={data.summary.isIllustrative}
+                  limit={8}
+                />
+              </div>
+            </section>
+          )}
+
+          {/* Ato 3 — O que fazer */}
+          {hasGaps && (
+            <section className="ct-gaps-act ct-gaps-act-3" aria-labelledby="gaps-act-3">
+              <header className="ct-gaps-act-head">
+                <span className="ct-gaps-act-num" aria-hidden="true">
+                  3
+                </span>
+                <div>
+                  <h2 id="gaps-act-3" className="ct-gaps-act-title">
+                    O que fazer
+                  </h2>
+                  <p className="ct-gaps-act-sub">
+                    Microações priorizadas por impacto no seu score. Cada uma
+                    sugere cursos pra fechar a lacuna.
+                  </p>
+                </div>
+              </header>
+              <div className="ct-microactions-list">
+                {sortedGaps.map((gap) => (
+                  <MicroactionCard
+                    key={gap.id}
+                    gap={gap}
+                    courses={coursesByGapId.get(gap.id) || []}
+                    priority={gap.id === firstPendingId ? "top" : null}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
     </main>
-  );
-}
-
-// Mostra os Gap REAIS do snapshot mais recente do usuario (vindos do /analyze),
-// ordenados por impactoPontos desc. Mostra completados tambem (com estilo
-// .done) — o usuario pode desfazer caso tenha clicado por engano. Diferente do
-// dashboard, que filtra completados pra deixar as 3 "proximas acoes" limpas;
-// aqui o /gaps eh a visao completa entao mantemos o historico.
-function MicroactionsSection({ snapshot }) {
-  if (!snapshot || !Array.isArray(snapshot.gaps) || snapshot.gaps.length === 0) {
-    return null;
-  }
-  const sorted = [...snapshot.gaps].sort(
-    (a, b) => (b.impactoPontos || 0) - (a.impactoPontos || 0),
-  );
-  return (
-    <div style={{ marginBottom: 26 }}>
-      <h2 className="ct-section-title">Suas microações priorizadas</h2>
-      <p className="ct-section-sub">
-        Lacunas identificadas no teu último diagnóstico, ordenadas por impacto
-        no score.
-      </p>
-      <div className="ct-microactions-list">
-        {sorted.map((gap) => (
-          <MicroactionCard key={gap.id} gap={gap} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Fecha o item #3 do Canvas MVP (Skill Gap Mapper completo): alem de
-// identificar e priorizar, sugere cursos REAIS pra cada lacuna do snapshot.
-// Renderiza so se houver gaps no snapshot E pelo menos um deles bater com o
-// catalogo curado em lib/knowledge/courses.json. Sem gaps = sem secao.
-//
-// Decisao de SSR (nao client fetch ao /api/gaps/courses):
-//  - Catalogo eh estatico, sem chamada externa, sem custo.
-//  - Render no servidor evita flicker e melhora LCP da pagina.
-//  - O endpoint /api/gaps/courses ainda existe pra consumidores futuros
-//    (mobile, chat, etc.) — nao foi desperdicio criar.
-function CourseSuggestionsSection({ snapshot }) {
-  if (!snapshot || !Array.isArray(snapshot.gaps) || snapshot.gaps.length === 0) {
-    return null;
-  }
-  const coursesBySkill = suggestCoursesForGaps(snapshot.gaps);
-  const entries = Object.entries(coursesBySkill);
-  if (entries.length === 0) return null;
-
-  return (
-    <section style={{ marginTop: 32, marginBottom: 26 }}>
-      <h2 className="ct-section-title">
-        Cursos sugeridos pra fechar essas lacunas
-      </h2>
-      <p className="ct-section-sub">
-        Curados manualmente. Priorizamos gratuitos e formatos curtos (&lt;40h).
-      </p>
-      {entries.map(([skill, list]) => (
-        <div key={skill} className="ct-courses-group">
-          <h3 className="ct-courses-skill">{skill}</h3>
-          <div className="ct-courses-grid">
-            {list.map((c) => (
-              <a
-                key={c.id}
-                href={c.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ct-course-card"
-              >
-                <div className="ct-course-head">
-                  <span className="ct-course-provider">{c.provider}</span>
-                  {c.free && (
-                    <span className="ct-course-badge-free">grátis</span>
-                  )}
-                </div>
-                <h4 className="ct-course-title">{c.title}</h4>
-                <p className="ct-course-meta">
-                  {c.duration} · {c.level} · {c.language}
-                </p>
-                <p className="ct-course-why">{c.why}</p>
-                <span className="ct-course-cta">Ver curso ↗</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      ))}
-    </section>
   );
 }
 
@@ -293,154 +290,6 @@ function NoJobsState() {
         resultados pro seu cargo-alvo. Pode ser cargo muito específico, ou
         momento ruim do mercado. Tente daqui a algumas horas.
       </p>
-    </div>
-  );
-}
-
-function KPIStrip({ summary }) {
-  return (
-    <div className="ct-kpi-strip">
-      <KPICard value={summary.totalJobs} label="vagas reais analisadas" />
-      <KPICard
-        value={`${summary.skillsHave}/${summary.skillsRequired}`}
-        label="skills exigidas que você tem"
-      />
-      <KPICard
-        value={summary.highPriorityGaps}
-        label="gaps de alta prioridade"
-        color="attention"
-      />
-      <KPICard
-        value={`${summary.adherence}%`}
-        label="aderência média ao cargo"
-        color="primary"
-      />
-    </div>
-  );
-}
-
-function KPICard({ value, label, color }) {
-  const colorClass =
-    color === "attention"
-      ? "ct-kpi-attention"
-      : color === "primary"
-        ? "ct-kpi-primary"
-        : "";
-  return (
-    <div className="ct-kpi-card">
-      <div className={"ct-kpi-value " + colorClass}>{value}</div>
-      <div className="ct-kpi-label">{label}</div>
-    </div>
-  );
-}
-
-function RequirementsList({ requirements, isIllustrative }) {
-  return (
-    <div className="ct-req-card">
-      <div className="ct-req-head">
-        <h2>O que as vagas pedem</h2>
-        <span className="ct-req-sub">ordenado por frequência nas vagas</span>
-      </div>
-      {isIllustrative && (
-        <div className="ct-req-illustrative">
-          Sem provider de vagas configurado — exibindo dados ilustrativos.
-          Configure ADZUNA_APP_ID / JOOBLE_API_KEY pra vagas reais.
-        </div>
-      )}
-      <div>
-        {requirements.map((r, i) => (
-          <div className="ct-req-row" key={r.name + i}>
-            <div className="ct-req-row-head">
-              <span
-                className={
-                  "ct-req-dot " + (r.status === "have" ? "have" : "missing")
-                }
-              />
-              <span className="ct-req-name">{r.name}</span>
-              <span
-                className={
-                  "ct-req-status " + (r.status === "have" ? "have" : "missing")
-                }
-              >
-                {r.status === "have" ? "você tem" : "falta"}
-              </span>
-            </div>
-            <div className="ct-req-row-foot">
-              <div className="ct-req-bar">
-                <div
-                  className={
-                    "ct-req-bar-fill " +
-                    (r.status === "have" ? "have" : "missing")
-                  }
-                  style={{ width: r.pct + "%" }}
-                />
-              </div>
-              <span className="ct-req-pct">
-                pedido em {r.pct}% · {r.count} vagas
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SkillRail({ haveList, missingList }) {
-  return (
-    <div className="ct-rail">
-      <div className="ct-rail-card">
-        <div className="ct-rail-title">
-          <span className="ct-rail-dot have" />
-          Skills que você já tem
-        </div>
-        <div className="ct-skill-chips" style={{ marginTop: 13 }}>
-          {haveList.length === 0 ? (
-            <p
-              style={{
-                fontSize: 12,
-                color: "var(--text-faint)",
-                margin: 0,
-              }}
-            >
-              Nenhuma skill detectada no perfil ainda.
-            </p>
-          ) : (
-            haveList.map((s, i) => (
-              <span className="ct-skill-chip have" key={i}>
-                {s}
-              </span>
-            ))
-          )}
-        </div>
-      </div>
-      <div className="ct-rail-card">
-        <div className="ct-rail-title">
-          <span className="ct-rail-dot attention" />
-          Priorize aprender estas
-        </div>
-        <p className="ct-rail-sub">As de maior frequência que ainda faltam</p>
-        <div className="ct-rail-missing-list">
-          {missingList.length === 0 ? (
-            <p
-              style={{
-                fontSize: 12,
-                color: "var(--text-faint)",
-                margin: 0,
-              }}
-            >
-              Sem gaps importantes! Você cobre os principais requisitos.
-            </p>
-          ) : (
-            missingList.map((g, i) => (
-              <div className="ct-rail-missing-row" key={i}>
-                <span className="ct-rail-missing-name">{g.name}</span>
-                <span className="ct-rail-missing-pct">{g.pct}% das vagas</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
     </div>
   );
 }
