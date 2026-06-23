@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { safeHref } from "@/lib/url-safe";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 /**
  * Card expandido de microacao (ato 3 da /gaps).
@@ -34,6 +37,7 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
   async function toggle() {
     setBusy(true);
     setError("");
+    const wasdone = done;
     try {
       const method = done ? "DELETE" : "POST";
       const res = await fetch(`/api/gaps/${gap.id}/complete`, { method });
@@ -42,6 +46,14 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
         throw new Error(data.error || "Falhou");
       }
       setDone(!done);
+      if (wasdone) {
+        track(EVENTS.GAP_UNCOMPLETED, { gap_id: gap.id });
+      } else {
+        track(EVENTS.GAP_COMPLETED, {
+          gap_id: gap.id,
+          impacto_pontos: gap.impactoPontos || 0,
+        });
+      }
       startTransition(() => router.refresh());
     } catch (e) {
       setError(e.message || "Tenta de novo");
@@ -120,29 +132,43 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
               </span>
             </div>
             <div className="ct-microaction-courses-grid">
-              {courses.map((c) => (
-                <a
-                  key={c.id}
-                  href={c.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ct-microaction-course"
-                >
-                  <div className="ct-microaction-course-head">
-                    <span className="ct-microaction-course-provider">
-                      {c.provider}
+              {courses.map((c) => {
+                // safeHref: defesa em camadas (catalogo curado mas validamos
+                // antes de renderizar pra blindar contra payload futuro).
+                const href = safeHref(c.url);
+                if (!href) return null;
+                return (
+                  <a
+                    key={c.id}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ct-microaction-course"
+                    onClick={() =>
+                      track(EVENTS.COURSE_CLICKED, {
+                        course_id: c.id,
+                        skill: gap?.habilidade?.slice(0, 60) || "",
+                        provider: c.provider || "",
+                        free: !!c.free,
+                      })
+                    }
+                  >
+                    <div className="ct-microaction-course-head">
+                      <span className="ct-microaction-course-provider">
+                        {c.provider}
+                      </span>
+                      {c.free && (
+                        <span className="ct-microaction-course-free">grátis</span>
+                      )}
+                    </div>
+                    <span className="ct-microaction-course-title">{c.title}</span>
+                    <span className="ct-microaction-course-meta">
+                      {c.duration} · {c.level} · {c.language}
                     </span>
-                    {c.free && (
-                      <span className="ct-microaction-course-free">grátis</span>
-                    )}
-                  </div>
-                  <span className="ct-microaction-course-title">{c.title}</span>
-                  <span className="ct-microaction-course-meta">
-                    {c.duration} · {c.level} · {c.language}
-                  </span>
-                  <span className="ct-microaction-course-cta">Ver curso ↗</span>
-                </a>
-              ))}
+                    <span className="ct-microaction-course-cta">Ver curso ↗</span>
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}

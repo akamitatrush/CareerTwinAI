@@ -14,6 +14,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 export default function RefreshDiagnosisButton({
   allGapsDone,
@@ -32,6 +34,9 @@ export default function RefreshDiagnosisButton({
   async function refresh(applyCompletedSkills) {
     setLoading(true);
     setError("");
+    track(EVENTS.REFRESH_DIAGNOSIS_CLICKED, {
+      apply_completed_skills: !!applyCompletedSkills,
+    });
     try {
       const res = await fetch("/api/profile/refresh", {
         method: "POST",
@@ -57,6 +62,12 @@ export default function RefreshDiagnosisButton({
       const delta = Number(data?.delta) || 0;
       const score = Number(data?.score) || 0;
       const previousScore = Number(data?.previousScore) || 0;
+      track(EVENTS.REFRESH_DIAGNOSIS_COMPLETED, {
+        delta,
+        previous_score: previousScore,
+        new_score: score,
+        applied: !!applyCompletedSkills,
+      });
       setResultToast({ delta, score, previousScore, applied: !!applyCompletedSkills });
       router.refresh();
       // Auto-dismiss apos 6s pra nao poluir.

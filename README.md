@@ -110,12 +110,12 @@ Pipeline de diagnóstico em uma vista:
 
 ```mermaid
 flowchart LR
-    CV[CV / PDF / DOCX / LinkedIn] --> LLM[Claude Sonnet 4.6:<br/>perfil + gaps + explicações]
-    Cargo[Cargo-alvo] --> Jobs[searchJobs<br/>6 providers paralelo]
-    LLM --> Code[Cálculo determinístico<br/>4 sub-scores]
+    CV[CV PDF DOCX LinkedIn] --> LLM["Claude Sonnet 4.6<br/>perfil + gaps + explicacoes"]
+    Cargo[Cargo-alvo] --> Jobs["searchJobs<br/>6 providers paralelo"]
+    LLM --> Code["Calculo deterministico<br/>4 sub-scores"]
     Jobs --> Code
-    Code --> Score[Overall = Σ subscore × peso]
-    Score --> Snapshot[(ScoreSnapshot imutável<br/>+ Gap + PlanItem<br/>+ Consent payloadHash)]
+    Code --> Score["Overall = soma subscore x peso"]
+    Score --> Snapshot["ScoreSnapshot imutavel<br/>+ Gap + PlanItem<br/>+ Consent payloadHash"]
 ```
 
 ---
@@ -234,12 +234,38 @@ erDiagram
     ScoreSnapshot ||--o{ PlanItem : "plano de ação"
     Application ||--o{ ApplicationEvent : "timeline auditável"
 
-    User { string id email }
-    Profile { string targetRole string[] skills json perfilJson json linkedinJson json portfolioJson }
-    ScoreSnapshot { int overall json subScores datetime createdAt }
-    AssessmentResult { string kind json answers json result }
-    Evidence { string kind string title string description string url }
-    TailoredCv { string jobTitle string company text adaptedCv json diff }
+    User {
+        string id
+        string email
+    }
+    Profile {
+        string targetRole
+        json perfilJson
+        json linkedinJson
+        json portfolioJson
+    }
+    ScoreSnapshot {
+        int overall
+        json subScores
+        datetime createdAt
+    }
+    AssessmentResult {
+        string kind
+        json answers
+        json result
+    }
+    Evidence {
+        string kind
+        string title
+        string description
+        string url
+    }
+    TailoredCv {
+        string jobTitle
+        string company
+        text adaptedCv
+        json diff
+    }
 ```
 
 ---

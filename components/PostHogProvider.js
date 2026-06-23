@@ -90,19 +90,40 @@ export default function PostHogProvider({ children }) {
     // Identify-on-load: se ha sessao ativa, pega userId e roda identify.
     // Endpoint publico do NextAuth (/api/auth/session) — devolve so o que o
     // user ja sabe (id/email/name). Falha silenciosa nao quebra a app.
+    //
+    // Tambem dispara LOGIN_COMPLETED na primeira vez que vemos o user nessa
+    // sessao do browser (key ct_seen em localStorage). SIGNUP_COMPLETED se
+    // a session.user.createdAt e recente (< 5min) — heuristica simples.
     fetch("/api/auth/session")
       .then((r) => r.json())
       .then((s) => {
-        if (s?.user?.id) {
-          identifyUser({
-            id: s.user.id,
-            email: s.user.email,
-            name: s.user.name,
-            plan: s.user.plan,
-            isOwner: s.user.isOwner,
-            createdAt: s.user.createdAt,
-          });
-        }
+        if (!s?.user?.id) return;
+        identifyUser({
+          id: s.user.id,
+          email: s.user.email,
+          name: s.user.name,
+          plan: s.user.plan,
+          isOwner: s.user.isOwner,
+          createdAt: s.user.createdAt,
+        });
+        // Primeira visita nessa session (mas user pode ja existir no banco)
+        try {
+          const lastSeenKey = `ct_login_${s.user.id}`;
+          const lastSeen = localStorage.getItem(lastSeenKey);
+          if (!lastSeen) {
+            // Conta nova OU sessao nova no browser. Pra distinguir, comparamos
+            // createdAt (se exposto) com agora. < 5min => signup; senao => login.
+            const created = s.user.createdAt ? new Date(s.user.createdAt) : null;
+            const isFresh =
+              created && Date.now() - created.getTime() < 5 * 60 * 1000;
+            if (isFresh) {
+              track("signup_completed", {});
+            } else {
+              track("login_completed", {});
+            }
+            localStorage.setItem(lastSeenKey, String(Date.now()));
+          }
+        } catch {}
       })
       .catch(() => {});
   }, []);

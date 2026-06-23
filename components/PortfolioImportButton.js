@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Modal from "./Modal";
 import { safeHref } from "@/lib/url-safe";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 export default function PortfolioImportButton({ onImport, disabled }) {
   const [open, setOpen] = useState(false);
@@ -30,6 +32,10 @@ export default function PortfolioImportButton({ onImport, disabled }) {
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Falha ao importar.");
+      track(EVENTS.GITHUB_IMPORT_COMPLETED, {
+        has_github: !!body.github,
+        has_url: !!body.url,
+      });
       setResult(data.portfolio);
       onImport?.(data.portfolio);
     } catch (e) {
@@ -43,7 +49,10 @@ export default function PortfolioImportButton({ onImport, disabled }) {
     <>
       <button
         className="btn btn-ghost"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          track(EVENTS.GITHUB_IMPORT_CLICKED, {});
+          setOpen(true);
+        }}
         disabled={disabled}
         type="button"
       >

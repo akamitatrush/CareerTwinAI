@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/redact-cv",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/outcome-survey",
+      "schedule": "0 14 * * 1"
     }
   ]
 }

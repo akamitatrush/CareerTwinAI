@@ -7,6 +7,7 @@ import InterviewModal from "@/components/InterviewModal";
 import TailorModal from "@/components/TailorModal";
 import ChatModal from "@/components/ChatModal";
 import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 import { safeHref } from "@/lib/url-safe";
 
 const CIRC = 2 * Math.PI * 52;
@@ -409,7 +410,7 @@ function SaveJobButton({ vaga }) {
       }
       setState(data.duplicated ? "dup" : "saved");
       if (!data.duplicated) {
-        track("application_saved", {
+        track(EVENTS.APPLICATION_SAVED, {
           status: "SAVED",
           has_url: !!vaga.url,
           has_local: !!vaga.local,

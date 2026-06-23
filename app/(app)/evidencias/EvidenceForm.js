@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 // Form inline (vs modal): a pagina /evidencias e dedicada e existe pra esse
 // fluxo. Modal so faria sentido se a feature fosse chamada de outra tela.
@@ -82,6 +84,12 @@ export default function EvidenceForm() {
         setSubmitting(false);
         return;
       }
+      track(EVENTS.EVIDENCE_ADDED, {
+        kind: payload.kind,
+        has_metric: !!(payload.metricLabel && payload.metricValue),
+        has_url: !!payload.url,
+        skills_count: skills.length,
+      });
       setForm(INITIAL);
       setOpen(false);
       // refresh re-roda o server component da pagina e pega a evidence nova.

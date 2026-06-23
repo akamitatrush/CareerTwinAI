@@ -103,11 +103,25 @@ export default function RadarClient({ initial }) {
             border: "1px solid var(--attention-tint)",
           }}
         >
-          Sem provider de vagas configurado — exibindo dados ilustrativos.
+          {Object.keys(counts).length === 0 || Object.keys(counts).every((k) => k === "fixtures") ? (
+            <>
+              Nenhum provider de vagas configurado retornou resultados — exibindo dados ilustrativos.
+              <br />
+              <span style={{ fontSize: 12, color: "var(--text-soft)" }}>
+                Se as chaves estão configuradas no Vercel, pode ser: rate-limit do free tier
+                atingido, busca muito específica, ou cache stale (espere ~5min e recarregue).
+              </span>
+            </>
+          ) : (
+            <>
+              Alguns providers configurados não retornaram resultados — completamos com
+              dados ilustrativos. Detalhe por fonte abaixo.
+            </>
+          )}
         </div>
       )}
 
-      {!loading && !illustrative && Object.keys(counts).length > 0 && (
+      {!loading && Object.keys(counts).length > 0 && (
         <div className="ct-sources-strip" aria-label="Fontes de vagas">
           {Object.entries(counts)
             .sort((a, b) => b[1] - a[1])

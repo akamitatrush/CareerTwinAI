@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Modal from "./Modal";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 export default function LinkedinImportButton({ onImport, disabled }) {
   const [open, setOpen] = useState(false);
@@ -24,6 +26,9 @@ export default function LinkedinImportButton({ onImport, disabled }) {
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Falha ao importar.");
+      track(EVENTS.LINKEDIN_IMPORT_COMPLETED, {
+        cv_chars: data?.cv?.length || 0,
+      });
       onImport?.({ cv: data.cv, perfil: data.perfil });
       setOpen(false);
       setText("");
@@ -38,7 +43,10 @@ export default function LinkedinImportButton({ onImport, disabled }) {
     <>
       <button
         className="btn btn-ghost"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          track(EVENTS.LINKEDIN_IMPORT_CLICKED, {});
+          setOpen(true);
+        }}
         disabled={disabled}
         type="button"
       >

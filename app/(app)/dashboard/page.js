@@ -8,6 +8,7 @@ import { computeCompleteness } from "@/lib/metrics/completeness";
 import { getRealMedian } from "@/lib/metrics/median-real";
 import ActionCardClient from "./ActionCardClient";
 import RefreshDiagnosisButton from "./RefreshDiagnosisButton";
+import DashboardTracker from "./DashboardTracker";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard — CareerTwin AI" };
@@ -99,6 +100,13 @@ export default async function DashboardPage() {
 
   return (
     <main id="main-content" className="app-container">
+      {/* Analytics: dispara dashboard_viewed no client com metricas pre-calc.
+          Sem-PII: so contadores e score (sem habilidades/nome/email). */}
+      <DashboardTracker
+        hasSnapshot={!!latest}
+        score={Number(latest?.overall) || 0}
+        gapsCount={Array.isArray(latest?.gaps) ? latest.gaps.length : 0}
+      />
       {/* Header */}
       <div className="ct-dash-header">
         <div>

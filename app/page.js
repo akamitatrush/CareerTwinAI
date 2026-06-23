@@ -340,7 +340,21 @@ export default function Home() {
                   </div>
                   <div className="field">
                     <label htmlFor="roleText">Cargo-alvo</label>
-                    <input id="roleText" type="text" value={role} onChange={(e) => setRole(e.target.value)} placeholder="Ex.: Product Manager de IA · Pessoa Engenheira de Dados Sênior" />
+                    <input
+                      id="roleText"
+                      type="text"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value)}
+                      onBlur={() => {
+                        // Trackeia uma vez por sessao quando user "fecha" o input
+                        // com algo digitado. Trim pra evitar tracking de espacos.
+                        const r = role.trim();
+                        if (r.length > 0) {
+                          track(EVENTS.ROLE_DEFINED, { role_len: r.length });
+                        }
+                      }}
+                      placeholder="Ex.: Product Manager de IA · Pessoa Engenheira de Dados Sênior"
+                    />
                   </div>
 
                   <div className="ct-onb-actions">

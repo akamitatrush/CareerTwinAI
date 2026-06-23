@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   narrativeFor,
   ikigaiSynthesis,
 } from "@/lib/assessments/definitions";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 // Client component que renderiza UM dos 3 tipos de form (likert, multiselect,
 // openText), submete pra /api/assessments/[kind] e mostra o resultado.
@@ -28,6 +30,15 @@ export default function AssessmentClient({ definition, initialResult }) {
   // "show" = mostra resultado em vez do form (apos submit OU se ja tem result
   // E o user nao clicou "refazer"). "retake" = form mesmo tendo result.
   const [mode, setMode] = useState(initialResult ? "show" : "form");
+
+  // ASSESSMENT_STARTED: dispara 1x ao montar (sem result previo, ou no
+  // retake). kind ja indica qual assessment (DISC, valores, ikigai).
+  useEffect(() => {
+    if (mode === "form") {
+      track(EVENTS.ASSESSMENT_STARTED, { kind: String(definition.kind || "") });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function submit() {
     setSubmitting(true);
@@ -52,6 +63,32 @@ export default function AssessmentClient({ definition, initialResult }) {
       }
       setResult(json.result);
       setMode("show");
+      // Computa "completion_percent" de forma simples (heuristica por tipo).
+      let completionPercent = 100;
+      if (definition.type === "likert") {
+        const answered = definition.questions.filter(
+          (q) => Number(responses[q.id]) >= 1
+        ).length;
+        completionPercent = Math.round(
+          (answered / definition.questions.length) * 100
+        );
+      } else if (definition.type === "openText") {
+        const ok = definition.questions.filter(
+          (q) => String(responses[q.id] || "").trim().length >= 20
+        ).length;
+        completionPercent = Math.round(
+          (ok / definition.questions.length) * 100
+        );
+      } else if (definition.type === "multiselect") {
+        const max = definition.maxSelections || 5;
+        completionPercent = Math.round(
+          (Math.min(max, responses.length) / max) * 100
+        );
+      }
+      track(EVENTS.ASSESSMENT_COMPLETED, {
+        kind: String(definition.kind || ""),
+        completion_percent: completionPercent,
+      });
       // Atualiza server components (lista de autoconhecimento mostra status novo).
       router.refresh();
     } catch (e) {

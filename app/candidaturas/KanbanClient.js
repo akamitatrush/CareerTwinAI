@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 import { safeHref } from "@/lib/url-safe";
 
 const STATUS_NEXT = {
@@ -44,6 +45,11 @@ export default function KanbanClient({ initialItems, columns }) {
   async function changeStatus(id, status) {
     setBusyId(id);
     setError("");
+    // Captura status anterior antes do PATCH pra props de tracking
+    // (without esperar response). Se o user toggla rapido, "from" reflete
+    // o estado local atual — bom o suficiente pra analytics.
+    const prev = items.find((i) => i.id === id);
+    const fromStatus = prev?.status || "UNKNOWN";
     try {
       const r = await fetch(`/api/applications/${id}`, {
         method: "PATCH",
@@ -53,6 +59,10 @@ export default function KanbanClient({ initialItems, columns }) {
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "patch_failed");
       setItems((prev) => prev.map((i) => (i.id === id ? data.item : i)));
+      track(EVENTS.APPLICATION_STATUS_CHANGED, {
+        from: fromStatus,
+        to: status,
+      });
     } catch (e) {
       const msg = String(e?.message || "").toLowerCase();
       if (msg.includes("network") || msg.includes("failed to fetch")) {
@@ -108,7 +118,7 @@ export default function KanbanClient({ initialItems, columns }) {
       setItems((prev) => [data.item, ...prev]);
       setShowNew(false);
       form.reset();
-      track("application_saved", {
+      track(EVENTS.APPLICATION_SAVED, {
         status: body.status,
         has_url: !!body.url,
         has_local: !!body.local,
