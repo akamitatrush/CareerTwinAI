@@ -39,14 +39,38 @@ function pickExplicacao(llmText, key) {
   return s.length > 0 ? s : FALLBACK_EXPL[key];
 }
 
-async function handler(req) {
+// === Resultado de erro do core() em forma de "envelope". Tanto o branch JSON
+// quanto o branch SSE precisam serializar pra um shape padrao:
+//  - { kind: "json", status, body } => resposta HTTP normal
+//  - { kind: "ok", payload } => sucesso
+// O wrapper de cada branch decide como entregar.
+function jsonError(status, body) {
+  return { kind: "json", status, body };
+}
+function okPayload(payload) {
+  return { kind: "ok", payload };
+}
+
+/**
+ * Core do /api/analyze. Stateless, recebe um `emit` opcional pra emitir steps
+ * de progresso (usado pelo branch SSE; no JSON branch e um no-op). Retorna
+ * envelope padronizado pra ambos os branches.
+ *
+ * Otimizacao chave: LLM + searchJobs rodam em PARALELO via Promise.allSettled.
+ * searchJobs nao precisa do output do LLM — so do role. Reduz tempo total
+ * de ~18s (15s LLM + 3s jobs sequencial) pra ~15s (max do paralelo).
+ */
+async function core(req, emit = () => {}) {
   // Sessao opcional: logado → persiste com escopo de dono; anonimo → efemero.
   // Nao ha IDOR aqui: persistencia so acontece quando userId vem de auth().
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
   const limit = await guardLLM(req, { name: "analyze", userId, perMinuteAnon: 3, perMinuteUser: 10 });
-  if (!limit.ok) return tooMany(limit);
+  if (!limit.ok) {
+    // Retorna a Response direta pra preservar headers de rate-limit
+    return { kind: "raw", response: tooMany(limit) };
+  }
 
   // Enforcement de plano (apenas pra logados; anonimos rodam efemero e ja
   // sao rate-limited mais agressivamente acima). 402 Payment Required.
@@ -55,17 +79,14 @@ async function handler(req) {
   if (userId) {
     const lim = await enforceUsage(userId, "analyze");
     if (!lim.ok) {
-      return NextResponse.json(
-        {
-          error: "Voce atingiu o limite do plano Free (3 diagnosticos/mes). Faca upgrade pra Pro.",
-          code: "LIMIT_REACHED",
-          feature: "analyze",
-          plan: lim.plan,
-          limit: lim.limit,
-          upgradeUrl: "/precos",
-        },
-        { status: 402 }
-      );
+      return jsonError(402, {
+        error: "Voce atingiu o limite do plano Free (3 diagnosticos/mes). Faca upgrade pra Pro.",
+        code: "LIMIT_REACHED",
+        feature: "analyze",
+        plan: lim.plan,
+        limit: lim.limit,
+        upgradeUrl: "/precos",
+      });
     }
     // Pre-check de budget diario (cost amplification defense). Mesmo passando
     // no enforceUsage (count nao bateu o limite mensal), o custo agregado USD
@@ -82,27 +103,26 @@ async function handler(req) {
         req,
         meta: { feature: "analyze", used: budget.used, cap: budget.cap },
       });
-      return NextResponse.json(
-        {
-          error: "Voce atingiu o limite diario de uso de IA. Volte amanha ou faca upgrade.",
-          code: "BUDGET_EXCEEDED",
-          used: budget.used,
-          cap: budget.cap,
-          upgradeUrl: "/precos",
-        },
-        { status: 402 }
-      );
+      return jsonError(402, {
+        error: "Voce atingiu o limite diario de uso de IA. Volte amanha ou faca upgrade.",
+        code: "BUDGET_EXCEEDED",
+        used: budget.used,
+        cap: budget.cap,
+        upgradeUrl: "/precos",
+      });
     }
   }
+
+  emit({ type: "step", step: "validating" });
 
   let body;
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json(
-      { error: "Não consegui entender o que foi enviado. Tente de novo.", code: "BAD_JSON" },
-      { status: 400 }
-    );
+    return jsonError(400, {
+      error: "Não consegui entender o que foi enviado. Tente de novo.",
+      code: "BAD_JSON",
+    });
   }
   const parsed = AnalyzeBody.safeParse(body);
   if (!parsed.success) {
@@ -110,74 +130,80 @@ async function handler(req) {
     const role = typeof body?.role === "string" ? body.role.trim() : "";
     const cv = typeof body?.cv === "string" ? body.cv : "";
     if (!role) {
-      return NextResponse.json(
-        { error: "Diga qual cargo você quer (campo cargo-alvo).", code: "ROLE_REQUIRED" },
-        { status: 400 }
-      );
+      return jsonError(400, {
+        error: "Diga qual cargo você quer (campo cargo-alvo).",
+        code: "ROLE_REQUIRED",
+      });
     }
     if (cv.trim().length < 60) {
-      return NextResponse.json(
-        {
-          error: "Seu currículo está muito curto. Cole pelo menos um parágrafo com experiências e habilidades.",
-          code: "CV_TOO_SHORT",
-        },
-        { status: 400 }
-      );
+      return jsonError(400, {
+        error: "Seu currículo está muito curto. Cole pelo menos um parágrafo com experiências e habilidades.",
+        code: "CV_TOO_SHORT",
+      });
     }
     if (cv.length > 40_000) {
-      return NextResponse.json(
-        {
-          error: "Seu currículo passou do limite de 40 mil caracteres. Resuma para os trechos mais relevantes.",
-          code: "CV_TOO_LONG",
-        },
-        { status: 400 }
-      );
+      return jsonError(400, {
+        error: "Seu currículo passou do limite de 40 mil caracteres. Resuma para os trechos mais relevantes.",
+        code: "CV_TOO_LONG",
+      });
     }
-    return NextResponse.json(
-      { error: "Faltam dados ou algum campo está em formato inválido. Confira currículo e cargo-alvo.", code: "INVALID_INPUT" },
-      { status: 400 }
-    );
+    return jsonError(400, {
+      error: "Faltam dados ou algum campo está em formato inválido. Confira currículo e cargo-alvo.",
+      code: "INVALID_INPUT",
+    });
   }
   const { cv, role } = parsed.data;
 
-  // 1) LLM: extrai perfil + escreve explicacoes + lista lacunas. Nao gera numeros.
+  // 1+2) LLM (extrai perfil + escreve explicacoes + lista lacunas) E searchJobs
+  // rodam EM PARALELO. searchJobs so precisa do role, NAO do output do LLM.
+  // Antes era serial (~18s); agora ~15s — economia de 3s percebidos.
+  // Promise.allSettled pra que falha de jobs nao mate o LLM e vice-versa
+  // (jobs degrada graciosamente; LLM precisa ser tratado caso a caso).
+  emit({ type: "step", step: "llm_jobs_parallel" });
+
+  const prompt = await promptDiag(role.trim(), cv.trim());
+  const [llmSettled, jobsSettled] = await Promise.allSettled([
+    completeJSONWithUsage(prompt, { route: "analyze", userId }),
+    searchJobs({ role: role.trim(), location: "Brasil", limit: 50 }),
+  ]);
+
+  // jobsSettled: degrada gracioso. Falha nao quebra o diagnostico — score de
+  // aderencia ainda computa com array vazio (jogando o valor pra baixo).
+  let jobsPayload = { jobs: [], sources: [] };
+  if (jobsSettled.status === "fulfilled" && jobsSettled.value) {
+    jobsPayload = jobsSettled.value;
+  } else if (jobsSettled.status === "rejected") {
+    console.error("analyze: searchJobs falhou", jobsSettled.reason?.message);
+  }
+
+  // llmSettled: critico — precisamos do perfil pra gerar resultado. Trata
+  // erro com mesma logica do path serial original.
   let diag;
   let llmUsage = null; // capturado pra trackTokenUsage depois do persist
-  try {
-    const { result: raw, usage } = await completeJSONWithUsage(
-      await promptDiag(role.trim(), cv.trim()),
-      { route: "analyze", userId }
-    );
-    llmUsage = usage;
-    const valid = DiagShape.safeParse(raw);
-    if (!valid.success) {
-      console.error("analyze: LLM shape inválido");
-      // Tokens ja foram gastos pelo provider — track agora (track block pos-LLM
-      // nao roda nesse branch). Falha silenciosa (uso ja gastou).
-      if (userId && llmUsage) {
-        await trackTokenUsage(userId, "analyze", llmUsage);
-      }
-      return NextResponse.json(
-        {
-          error: "A IA devolveu uma resposta em formato inesperado. Tente novamente em alguns segundos.",
-          code: "LLM_INVALID",
-        },
-        { status: 502 }
-      );
-    }
-    diag = valid.data;
-  } catch (e) {
-    // Não vazar detalhes ao cliente. LLM lancou antes de responder => sem
-    // tokens cobrados pelo provider, nada a track.
-    console.error("analyze: LLM falhou", e?.message);
-    return NextResponse.json(
-      {
-        error: "A IA não conseguiu analisar agora. Tente novamente em alguns segundos — se persistir, o currículo pode estar muito longo ou em formato estranho.",
-        code: "LLM_FAILED",
-      },
-      { status: 502 }
-    );
+  if (llmSettled.status === "rejected") {
+    console.error("analyze: LLM falhou", llmSettled.reason?.message);
+    // LLM rejeitou antes de responder => sem tokens cobrados, nada a track.
+    return jsonError(502, {
+      error: "A IA não conseguiu analisar agora. Tente novamente em alguns segundos — se persistir, o currículo pode estar muito longo ou em formato estranho.",
+      code: "LLM_FAILED",
+    });
   }
+  // llmSettled.status === "fulfilled"
+  const { result: raw, usage } = llmSettled.value;
+  llmUsage = usage;
+  const valid = DiagShape.safeParse(raw);
+  if (!valid.success) {
+    console.error("analyze: LLM shape inválido");
+    // Tokens ja foram gastos pelo provider — track agora. Falha silenciosa.
+    if (userId && llmUsage) {
+      await trackTokenUsage(userId, "analyze", llmUsage);
+    }
+    return jsonError(502, {
+      error: "A IA devolveu uma resposta em formato inesperado. Tente novamente em alguns segundos.",
+      code: "LLM_INVALID",
+    });
+  }
+  diag = valid.data;
 
   // LLM passou: tokens ja foram cobrados pelo provider. Track AGORA pra
   // garantir contagem mesmo se persist abaixo falhar. Falha silenciosa. Em
@@ -206,20 +232,12 @@ async function handler(req) {
     }
   }
 
-  // 2) Busca vagas reais (Adzuna/Jooble/Greenhouse/Lever) ou cai em fixtures.
-  //    Limit 50 e suficiente pra agregacao estatistica do TF-like de aderencia
-  //    sem inflar custo. Falha de provider degrada sem quebrar o diagnostico.
-  let jobsPayload = { jobs: [], sources: [] };
-  try {
-    jobsPayload = await searchJobs({ role: role.trim(), location: "Brasil", limit: 50 });
-  } catch (e) {
-    console.error("analyze: searchJobs falhou", e?.message);
-  }
-
   // 3) Monta o "profile sintetico" pra alimentar o calculo deterministico.
   //    Mistura o que veio da LLM (skills extraidas do CV) + insumos crus
   //    (rawCv, targetRole). Quem ja tinha profile no DB e logado vai sobrescrever
   //    no step 5 — esse objeto e so pra computar score do snapshot atual.
+  emit({ type: "step", step: "computing" });
+
   const syntheticProfile = {
     nome: diag.perfil.nome || null,
     cargoAtual: diag.perfil.cargo_atual || null,
@@ -270,7 +288,7 @@ async function handler(req) {
 
   // Modo efemero (anonimo): nao persiste, retorna direto.
   if (!userId) {
-    return NextResponse.json({
+    return okPayload({
       snapshotId: null,
       perfil: diag.perfil,
       sub_scores,
@@ -279,6 +297,8 @@ async function handler(req) {
       efemero: true,
     });
   }
+
+  emit({ type: "step", step: "persisting" });
 
   // Persistência: profile vigente sobrescrito; snapshot imutável.
   // Tudo escopado por userId vindo da sessão (sem IDOR).
@@ -446,7 +466,7 @@ async function handler(req) {
       meta: { kind: "CV_PASTE", sizeBytes: Buffer.byteLength(cv, "utf8"), snapshotId: snapshot.id },
     });
 
-    return NextResponse.json({
+    return okPayload({
       snapshotId: snapshot.id,
       perfil: diag.perfil,
       sub_scores,
@@ -455,14 +475,91 @@ async function handler(req) {
     });
   } catch (e) {
     console.error("analyze: persistencia falhou", e?.message);
-    return NextResponse.json(
-      {
-        error: "Tudo certo com a análise, mas não consegui salvar agora. Atualize a página e tente de novo.",
-        code: "PERSIST_FAILED",
-      },
-      { status: 500 }
-    );
+    return jsonError(500, {
+      error: "Tudo certo com a análise, mas não consegui salvar agora. Atualize a página e tente de novo.",
+      code: "PERSIST_FAILED",
+    });
   }
+}
+
+async function handler(req) {
+  // Branch streaming: ?stream=1 retorna SSE com eventos progressivos de step.
+  // Sem o param mantem JSON one-shot (back-compat — tests existentes nao quebram).
+  // Auth/rate-limit/validacao/billing/persist SAO IDENTICOS — so o transporte
+  // muda. Decisao deliberada: o resultado final tem o MESMO shape em ambos os
+  // paths (eventos `step` so adicionam visibility durante processamento).
+  const url = new URL(req.url);
+  const wantsStream = url.searchParams.get("stream") === "1";
+
+  if (wantsStream) {
+    // SSE: enviamos eventos {type:"step", step} conforme avanca o pipeline,
+    // {type:"result", payload} ao fim. Em erro emitimos {type:"error", error,
+    // code, status} e fechamos — cliente trata sem HTTP error porque o status
+    // ja foi 200 quando comecou a stream. Isso e por design (SSE spec).
+    const encoder = new TextEncoder();
+    const sseStream = new ReadableStream({
+      async start(controller) {
+        function send(event) {
+          const line = `data: ${JSON.stringify(event)}\n\n`;
+          controller.enqueue(encoder.encode(line));
+        }
+        try {
+          const envelope = await core(req, send);
+          if (envelope.kind === "ok") {
+            send({ type: "result", payload: envelope.payload });
+            send({ type: "done" });
+          } else if (envelope.kind === "json") {
+            // Erro estruturado (validacao, billing, LLM_FAILED, etc) — emite
+            // como event {type:"error"} com os mesmos fields da JSON response
+            // pra cliente poder mostrar a mesma mensagem amigavel.
+            send({
+              type: "error",
+              status: envelope.status,
+              ...envelope.body,
+            });
+          } else if (envelope.kind === "raw") {
+            // Edge case: rate-limit/tooMany retornou Response direta. No
+            // contexto SSE precisamos serializar — extrai status + body.
+            const status = envelope.response.status;
+            let payload = {};
+            try {
+              payload = await envelope.response.clone().json();
+            } catch {}
+            send({ type: "error", status, ...payload });
+          }
+        } catch (e) {
+          // Erro inesperado — protege client de receber stream "morto".
+          console.error("analyze: stream falhou", e?.message);
+          send({
+            type: "error",
+            status: 500,
+            error: "Encontramos um problema no servidor. Tente de novo.",
+            code: "SERVER_ERROR",
+          });
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(sseStream, {
+      headers: {
+        "content-type": "text/event-stream; charset=utf-8",
+        "cache-control": "no-cache, no-transform",
+        "connection": "keep-alive",
+        // Anti-buffering por proxies (nginx). Garante chunks chegarem ao vivo.
+        "x-accel-buffering": "no",
+      },
+    });
+  }
+
+  // Path JSON tradicional (back-compat). Roda core() sem emit progress.
+  const envelope = await core(req);
+  if (envelope.kind === "raw") return envelope.response;
+  if (envelope.kind === "json") {
+    return NextResponse.json(envelope.body, { status: envelope.status });
+  }
+  return NextResponse.json(envelope.payload);
 }
 
 export const POST = withApiGuard(handler);

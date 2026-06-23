@@ -45,6 +45,11 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [procStep, setProcStep] = useState(0);
   const [procElapsed, setProcElapsed] = useState(0);
+  // Step text vindo do stream SSE de /api/analyze. Atualizado conforme o
+  // backend emite eventos. Sincroniza com procStep abaixo pra dar feedback
+  // contextual em cada fase do pipeline (validating → llm_jobs_parallel
+  // → computing → persisting). Default "" antes do stream iniciar.
+  const [procStepText, setProcStepText] = useState("");
   const [diag, setDiag] = useState(null);
   const [opp, setOpp] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
@@ -128,6 +133,7 @@ export default function Home() {
     }
     setStage("proc");
     setProcStep(0);
+    setProcStepText("");
     setBusy(true);
     track(EVENTS.DIAGNOSIS_STARTED, {
       cv_chars: cv.trim().length,
@@ -136,13 +142,73 @@ export default function Home() {
     });
     try {
       setProcStep(1);
-      const dRes = await fetch("/api/analyze", {
+      // /api/analyze com ?stream=1: SSE com eventos progressivos. UI atualiza
+      // o procStepText em tempo real. Em caso de erro mid-stream o backend
+      // emite {type:"error", status, error, code} — tratamos como throw aqui
+      // pra cair no catch e mostrar a mesma mensagem amigavel do path JSON.
+      const dRes = await fetch("/api/analyze?stream=1", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ cv, role }),
       });
-      const d = await dRes.json();
-      if (!dRes.ok) throw new Error(d.error || "Falha na análise.");
+      if (!dRes.ok) {
+        // Fallback: se o servidor caiu antes de abrir o stream (raro — gateway
+        // 5xx, por ex), tenta parsear JSON pra extrair msg amigavel.
+        let msg = "Falha na análise.";
+        try {
+          const errBody = await dRes.json();
+          msg = errBody.error || msg;
+        } catch {}
+        throw new Error(msg);
+      }
+      // Step mapping: nome do step do backend -> numero do procStep da UI.
+      // Mantemos os steps existentes (0-3) e o text granular vem do stream.
+      const stepNumberMap = {
+        validating: 1,
+        llm_jobs_parallel: 1,
+        computing: 2,
+        persisting: 2,
+      };
+      const reader = dRes.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let d = null;
+      let streamError = null;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        // SSE: eventos separados por linha em branco (\n\n).
+        const blocks = buf.split("\n\n");
+        buf = blocks.pop() || "";
+        for (const block of blocks) {
+          const dataLine = block.split("\n").find((l) => l.startsWith("data: "));
+          if (!dataLine) continue;
+          let event;
+          try {
+            event = JSON.parse(dataLine.slice(6));
+          } catch {
+            continue;
+          }
+          if (event.type === "step") {
+            setProcStepText(event.step);
+            const n = stepNumberMap[event.step];
+            if (typeof n === "number") setProcStep(n);
+          } else if (event.type === "result") {
+            d = event.payload;
+          } else if (event.type === "error") {
+            // Mid-stream error: backend nos manda msg amigavel + code, jogamos
+            // pra catch reusar o mapping existente (timeout/rate/cv_invalid).
+            streamError = new Error(event.error || "Falha na análise.");
+            streamError.code = event.code;
+            streamError.status = event.status;
+          } else if (event.type === "done") {
+            // Marca explicita de fim. Loop sai no proximo done:true do reader.
+          }
+        }
+      }
+      if (streamError) throw streamError;
+      if (!d) throw new Error("A IA não retornou resultado. Tente de novo.");
       setProcStep(2);
       const oRes = await fetch("/api/opportunities", {
         method: "POST",

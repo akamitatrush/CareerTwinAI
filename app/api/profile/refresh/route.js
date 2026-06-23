@@ -383,6 +383,43 @@ async function handler(req) {
     console.log("[refresh] overall antes do bonus:", computed.overall);
   }
 
+  // FIX: quando applyCompletedSkills, usa previous sub-scores como BASELINE em vez
+  // de confiar 100% na re-extracao do LLM. LLM e nao-deterministico — mesmo CV
+  // gera perfil ligeiramente diferente a cada call, o que faz computeAllSubScores
+  // produzir numeros diferentes. Sem essa floor, user que ganhou bonus podia
+  // VER score CAIR (re-extracao -9 + bonus +5 = liquido -4).
+  //
+  // User reportou: "marquei 1 tarefa, cliquei atualizar, score caiu 9 pontos".
+  // Logica nova: quando user explicitamente aplica conquistas, ele MERECE pelo
+  // menos os pontos prometidos. Baseline = previous sub-scores. Bonus aplicado
+  // em cima desse baseline (nao em cima do re-computado).
+  //
+  // Sem applyCompletedSkills (so recalcular): comportamento antigo mantido —
+  // user opted-in pra re-extracao integral, aceita oscilacao.
+  if (applyCompletedSkills && previousSnapshot?.subScores) {
+    const prevSubs = previousSnapshot.subScores;
+    for (const dim of Object.keys(computed.sub_scores)) {
+      const prevValor = Number(prevSubs[dim]?.valor);
+      if (Number.isFinite(prevValor)) {
+        // Preserva o valor anterior — bonus sera aplicado em cima dele.
+        // Explicacao continua sendo a NOVA do LLM (sem isso, snapshot velho).
+        computed.sub_scores[dim].valor = prevValor;
+      }
+    }
+    // Recalcula overall baseado nos sub-scores restaurados.
+    computed.overall = Math.round(
+      computed.sub_scores.aderencia_vagas.valor * 0.4 +
+        computed.sub_scores.relevancia_habilidades.valor * 0.3 +
+        computed.sub_scores.otimizacao_perfil.valor * 0.2 +
+        computed.sub_scores.experiencia_mercado.valor * 0.1,
+    );
+    if (process.env.DEBUG_REFRESH === "1") {
+      console.log("[refresh] baseline restaurado de previousSnapshot");
+      console.log("[refresh] sub_scores apos baseline:", JSON.stringify(computed.sub_scores));
+      console.log("[refresh] overall apos baseline:", computed.overall);
+    }
+  }
+
   if (applyCompletedSkills) {
     let totalBonus = 0;
     const MAX_TOTAL_BONUS = 25;
