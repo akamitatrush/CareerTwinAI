@@ -11,6 +11,7 @@ import { computeAllSubScores } from "@/lib/scoring/subscores";
 import { notify, NotificationTemplates } from "@/lib/notifications";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
+import { grantAchievement } from "@/lib/achievements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -387,6 +388,28 @@ export async function POST(req) {
       } catch (e) {
         console.error("analyze: welcome notify falhou", e?.message);
       }
+    }
+
+    // Achievements: grants idempotentes (unique constraint userId+kind).
+    // Falhas silenciosas — diagnostico ja foi salvo, conquista e UX bonus.
+    // FIRST_DIAGNOSIS so dispara se for o primeiro snapshot real (count zero
+    // antes desse). SCORE_70/80/90 conferem o overall — concedem tiers
+    // cumulativos (atinge 90 ganha tambem 70 e 80 nas proximas conquistas).
+    try {
+      if (prevSnapshotsCount === 0) {
+        await grantAchievement(userId, "FIRST_DIAGNOSIS", { snapshotId: snapshot.id });
+      }
+      if (overall >= 70) {
+        await grantAchievement(userId, "SCORE_70", { overall, snapshotId: snapshot.id });
+      }
+      if (overall >= 80) {
+        await grantAchievement(userId, "SCORE_80", { overall, snapshotId: snapshot.id });
+      }
+      if (overall >= 90) {
+        await grantAchievement(userId, "SCORE_90", { overall, snapshotId: snapshot.id });
+      }
+    } catch (e) {
+      console.error("analyze: achievements falhou", e?.message);
     }
 
     // Uso ja foi contabilizado atomicamente em enforceUsage no inicio do POST

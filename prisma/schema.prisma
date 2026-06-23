@@ -448,12 +448,15 @@ model UsageMeter {
 // users, somente os do customer dono. userId nullable pra eventos pre-customer
 // (signup pendente) e onDelete:SetNull preserva auditoria quando user e apagado
 // (LGPD: deixar rastro de cobrancas e legitimo).
+//
+// payload nullable: cron /api/cron/redact-billing limpa payload > 12 meses
+// (LGPD storage limitation). stripeEventId+type+processedAt continuam pra audit.
 model BillingEvent {
   id            String   @id @default(cuid())
   userId        String?
   stripeEventId String   @unique
   type          String
-  payload       Json
+  payload       Json?
   processedAt   DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)

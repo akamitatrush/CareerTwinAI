@@ -6,6 +6,7 @@ import {
   kindFromSlug,
   ALLOWED_KINDS,
 } from "@/lib/assessments/definitions";
+import { grantAchievement } from "@/lib/achievements";
 
 // Render dinamico: auth() le cookies + Prisma. Sem cache estatico.
 export const runtime = "nodejs";
@@ -111,6 +112,24 @@ export async function POST(req, ctx) {
         completedAt: true,
       },
     });
+
+    // Achievement: ALL_ASSESSMENTS_COMPLETED quando user completa DISC + Valores
+    // + Ikigai. groupBy retorna numero distinto de kinds com pelo menos 1
+    // resultado — se for >= 3, concede. Idempotente via unique constraint.
+    // Falha silenciosa nao derruba a resposta do assessment.
+    try {
+      const distinctKinds = await prisma.assessmentResult.findMany({
+        where: { userId: session.user.id },
+        distinct: ["kind"],
+        select: { kind: true },
+      });
+      if (distinctKinds.length >= 3) {
+        await grantAchievement(session.user.id, "ALL_ASSESSMENTS_COMPLETED");
+      }
+    } catch (e) {
+      console.error("assessments: achievement falhou", e?.message);
+    }
+
     return NextResponse.json({ ok: true, result });
   } catch {
     return NextResponse.json({ error: "internal" }, { status: 500 });

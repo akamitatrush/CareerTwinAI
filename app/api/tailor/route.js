@@ -7,6 +7,7 @@ import { TailorBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
+import { grantAchievement } from "@/lib/achievements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -192,6 +193,20 @@ export async function POST(req) {
           select: { id: true },
         });
         tailoredCvId = created.id;
+
+        // Achievement: primeiro CV adaptado. count escopado por userId
+        // garante que so dispara quando o user atinge total=1 (ate aqui).
+        // Idempotente — segundo +1 cai em alreadyEarned via unique.
+        try {
+          const total = await prisma.tailoredCv.count({ where: { userId } });
+          if (total === 1) {
+            await grantAchievement(userId, "FIRST_TAILOR", {
+              tailoredCvId: created.id,
+            });
+          }
+        } catch (e) {
+          console.error("tailor: achievement falhou", e?.message);
+        }
       } catch (e) {
         // Log sem PII (so .message). Nao derruba resposta.
         console.error("tailor: persist falhou", e?.message);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ApplicationCreateBody } from "@/lib/validators";
+import { grantAchievement } from "@/lib/achievements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -102,5 +103,22 @@ export async function POST(req) {
       },
     },
   });
+
+  // Achievement: FIRST_APPLICATION. Conta total apos o create e concede se
+  // for a primeira. Idempotente — segundo cai em alreadyEarned. Falha
+  // silenciosa nao derruba o POST.
+  try {
+    const total = await prisma.application.count({
+      where: { userId: session.user.id },
+    });
+    if (total === 1) {
+      await grantAchievement(session.user.id, "FIRST_APPLICATION", {
+        applicationId: item.id,
+      });
+    }
+  } catch (e) {
+    console.error("applications: achievement falhou", e?.message);
+  }
+
   return NextResponse.json({ item });
 }

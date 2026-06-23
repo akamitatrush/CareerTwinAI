@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { eraseUserData } from "@/lib/data-export";
+import { audit } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,17 @@ async function toggleDigestAction(formData) {
   await prisma.user.update({
     where: { id: session.user.id },
     data: { digestEnabled: enabled },
+  });
+  // Audit log — preference change. LGPD: meta sem PII, so o flag.
+  const h = headers();
+  const actorIp =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
+  await audit({
+    userId: session.user.id,
+    action: "PROFILE_UPDATED",
+    actorIp,
+    target: `User:${session.user.id}`,
+    meta: { field: "digestEnabled", value: enabled, source: "meus-dados" },
   });
   redirect("/meus-dados");
 }

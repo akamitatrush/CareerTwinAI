@@ -28,6 +28,7 @@ import { searchJobs } from "@/lib/jobs";
 import { audit } from "@/lib/audit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { grantAchievement } from "@/lib/achievements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -533,6 +534,24 @@ export async function POST(req) {
       applyCompletedSkills,
     },
   });
+
+  // 15) Achievements: FIRST_REFRESH + tiers SCORE_70/80/90 quando o novo
+  // overall cruza os thresholds. Idempotentes via unique constraint.
+  // Falhas sao silenciosas — diagnostico ja foi persistido.
+  try {
+    await grantAchievement(userId, "FIRST_REFRESH", { snapshotId: snapshot.id });
+    if (overall >= 70) {
+      await grantAchievement(userId, "SCORE_70", { overall, snapshotId: snapshot.id });
+    }
+    if (overall >= 80) {
+      await grantAchievement(userId, "SCORE_80", { overall, snapshotId: snapshot.id });
+    }
+    if (overall >= 90) {
+      await grantAchievement(userId, "SCORE_90", { overall, snapshotId: snapshot.id });
+    }
+  } catch (e) {
+    console.error("profile.refresh: achievements falhou", e?.message);
+  }
 
   return NextResponse.json({
     ok: true,

@@ -36,6 +36,7 @@ vi.mock("@/lib/billing/enforce", () => ({
   trackTokenUsage: vi.fn(async () => undefined),
   checkDailyBudget: vi.fn(async () => ({ ok: true, used: 0, cap: 100 })),
 }));
+vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/rate-limit", () => ({
   guardLLM: vi.fn(async () => ({ ok: true })),
   tooMany: vi.fn(() =>

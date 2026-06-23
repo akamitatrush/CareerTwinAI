@@ -343,6 +343,38 @@ describe("trackTokenUsage", () => {
     expect(call.update.costUsd).toEqual({ increment: 0.012345 });
   });
 
+  it("count=0 no create — trackTokenUsage NAO duplica count do enforceUsage", async () => {
+    // Wave 11 wiring: enforceUsage ja incrementou count atomicamente no inicio
+    // da rota. trackTokenUsage so adiciona tokens/cost — NAO mexe em count
+    // pra nao duplicar. Verifica que create usa count:0 (idempotente em race).
+    prisma.usageMeter.upsert.mockResolvedValueOnce({});
+    await trackTokenUsage("u1", "tailor", {
+      tokensIn: 200,
+      tokensOut: 100,
+      costUsd: 0.001,
+    });
+    const call = prisma.usageMeter.upsert.mock.calls[0][0];
+    expect(call.create.count).toBe(0);
+    // update NAO inclui count — so token fields.
+    expect(call.update.count).toBeUndefined();
+  });
+
+  it("usa periodKey mensal pra feature analyze (mesma key de enforceUsage)", async () => {
+    // tokens e count usam a MESMA periodKey por feature — pre-condicao pro
+    // aggregate de checkDailyBudget pegar tudo do periodo ativo.
+    prisma.usageMeter.upsert.mockResolvedValueOnce({});
+    await trackTokenUsage("u1", "analyze", { tokensIn: 10, tokensOut: 5, costUsd: 0.0001 });
+    const call = prisma.usageMeter.upsert.mock.calls[0][0];
+    expect(call.where.userId_feature_periodKey.periodKey).toMatch(/^\d{4}-\d{2}$/);
+  });
+
+  it("usa dayKey pra opportunities (diaria — bate com enforceUsage)", async () => {
+    prisma.usageMeter.upsert.mockResolvedValueOnce({});
+    await trackTokenUsage("u1", "opportunities", { tokensIn: 50, tokensOut: 30, costUsd: 0.0005 });
+    const call = prisma.usageMeter.upsert.mock.calls[0][0];
+    expect(call.where.userId_feature_periodKey.periodKey).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
   it("ignora sem userId", async () => {
     await trackTokenUsage(null, "analyze", { tokensIn: 100, tokensOut: 50, costUsd: 0.01 });
     expect(prisma.usageMeter.upsert).not.toHaveBeenCalled();

@@ -126,6 +126,112 @@ A definir quando tiver volume:
 - **Conversão free → paid** — quantos % atingem limite e fazem upgrade.
 - **Feature usage no Free** — qual feature bate limite primeiro (ICP signal).
 
+## Cost tracking + daily budget (Wave 11)
+
+Além do enforcement por feature (contador mensal/diário), o sistema rastreia
+**custo USD real de LLM** por usuário e aplica **hard-cap diário** que defende
+contra cost amplification attacks (LLM01 da OWASP LLM Top 10).
+
+### Como funciona
+
+Toda chamada a `lib/llm.js` → `completeJSONWithUsage()` retorna `{ result, usage }`
+onde `usage = { tokensIn, tokensOut, costUsd }`. Costs são calculados pela
+tabela `PRICES` em `lib/llm.js` (Sonnet 4.6: $3/$15 por 1M tokens, etc).
+
+Cada rota LLM-heavy chama, em ordem:
+
+1. **`enforceUsage()`** — incrementa contador atômico da feature mensal/diária.
+2. **`checkDailyBudget()` (pre-check)** — agrega custo USD do dia/mês e
+   compara com `DAILY_COST_CAP_USD[plan]`. Se estourou: **402 BUDGET_EXCEEDED**
+   antes do LLM rodar. `$0` gasto. Audit `SECURITY_BUDGET_EXCEEDED` registrado.
+3. **`completeJSONWithUsage()`** — chama LLM, retorna tokens + cost reais.
+4. **`trackTokenUsage()`** — incrementa `tokensIn`/`tokensOut`/`costUsd` no
+   `UsageMeter` da MESMA `(userId, feature, periodKey)` que o contador.
+5. **`checkDailyBudget()` (post-check)** — se passou do cap mesmo após
+   tracking (cap apertado ou cap mudou mid-period), dispara audit
+   `SECURITY_BUDGET_EXCEEDED` com `phase: "post-llm"` pra investigação manual.
+
+### Caps por plano (em `lib/billing/enforce.js`)
+
+| Plano | Cap diário USD | Aproximação |
+|---|---|---|
+| Free | $0.10 | ~10 chamadas LLM Sonnet 4.6 (input curto) |
+| Pro mensal | $5.00 | ~150 chamadas (ilimitado prático) |
+| Pro anual | $5.00 | Idem |
+| Team mensal | $20.00 | Uso de equipe pequena |
+
+Calibrado em ~5x o uso honesto. Mesmo Pro tem teto pra defender contra
+atacante que abuse de conta paga (cartão roubado, etc).
+
+### Rotas instrumentadas
+
+Todas as rotas que chamam LLM agora tracking + check:
+
+- `app/api/analyze/route.js` — feature `analyze`
+- `app/api/profile/refresh/route.js` — feature `analyze` (mesma)
+- `app/api/tailor/route.js` — feature `tailor`
+- `app/api/opportunities/route.js` — feature `opportunities` (agrega 2 LLM calls)
+- `app/api/interview/route.js` — feature `interview`
+- `app/api/chat/route.js` — feature `chat` (sem enforceUsage — só budget cap)
+- `app/api/linkedin/parse/route.js` — feature `linkedin`
+- `app/api/portfolio/import/route.js` — feature `portfolio`
+
+Cron `app/api/cron/digest/route.js` **NÃO** chama LLM (usa só searchJobs +
+template determinístico) — sem tracking.
+
+### Como ver custo por user
+
+```sql
+-- Custo USD total do mes atual por user
+SELECT u.email, SUM(um."costUsd") as total_usd
+FROM "UsageMeter" um
+JOIN "User" u ON u.id = um."userId"
+WHERE um."periodKey" >= TO_CHAR(NOW(), 'YYYY-MM')
+GROUP BY u.email
+ORDER BY total_usd DESC
+LIMIT 20;
+
+-- Custo USD do DIA atual por user + feature
+SELECT u.email, um.feature, um."tokensIn", um."tokensOut", um."costUsd"
+FROM "UsageMeter" um
+JOIN "User" u ON u.id = um."userId"
+WHERE um."periodKey" = TO_CHAR(NOW(), 'YYYY-MM-DD')
+   OR um."periodKey" = TO_CHAR(NOW(), 'YYYY-MM')
+ORDER BY um."costUsd" DESC
+LIMIT 50;
+
+-- Audit log de budget excedido (alertas de attacker / cap apertado)
+SELECT "userId", meta, "createdAt"
+FROM "AuditLog"
+WHERE action = 'SECURITY_BUDGET_EXCEEDED'
+ORDER BY "createdAt" DESC
+LIMIT 50;
+```
+
+### Como ajustar caps
+
+Editar `lib/billing/enforce.js` → `DAILY_COST_CAP_USD`:
+
+```js
+const DAILY_COST_CAP_USD = {
+  free: 0.1,         // <-- ajuste aqui
+  pro_monthly: 5.0,
+  pro_yearly: 5.0,
+  team_monthly: 20.0,
+};
+```
+
+Mudança vale a partir da próxima `checkDailyBudget()`. Custo histórico no
+`UsageMeter` mantém — só o teto move.
+
+### Privacidade (LGPD)
+
+- Tokens e cost são métricas operacionais (sem PII).
+- Audit log `SECURITY_BUDGET_EXCEEDED.meta` só carrega `{ feature, used, cap,
+  phase }` — sem CV, sem texto do prompt, sem PII raw.
+- `console.log(JSON.stringify({evt:"llm.usage"...}))` em `lib/llm.js` logga
+  por route + userId + tokens + costUsd — sem conteúdo do prompt ou resposta.
+
 ## Segurança implementada
 
 - **HMAC nos webhooks**: `stripe().webhooks.constructEvent()` valida assinatura

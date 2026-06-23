@@ -15,7 +15,7 @@ vi.mock("@/lib/db", () => {
     usageMeter: { findMany: vi.fn() },
     billingEvent: { findMany: vi.fn() },
     outcome: { findMany: vi.fn() },
-    auditLog: { create: vi.fn() },
+    auditLog: { create: vi.fn(), findMany: vi.fn() },
   };
   return { prisma: mock };
 });
@@ -49,6 +49,7 @@ describe("exportUserData", () => {
     prisma.usageMeter.findMany.mockResolvedValue([]);
     prisma.billingEvent.findMany.mockResolvedValue([]);
     prisma.outcome.findMany.mockResolvedValue([]);
+    prisma.auditLog.findMany.mockResolvedValue([]);
 
     const data = await exportUserData("u1");
 
@@ -86,15 +87,19 @@ describe("exportUserData", () => {
     expect(prisma.outcome.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: "u1" } })
     );
+    expect(prisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "u1" } })
+    );
 
     expect(data.user.id).toBe("u1");
-    expect(data.version).toBe("3");
+    expect(data.version).toBe("4");
     expect(typeof data.exportedAt).toBe("string");
     expect(Array.isArray(data.assessments)).toBe(true);
     expect(Array.isArray(data.evidence)).toBe(true);
     expect(Array.isArray(data.usageMeters)).toBe(true);
     expect(Array.isArray(data.billingEvents)).toBe(true);
     expect(Array.isArray(data.outcomes)).toBe(true);
+    expect(Array.isArray(data.auditLogs)).toBe(true);
   });
 
   it("sanitiza billingEvents (sem payload completo)", async () => {
@@ -116,11 +121,43 @@ describe("exportUserData", () => {
       },
     ]);
     prisma.outcome.findMany.mockResolvedValue([]);
+    prisma.auditLog.findMany.mockResolvedValue([]);
     const data = await exportUserData("u1");
     expect(data.billingEvents).toHaveLength(1);
     expect(data.billingEvents[0]).toHaveProperty("stripeEventId");
     expect(data.billingEvents[0]).toHaveProperty("type");
     expect(data.billingEvents[0]).not.toHaveProperty("payload");
+  });
+
+  it("inclui auditLogs do user (LGPD transparencia)", async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: "u1", email: "a@b.com" });
+    prisma.profile.findUnique.mockResolvedValue(null);
+    prisma.scoreSnapshot.findMany.mockResolvedValue([]);
+    prisma.consent.findMany.mockResolvedValue([]);
+    prisma.dataSource.findMany.mockResolvedValue([]);
+    prisma.tailoredCv.findMany.mockResolvedValue([]);
+    prisma.assessmentResult.findMany.mockResolvedValue([]);
+    prisma.evidence.findMany.mockResolvedValue([]);
+    prisma.subscription.findUnique.mockResolvedValue(null);
+    prisma.usageMeter.findMany.mockResolvedValue([]);
+    prisma.billingEvent.findMany.mockResolvedValue([]);
+    prisma.outcome.findMany.mockResolvedValue([]);
+    prisma.auditLog.findMany.mockResolvedValue([
+      {
+        id: "al1",
+        action: "PROFILE_UPDATED",
+        target: "User:u1",
+        meta: { field: "name" },
+        createdAt: new Date("2026-06-20"),
+      },
+    ]);
+    const data = await exportUserData("u1");
+    expect(data.auditLogs).toHaveLength(1);
+    expect(data.auditLogs[0]).toHaveProperty("action", "PROFILE_UPDATED");
+    expect(data.auditLogs[0]).toHaveProperty("target", "User:u1");
+    // LGPD: actorIp NAO deve ser exposto no export (eh hash, mas evita
+    // revelar pattern de acesso ao proprio user).
+    expect(data.auditLogs[0]).not.toHaveProperty("actorIp");
   });
 
   it("recusa userId vazio", async () => {

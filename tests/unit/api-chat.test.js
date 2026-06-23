@@ -134,7 +134,7 @@ describe("POST /api/chat — auth + input validation", () => {
     const data = await r.json();
     expect(data.code).toBe("INVALID_INPUT");
     // LLM nem foi chamado.
-    expect(completeJSON).not.toHaveBeenCalled();
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
   });
 });
 
@@ -144,7 +144,7 @@ describe("POST /api/chat — rate-limit gate", () => {
     guardLLM.mockResolvedValueOnce({ ok: false, retryAfter: 30 });
     const r = await POST(makeReq({ role: "Dev", message: "oi" }));
     expect(r.status).toBe(429);
-    expect(completeJSON).not.toHaveBeenCalled();
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
   });
 });
 

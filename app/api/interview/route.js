@@ -6,6 +6,7 @@ import { InterviewBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
+import { grantAchievement } from "@/lib/achievements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -150,6 +151,18 @@ export async function POST(req) {
     );
     // Uso ja foi contabilizado em enforceUsage acima (fix TOCTOU).
     await trackAndAudit(usage, "eval");
+
+    // Achievement: FIRST_INTERVIEW concedido na primeira avaliacao. Idempotente
+    // via unique (userId, kind) — grants subsequentes caem em alreadyEarned.
+    // Falha silenciosa nao derruba o resultado da simulacao.
+    if (userId) {
+      try {
+        await grantAchievement(userId, "FIRST_INTERVIEW");
+      } catch (e) {
+        console.error("interview: achievement falhou", e?.message);
+      }
+    }
+
     return NextResponse.json(data);
   } catch (e) {
     console.error("interview: LLM falhou", e?.message);

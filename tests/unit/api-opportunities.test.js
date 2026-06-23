@@ -11,6 +11,7 @@
 //  - LLM falhar nao quebra resposta (fallback deterministico)
 //
 // Mocks: prisma, LLM, auth, billing, rate-limit, jobs, skills-taxonomy.
+// Route usa completeJSONWithUsage (Wave 11) — mocks correspondentes.
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { makeReq } from "../helpers/api.js";
@@ -23,7 +24,10 @@ vi.mock("@/lib/db", () => {
   return { prisma: mock };
 });
 
-vi.mock("@/lib/llm", () => ({ completeJSON: vi.fn() }));
+vi.mock("@/lib/llm", () => ({
+  completeJSON: vi.fn(),
+  completeJSONWithUsage: vi.fn(),
+}));
 vi.mock("@/lib/prompts", () => ({
   promptOpp: vi.fn(() => ({ system: "sys", user: "usr" })),
   promptOppReal: vi.fn(() => ({ system: "sys", user: "usr" })),
@@ -32,7 +36,11 @@ vi.mock("@/lib/prompts", () => ({
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/billing/enforce", () => ({
   enforceUsage: vi.fn(async () => ({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" })),
+  // Wave 11: trackTokenUsage + checkDailyBudget
+  trackTokenUsage: vi.fn(async () => undefined),
+  checkDailyBudget: vi.fn(async () => ({ ok: true, used: 0, cap: 100 })),
 }));
+vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/rate-limit", () => ({
   guardLLM: vi.fn(async () => ({ ok: true })),
   tooMany: vi.fn(() =>
@@ -51,11 +59,23 @@ vi.mock("@/lib/skills-taxonomy", () => ({
 }));
 
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { auth } from "@/lib/auth";
-import { enforceUsage } from "@/lib/billing/enforce";
+import {
+  enforceUsage,
+  trackTokenUsage,
+  checkDailyBudget,
+} from "@/lib/billing/enforce";
 import { guardLLM } from "@/lib/rate-limit";
 import { searchJobs } from "@/lib/jobs";
+
+// Helper pra emitir o shape novo de completeJSONWithUsage ({ result, usage }).
+// Mantemos usage com tokens nominais (>0) pra ativar o code path de tracking,
+// mas costUsd=0 pra nao precisar tunar mocks de checkDailyBudget.
+const withUsage = (result) => ({
+  result,
+  usage: { tokensIn: 100, tokensOut: 50, costUsd: 0 },
+});
 
 const VALID_PERFIL = {
   nome: "Maria",
@@ -89,10 +109,14 @@ beforeEach(async () => {
   prisma.scoreSnapshot.findFirst.mockReset();
   prisma.planItem.createMany.mockReset();
   prisma.planItem.deleteMany.mockReset();
-  completeJSON.mockReset();
+  completeJSONWithUsage.mockReset();
   auth.mockReset();
   enforceUsage.mockReset();
   enforceUsage.mockResolvedValue({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" });
+  trackTokenUsage.mockReset();
+  trackTokenUsage.mockResolvedValue(undefined);
+  checkDailyBudget.mockReset();
+  checkDailyBudget.mockResolvedValue({ ok: true, used: 0, cap: 100 });
   guardLLM.mockReset();
   guardLLM.mockResolvedValue({ ok: true });
   searchJobs.mockReset();
@@ -139,7 +163,7 @@ describe("POST /api/opportunities — gates billing e rate-limit", () => {
     guardLLM.mockResolvedValueOnce({ ok: false, retryAfter: 30 });
     const r = await POST(makeReq({ role: "Backend", perfil: VALID_PERFIL }));
     expect(r.status).toBe(429);
-    expect(completeJSON).not.toHaveBeenCalled();
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
   });
 
   it("402 LIMIT_REACHED quando enforceUsage nega (5 buscas/dia)", async () => {
@@ -155,12 +179,14 @@ describe("POST /api/opportunities — gates billing e rate-limit", () => {
     const data = await r.json();
     expect(data.code).toBe("LIMIT_REACHED");
     expect(data.feature).toBe("opportunities");
-    expect(completeJSON).not.toHaveBeenCalled();
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
   });
 
   it("anonimo: rate-limit aplica, mas enforce nao", async () => {
     auth.mockResolvedValue(null);
-    completeJSON.mockResolvedValue({ porques: [{ id: "j1", porque: "boa" }] });
+    completeJSONWithUsage.mockResolvedValue(
+      withUsage({ porques: [{ id: "j1", porque: "boa" }] })
+    );
     const r = await POST(makeReq({ role: "Backend", perfil: VALID_PERFIL }));
     expect(r.status).toBe(200);
     expect(enforceUsage).not.toHaveBeenCalled();
@@ -199,7 +225,9 @@ describe("POST /api/opportunities — IDOR via snapshotId", () => {
       perfilJson: VALID_PERFIL,
       gaps: [{ habilidade: "kubernetes" }],
     });
-    completeJSON.mockResolvedValue({ porques: [{ id: "j1", porque: "boa" }] });
+    completeJSONWithUsage.mockResolvedValue(
+      withUsage({ porques: [{ id: "j1", porque: "boa" }] })
+    );
     const r = await POST(makeReq({ snapshotId: "snap-1" }));
     expect(r.status).toBe(200);
     const data = await r.json();
@@ -210,7 +238,9 @@ describe("POST /api/opportunities — IDOR via snapshotId", () => {
 describe("POST /api/opportunities — happy path + filtros", () => {
   it("200 retorna vagas com match calculado", async () => {
     auth.mockResolvedValue(null);
-    completeJSON.mockResolvedValue({ porques: [{ id: "j1", porque: "boa" }] });
+    completeJSONWithUsage.mockResolvedValue(
+      withUsage({ porques: [{ id: "j1", porque: "boa" }] })
+    );
     const r = await POST(makeReq({ role: "Backend", perfil: VALID_PERFIL }));
     expect(r.status).toBe(200);
     const data = await r.json();
@@ -222,29 +252,33 @@ describe("POST /api/opportunities — happy path + filtros", () => {
 
   it("withPlan=false NAO chama LLM de plano (so porques)", async () => {
     auth.mockResolvedValue(null);
-    completeJSON.mockResolvedValue({ porques: [{ id: "j1", porque: "boa" }] });
+    completeJSONWithUsage.mockResolvedValue(
+      withUsage({ porques: [{ id: "j1", porque: "boa" }] })
+    );
     await POST(
       makeReq({ role: "Backend", perfil: VALID_PERFIL, withPlan: false })
     );
     // Sob withPlan=false, plano e Promise.resolve([]) — completeJSON e
     // chamado apenas 1x (pros porques), nao 2x (porques + plano).
-    expect(completeJSON).toHaveBeenCalledTimes(1);
+    expect(completeJSONWithUsage).toHaveBeenCalledTimes(1);
   });
 
   it("withPlan=true (default) chama LLM 2x (porques + plano)", async () => {
     auth.mockResolvedValue(null);
-    completeJSON
-      .mockResolvedValueOnce({ porques: [{ id: "j1", porque: "boa" }] })
-      .mockResolvedValueOnce({
-        plano: [{ semana: 1, foco: "Foo", acoes: [{ titulo: "A1" }] }],
-      });
+    completeJSONWithUsage
+      .mockResolvedValueOnce(withUsage({ porques: [{ id: "j1", porque: "boa" }] }))
+      .mockResolvedValueOnce(
+        withUsage({
+          plano: [{ semana: 1, foco: "Foo", acoes: [{ titulo: "A1" }] }],
+        })
+      );
     await POST(makeReq({ role: "Backend", perfil: VALID_PERFIL }));
-    expect(completeJSON).toHaveBeenCalledTimes(2);
+    expect(completeJSONWithUsage).toHaveBeenCalledTimes(2);
   });
 
   it("LLM porques falha: fallback deterministico (sem 500)", async () => {
     auth.mockResolvedValue(null);
-    completeJSON.mockRejectedValue(new Error("LLM down"));
+    completeJSONWithUsage.mockRejectedValue(new Error("LLM down"));
     const r = await POST(makeReq({ role: "Backend", perfil: VALID_PERFIL }));
     // Nao retorna erro — fallback constroi porques a partir de comuns/falta.
     expect(r.status).toBe(200);
@@ -256,7 +290,7 @@ describe("POST /api/opportunities — happy path + filtros", () => {
   it("searchJobs falha: retorna lista vazia mas sem 500", async () => {
     auth.mockResolvedValue(null);
     searchJobs.mockRejectedValue(new Error("Adzuna down"));
-    completeJSON.mockResolvedValue({ porques: [] });
+    completeJSONWithUsage.mockResolvedValue(withUsage({ porques: [] }));
     const r = await POST(makeReq({ role: "Backend", perfil: VALID_PERFIL }));
     expect(r.status).toBe(200);
     const data = await r.json();
@@ -273,17 +307,19 @@ describe("POST /api/opportunities — persistencia plano", () => {
       perfilJson: VALID_PERFIL,
       gaps: [],
     });
-    completeJSON
-      .mockResolvedValueOnce({ porques: [{ id: "j1", porque: "p" }] })
-      .mockResolvedValueOnce({
-        plano: [
-          {
-            semana: 1,
-            foco: "Foo",
-            acoes: [{ titulo: "A1", impacto: "alto", esforco: "Baixo" }],
-          },
-        ],
-      });
+    completeJSONWithUsage
+      .mockResolvedValueOnce(withUsage({ porques: [{ id: "j1", porque: "p" }] }))
+      .mockResolvedValueOnce(
+        withUsage({
+          plano: [
+            {
+              semana: 1,
+              foco: "Foo",
+              acoes: [{ titulo: "A1", impacto: "alto", esforco: "Baixo" }],
+            },
+          ],
+        })
+      );
     await POST(makeReq({ snapshotId: "snap-1" }));
     expect(prisma.planItem.deleteMany).toHaveBeenCalledWith({
       where: { snapshotId: "snap-1" },
@@ -305,11 +341,13 @@ describe("POST /api/opportunities — persistencia plano", () => {
       perfilJson: VALID_PERFIL,
       gaps: [],
     });
-    completeJSON
-      .mockResolvedValueOnce({ porques: [{ id: "j1", porque: "p" }] })
-      .mockResolvedValueOnce({
-        plano: [{ semana: 1, foco: "Foo", acoes: [{ titulo: "A1" }] }],
-      });
+    completeJSONWithUsage
+      .mockResolvedValueOnce(withUsage({ porques: [{ id: "j1", porque: "p" }] }))
+      .mockResolvedValueOnce(
+        withUsage({
+          plano: [{ semana: 1, foco: "Foo", acoes: [{ titulo: "A1" }] }],
+        })
+      );
     prisma.planItem.deleteMany.mockRejectedValue(new Error("DB pool"));
     const r = await POST(makeReq({ snapshotId: "snap-1" }));
     expect(r.status).toBe(200);

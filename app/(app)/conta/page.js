@@ -1,9 +1,16 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { audit } from "@/lib/audit";
+import {
+  ACHIEVEMENTS_META,
+  ACHIEVEMENT_KINDS,
+  MAX_POINTS,
+} from "@/lib/achievements";
 
 // Forca render dinamico — depende de auth() (cookies) e Prisma.
 export const dynamic = "force-dynamic";
@@ -30,6 +37,16 @@ function genericError(path = "/conta") {
   redirect(`${path}?erro=1`);
 }
 
+// Extrai IP do request via next/headers (LGPD: sera hasheado no audit()).
+// Server actions nao recebem req nativamente — `headers()` da o equivalente.
+function getActorIpFromHeaders(h) {
+  return (
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    h.get("x-real-ip") ||
+    null
+  );
+}
+
 // --------------------------------------------------------------------------
 // Server actions
 // --------------------------------------------------------------------------
@@ -45,6 +62,16 @@ async function updateNameAction(formData) {
     await prisma.user.update({
       where: { id: session.user.id },
       data: { name: parsed.data.name },
+    });
+    // Audit log — LGPD: registra quem mudou o que, sem o valor (privacy).
+    // Meta inclui so o campo afetado, nao o conteudo.
+    const h = headers();
+    await audit({
+      userId: session.user.id,
+      action: "PROFILE_UPDATED",
+      actorIp: getActorIpFromHeaders(h),
+      target: `User:${session.user.id}`,
+      meta: { field: "name" },
     });
   } catch {
     genericError();
@@ -69,6 +96,15 @@ async function updateTargetRoleAction(formData) {
       update: { targetRole: role || null },
       create: { userId: session.user.id, targetRole: role || null },
     });
+    // Audit log — LGPD: registra mudanca, sem revelar o cargo (privacy).
+    const h = headers();
+    await audit({
+      userId: session.user.id,
+      action: "PROFILE_UPDATED",
+      actorIp: getActorIpFromHeaders(h),
+      target: `Profile:${session.user.id}`,
+      meta: { field: "targetRole", cleared: !role },
+    });
   } catch {
     genericError();
   }
@@ -90,6 +126,15 @@ async function toggleDigestAction(formData) {
     await prisma.user.update({
       where: { id: session.user.id },
       data: { digestEnabled: enabled },
+    });
+    // Audit log — preference change. Meta inclui novo valor (bool, sem PII).
+    const h = headers();
+    await audit({
+      userId: session.user.id,
+      action: "PROFILE_UPDATED",
+      actorIp: getActorIpFromHeaders(h),
+      target: `User:${session.user.id}`,
+      meta: { field: "digestEnabled", value: enabled },
     });
   } catch {
     genericError();
@@ -129,33 +174,51 @@ export default async function ContaPage({ searchParams }) {
   const userId = session.user.id;
 
   // Tudo escopado por userId vindo da sessao (sem IDOR).
-  const [user, profile, snapshotsCount, applicationsCount, latestSnapshot] =
-    await Promise.all([
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          name: true,
-          email: true,
-          emailVerified: true,
-          image: true,
-          createdAt: true,
-          digestEnabled: true,
-        },
-      }),
-      prisma.profile.findUnique({
-        where: { userId },
-        select: { targetRole: true, nome: true },
-      }),
-      prisma.scoreSnapshot.count({ where: { userId } }),
-      prisma.application.count({ where: { userId } }),
-      prisma.scoreSnapshot.findFirst({
-        where: { userId },
-        orderBy: { createdAt: "desc" },
-        select: { overall: true, createdAt: true },
-      }),
-    ]);
+  const [
+    user,
+    profile,
+    snapshotsCount,
+    applicationsCount,
+    latestSnapshot,
+    earnedAchievements,
+  ] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        emailVerified: true,
+        image: true,
+        createdAt: true,
+        digestEnabled: true,
+      },
+    }),
+    prisma.profile.findUnique({
+      where: { userId },
+      select: { targetRole: true, nome: true },
+    }),
+    prisma.scoreSnapshot.count({ where: { userId } }),
+    prisma.application.count({ where: { userId } }),
+    prisma.scoreSnapshot.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: { overall: true, createdAt: true },
+    }),
+    prisma.achievement.findMany({
+      where: { userId },
+      orderBy: { earnedAt: "desc" },
+      select: { kind: true, earnedAt: true },
+    }),
+  ]);
 
   if (!user) redirect("/entrar");
+
+  // Achievements: agrega kinds desbloqueados pra render do grid.
+  const earnedKinds = new Set(earnedAchievements.map((a) => a.kind));
+  const earnedPoints = earnedAchievements.reduce(
+    (sum, a) => sum + (ACHIEVEMENTS_META[a.kind]?.points || 0),
+    0,
+  );
 
   const erro = searchParams?.erro === "1";
   const displayName = profile?.nome || user.name || "";
@@ -334,6 +397,58 @@ export default async function ContaPage({ searchParams }) {
                   : "sem diagnóstico"
               }
             />
+          </div>
+        </section>
+
+        {/* ============================================================
+            3.5. Conquistas — grid de achievements
+            ============================================================ */}
+        <section className="ct-conta-card" aria-labelledby="conta-achievements">
+          <div className="ct-conta-card-head">
+            <div>
+              <h2 id="conta-achievements" className="ct-conta-card-title">
+                Conquistas
+              </h2>
+              <p className="ct-conta-card-sub">
+                {earnedKinds.size} de {ACHIEVEMENT_KINDS.length} desbloqueadas
+                {" · "}
+                {earnedPoints} pontos
+                {earnedPoints < MAX_POINTS ? ` de ${MAX_POINTS}` : ""}
+              </p>
+            </div>
+            <span className="ct-achievements-points" aria-hidden="true">
+              {earnedPoints} pts
+            </span>
+          </div>
+
+          <div className="ct-achievements-grid" role="list">
+            {ACHIEVEMENT_KINDS.map((kind) => {
+              const earned = earnedKinds.has(kind);
+              const meta = ACHIEVEMENTS_META[kind];
+              return (
+                <div
+                  key={kind}
+                  role="listitem"
+                  className={
+                    "ct-achievement-card" + (earned ? " earned" : " locked")
+                  }
+                  aria-label={
+                    earned
+                      ? `${meta.title} (desbloqueada)`
+                      : `${meta.title} (bloqueada)`
+                  }
+                >
+                  <span className="ct-achievement-icon" aria-hidden="true">
+                    {earned ? meta.icon : "🔒"}
+                  </span>
+                  <h4 className="ct-achievement-title">{meta.title}</h4>
+                  <p className="ct-achievement-desc">{meta.desc}</p>
+                  <span className="ct-achievement-points">
+                    +{meta.points} pts
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </section>
 

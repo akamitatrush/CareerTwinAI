@@ -32,6 +32,7 @@ vi.mock("@/lib/db", () => {
 
 vi.mock("@/lib/llm", () => ({
   completeJSON: vi.fn(),
+  completeJSONWithUsage: vi.fn(),
 }));
 
 vi.mock("@/lib/prompts", () => ({
@@ -48,6 +49,9 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/billing/enforce", () => ({
   enforceUsage: vi.fn(async () => ({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" })),
+  // Wave 11: trackTokenUsage + checkDailyBudget
+  trackTokenUsage: vi.fn(async () => undefined),
+  checkDailyBudget: vi.fn(async () => ({ ok: true, used: 0, cap: 100 })),
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
@@ -77,11 +81,21 @@ vi.mock("@/lib/scoring/subscores", () => ({
 }));
 
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSON, completeJSONWithUsage } from "@/lib/llm";
 import { audit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
-import { enforceUsage } from "@/lib/billing/enforce";
+import {
+  enforceUsage,
+  trackTokenUsage,
+  checkDailyBudget,
+} from "@/lib/billing/enforce";
 import { guardLLM } from "@/lib/rate-limit";
+
+// Helper pra emitir o shape novo de completeJSONWithUsage ({ result, usage }).
+const withUsage = (result) => ({
+  result,
+  usage: { tokensIn: 100, tokensOut: 50, costUsd: 0 },
+});
 
 // LLM diag shape válido (mínimo) — extraído depois de DiagShape.safeParse.
 const validDiag = {
@@ -130,10 +144,15 @@ beforeEach(async () => {
     return await Promise.all(cb);
   });
   completeJSON.mockReset();
+  completeJSONWithUsage.mockReset();
   audit.mockReset();
   auth.mockReset();
   enforceUsage.mockReset();
   enforceUsage.mockResolvedValue({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" });
+  trackTokenUsage.mockReset();
+  trackTokenUsage.mockResolvedValue(undefined);
+  checkDailyBudget.mockReset();
+  checkDailyBudget.mockResolvedValue({ ok: true, used: 0, cap: 100 });
   guardLLM.mockReset();
   guardLLM.mockResolvedValue({ ok: true });
 
@@ -251,7 +270,7 @@ describe("POST /api/profile/refresh — fluxo de sucesso", () => {
       overall: previousOverall,
       gaps: completedGaps,
     });
-    completeJSON.mockResolvedValue(validDiag);
+    completeJSONWithUsage.mockResolvedValue(withUsage(validDiag));
     prisma.scoreSnapshot.create.mockResolvedValue({
       id: "snap-new",
       overall: 72,
@@ -469,7 +488,7 @@ describe("POST /api/profile/refresh — fluxo de sucesso", () => {
       senioridade: null,
     });
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
-    completeJSON.mockResolvedValue(validDiag);
+    completeJSONWithUsage.mockResolvedValue(withUsage(validDiag));
     prisma.scoreSnapshot.create.mockResolvedValue({ id: "snap-1", overall: 72 });
     const r = await POST(makeReq({}));
     expect(r.status).toBe(200);
@@ -491,7 +510,9 @@ describe("POST /api/profile/refresh — defesas LLM", () => {
     });
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
     // Shape inválido — gaps deveria ser array, mas mandamos string.
-    completeJSON.mockResolvedValue({ perfil: {}, sub_scores_explicacoes: {}, gaps: "string-bad" });
+    completeJSONWithUsage.mockResolvedValue(
+      withUsage({ perfil: {}, sub_scores_explicacoes: {}, gaps: "string-bad" })
+    );
     const r = await POST(makeReq({}));
     expect(r.status).toBe(502);
     const data = await r.json();
@@ -511,7 +532,7 @@ describe("POST /api/profile/refresh — defesas LLM", () => {
       skills: [],
     });
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
-    completeJSON.mockRejectedValue(new Error("timeout"));
+    completeJSONWithUsage.mockRejectedValue(new Error("timeout"));
     const r = await POST(makeReq({}));
     expect(r.status).toBe(502);
     const data = await r.json();
