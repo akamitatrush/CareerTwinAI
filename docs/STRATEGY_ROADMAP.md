@@ -4,6 +4,53 @@
 > "produto que pessoas queiram usar de verdade". Tom de consultoria sênior: sem fluff,
 > sem inflar o que temos, sem amenizar o que falta.
 
+## STATUS DE EXECUÇÃO — Update 2026-06-29
+
+**Sprint 1 + 2 + 3 + 4 + 5 (parcial) entregues em 1 sessão autônoma:**
+
+| # | Feature | Status | Sprint planejado | Detalhes |
+|---|---|---|---|---|
+| 1 | Career Copilot conversacional + streaming | ✅ Entregue | Sprint 1 | `components/CopilotWidget.js` FAB+drawer sempre visível em rotas auth. `/api/chat?stream=1` SSE com primeira palavra em ~600ms. `lib/llm-stream.js` agnostic Anthropic+OpenAI. Suggestions pathname-aware. 24 tests novos. |
+| 2 | Onboarding agent guiado | ✅ Entregue | Sprint 4 | `components/OnboardingChat.js` com tabs "Colar CV"/"Conversar". 6 perguntas conversacionais, buildCv concatena resposta em CV estruturado. A11y completo (roving tabindex, progressbar live). 12 tests. |
+| 3 | Daily briefing personalizado | ✅ Entregue | Sprint 2 | `/api/cron/daily-briefing` ter-dom 11h UTC, 50 users/exec. LLM gera subject+text personalizado por user state (score, gap top, vagas novas). Fallback determinístico. `/api/me/preferences` PATCH digestEnabled. 22 tests. |
+| 4 | AI CV rewriter inline | ✅ Entregue | Sprint 3 | `/api/cv/analyze-bullets` analisa cada linha do CV, retorna score+issues+suggestion. `app/(app)/conta/CvAnalyzer.js` highlight inline com copy-to-clipboard. Sem auto-apply pra manter consent. 19 tests. |
+| 5 | Career path simulator | ✅ Entregue (MVP determinístico) | Sprint 5 | `/carreira` route, 5 paths curados (PO AI, Eng Backend Sr, Tech Lead, Data Scientist, Product Designer Sr), cada um 4-5 milestones com skills+actions+evidence. 12 tests. |
+| 6 | Mock interviews em voz | ❌ Deferido | Fora 90d | Equivalente texto via `/api/interview` já existe. Voz exige WebRTC + streaming TTS = 30h++ complexity. Reavaliar pós-validação. |
+| 7 | Skill graph dinâmico | ✅ Entregue | Sprint 3 | `components/SkillGraph.js` SVG puro radial (have/haveExtra/missing rings), 20+ cargos mapeados em `skillsForRole`. Touch+keyboard+aria. Integrado no /dashboard. 15 tests. |
+| 8 | Microinterações + achievements | ✅ Entregue | Sprint 1 | `lib/achievements.js` com 17 achievements (455 pts máx, Bronze/Silver/Gold). `components/AchievementToast.js` 8 confettis SVG CSS. Grants wirados em 8 endpoints. 17 tests. |
+| 9 | Comparação com pares | 🟡 Infra pronta, gated | Sprint 5 | `Outcome` model + `/api/me/outcome` + `lib/metrics/median-real.js` + cron `/api/cron/outcome-survey`. Mediana real ativa quando >=50 outcomes HIRED. Stub `HIRED_MEDIAN=78` por enquanto. |
+| 10 | AI-suggested daily quest | ✅ Entregue | Sprint 2 | `DailyQuest` model + 8 quest kinds (CV/LinkedIn/Evidence/Skill/Interview/Network/Market/Reflection) com 10+ templates. `pickKindForUser` heurística filtra últimos 7 dias. `DailyQuestCard` no dashboard. 15 tests. |
+
+**Adicionalmente entregues (não no roadmap original):**
+
+- **Token tracking + budget cap** (`lib/llm.js` `completeJSONWithUsage`, `checkDailyBudget` pre-LLM gate, `UsageMeter.{tokensIn,tokensOut,costUsd}`)
+- **Outcome tracking infrastructure** (schema + endpoints + survey modal + survey cron)
+- **Production hardening** (error boundaries, lib/logger.js JSON-line, lib/retry.js exponential backoff, /api/health 9 checks)
+- **PostHog comprehensive** (44 events em `lib/analytics/events.js`, 4 funnels canonicos, ~30 track() calls wired)
+- **LGPD reaudit P1 fixes** (AuditLog em /conta server actions, SECURITY_RATE_LIMIT_HIT global, LGPD export inclui auditLogs, BillingEvent.payload TTL 12 meses)
+- **Theme palette refinada Wave A** (tokens dark reescritos completos, hierarquia text-faint corrigida, bg cool-gray substitui bege)
+- **Mobile responsive audit + fixes** (iOS zoom prevention, touch targets 44px WCAG, kanban scroll-snap, modais max-height)
+- **Integration tests** (12 test files + 143 tests cobrindo APIs LLM/billing/auth/IDOR críticas)
+- **README/CHANGELOG/ARCHITECTURE atualizados** (README com ASCII art logo, 5 mermaid diagrams corrigidos, seção Algoritmos detalhada)
+
+**Stats no fim da sessão:**
+
+- **847 testes passing** (era 320 no início; +527 testes em 1 sessão)
+- **66 arquivos de teste**
+- Build clean em todas as ondas
+- **0 regressões funcionais** documentadas
+- **15+ docs novos** (RAG, MONETIZACAO, DEPLOY, OUTCOMES, ANALYTICS, RELIABILITY, STRATEGY_ROADMAP, 8 audits, HANDOFF)
+
+**Próximos passos sugeridos (pós-validação):**
+
+1. Validar com 10-20 usuários reais (ICP entre transition, evolution, planejamento)
+2. PostHog observar funis ACTIVATION, FIRST_ACTION, CV_ADAPTATION, MONETIZATION
+3. Configurar `OWNER_EMAILS` + `VOYAGE_API_KEY` + `STRIPE_*` + `UPSTASH_*` no Vercel
+4. Aplicar migrations pendentes via `npx prisma migrate deploy`
+5. Decidir Sprint 6+: voz no mock interview (#6) OU dataset proprietário de Outcomes (#9 unlock)
+
+---
+
 ## 1. Estado atual: o que temos
 
 **Foundation funcional (entregue):** 4 pilares cobertos — Autoconhecimento (3 mini-assessments
