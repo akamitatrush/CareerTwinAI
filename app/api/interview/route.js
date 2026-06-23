@@ -4,6 +4,7 @@ import { completeJSON } from "@/lib/llm";
 import { promptInterviewQuestion, promptInterviewEval } from "@/lib/prompts";
 import { InterviewBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { enforceUsage, trackUsage } from "@/lib/billing/enforce";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,25 @@ export async function POST(req) {
 
   const limit = guardLLM(req, { name: "interview", userId, perMinuteAnon: 5, perMinuteUser: 20 });
   if (!limit.ok) return tooMany(limit);
+
+  // Enforcement de plano (5 simulacoes/mes no Free). Conta cada chamada
+  // (question OU evaluate) — pesa LLM em ambas.
+  if (userId) {
+    const lim = await enforceUsage(userId, "interview");
+    if (!lim.ok) {
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite do plano Free (5 simulacoes/mes). Faca upgrade pra Pro.",
+          code: "LIMIT_REACHED",
+          feature: "interview",
+          plan: lim.plan,
+          limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+  }
 
   let raw;
   try {
@@ -68,12 +88,14 @@ export async function POST(req) {
         await promptInterviewQuestion(body.role, body.gaps, body.asked),
         { route: "interview.question", userId }
       );
+      if (userId) await trackUsage(userId, "interview");
       return NextResponse.json(data);
     }
     const data = await completeJSON(
       promptInterviewEval(body.role, body.pergunta, body.resposta),
       { route: "interview.eval", userId }
     );
+    if (userId) await trackUsage(userId, "interview");
     return NextResponse.json(data);
   } catch (e) {
     console.error("interview: LLM falhou", e?.message);

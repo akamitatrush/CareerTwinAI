@@ -37,6 +37,9 @@ model User {
   notifications Notification[]
   assessments   AssessmentResult[]
   evidence      Evidence[]
+  subscription  Subscription?
+  usageMeters   UsageMeter[]
+  billingEvents BillingEvent[]
 }
 
 model Account {
@@ -353,6 +356,86 @@ model KnowledgeChunk {
   updatedAt   DateTime                     @updatedAt
 
   @@index([topic])
+}
+
+// ============ Billing (Stripe Phase 1+2) ============
+
+// Subscription: relacao 1:1 com User. planId guarda o plano logico (free,
+// pro_monthly, pro_yearly, team_monthly) — facilita auditar sem ir no Stripe.
+// stripeCustomerId/stripeSubscriptionId tornam-se UNIQUE depois que webhook
+// confirma assinatura; nullables porque user pode existir sem nunca ter
+// passado pelo Stripe (free). currentPeriodEnd e atualizado em todo evento
+// subscription.updated; quando vence sem renovacao, status cai pra CANCELED
+// via webhook. cancelAtPeriodEnd reflete intencao do user via Customer Portal.
+// Cascade no userId pra "apagar tudo" remover historico de assinatura junto.
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  planId               String             @default("free")
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  trialEndsAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  PAUSED
+}
+
+// UsageMeter: contador (userId, feature, periodKey) com unique pra upsert atomico.
+// periodKey="2026-06" pra features mensais ("analyze", "tailor", "interview");
+// "2026-06-22" (YYYY-MM-DD) pra diarias ("opportunities"). Periodo muda
+// naturalmente sem cron — basta sufixar pelo periodo atual no dia da consulta.
+// Cron mensal limpa registros >3 meses (housekeeping). Index (userId, periodKey)
+// atende dashboard "uso do mes" sem full-scan.
+model UsageMeter {
+  id        String   @id @default(cuid())
+  userId    String
+  feature   String
+  count     Int      @default(0)
+  periodKey String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feature, periodKey])
+  @@index([userId, periodKey])
+}
+
+// BillingEvent: log auditavel de eventos Stripe processados. stripeEventId UNIQUE
+// garante idempotencia — webhooks da Stripe sao retried; segundo processamento
+// pega P2002 e retorna 200 sem reaplicar efeito. payload contem o data.object
+// (subscription/invoice/etc) sem sanitizar — Stripe nao envia PII de outros
+// users, somente os do customer dono. userId nullable pra eventos pre-customer
+// (signup pendente) e onDelete:SetNull preserva auditoria quando user e apagado
+// (LGPD: deixar rastro de cobrancas e legitimo).
+model BillingEvent {
+  id            String   @id @default(cuid())
+  userId        String?
+  stripeEventId String   @unique
+  type          String
+  payload       Json
+  processedAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type, processedAt])
 }
 
 // Historico de CVs adaptados pra vagas especificas. Cada chamada a /api/tailor

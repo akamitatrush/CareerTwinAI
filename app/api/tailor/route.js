@@ -5,6 +5,7 @@ import { completeJSON } from "@/lib/llm";
 import { promptTailor } from "@/lib/prompts";
 import { TailorBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { enforceUsage, trackUsage } from "@/lib/billing/enforce";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +16,24 @@ export async function POST(req) {
 
   const limit = guardLLM(req, { name: "tailor", userId, perMinuteAnon: 3, perMinuteUser: 10 });
   if (!limit.ok) return tooMany(limit);
+
+  // Enforcement do plano apenas pra logados (anonimos sao rate-limited acima).
+  if (userId) {
+    const lim = await enforceUsage(userId, "tailor");
+    if (!lim.ok) {
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite do plano Free (1 CV adaptado/mes). Faca upgrade pra Pro.",
+          code: "LIMIT_REACHED",
+          feature: "tailor",
+          plan: lim.plan,
+          limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+  }
 
   let body;
   try {
@@ -124,6 +143,8 @@ export async function POST(req) {
         // Log sem PII (so .message). Nao derruba resposta.
         console.error("tailor: persist falhou", e?.message);
       }
+      // Contabiliza uso mesmo se persistencia falhou — LLM gastou tokens.
+      await trackUsage(userId, "tailor");
     }
 
     return NextResponse.json({ ...data, tailoredCvId });

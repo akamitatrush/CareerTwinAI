@@ -9,6 +9,7 @@ import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { searchJobs } from "@/lib/jobs";
 import { computeAllSubScores } from "@/lib/scoring/subscores";
 import { notify, NotificationTemplates } from "@/lib/notifications";
+import { enforceUsage, trackUsage } from "@/lib/billing/enforce";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,6 +40,25 @@ export async function POST(req) {
 
   const limit = guardLLM(req, { name: "analyze", userId, perMinuteAnon: 3, perMinuteUser: 10 });
   if (!limit.ok) return tooMany(limit);
+
+  // Enforcement de plano (apenas pra logados; anonimos rodam efemero e ja
+  // sao rate-limited mais agressivamente acima). 402 Payment Required.
+  if (userId) {
+    const lim = await enforceUsage(userId, "analyze");
+    if (!lim.ok) {
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite do plano Free (3 diagnosticos/mes). Faca upgrade pra Pro.",
+          code: "LIMIT_REACHED",
+          feature: "analyze",
+          plan: lim.plan,
+          limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+  }
 
   let body;
   try {
@@ -290,6 +310,9 @@ export async function POST(req) {
         console.error("analyze: welcome notify falhou", e?.message);
       }
     }
+
+    // Contabiliza uso APOS persistencia bem-sucedida. Idempotente em race.
+    await trackUsage(userId, "analyze");
 
     // Rastro LGPD: registra fonte + consentimento (payloadHash prova consent
     // sem reter o bruto se o usuario revogar/apagar).

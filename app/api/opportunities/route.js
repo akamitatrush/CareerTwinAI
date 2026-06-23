@@ -7,6 +7,7 @@ import { OppBody, OppShape, PorquesShape, PlanoShape } from "@/lib/validators";
 import { searchJobs } from "@/lib/jobs";
 import { extractSkills, matchScore } from "@/lib/skills-taxonomy";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { enforceUsage, trackUsage } from "@/lib/billing/enforce";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +28,24 @@ export async function POST(req) {
 
   const limit = guardLLM(req, { name: "opp", userId, perMinuteAnon: 3, perMinuteUser: 10 });
   if (!limit.ok) return tooMany(limit);
+
+  // Enforcement de plano (5 buscas/dia no Free). Diario => dayKey() interno.
+  if (userId) {
+    const lim = await enforceUsage(userId, "opportunities");
+    if (!lim.ok) {
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite do plano Free (5 buscas de vagas/dia). Faca upgrade pra Pro.",
+          code: "LIMIT_REACHED",
+          feature: "opportunities",
+          plan: lim.plan,
+          limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+  }
 
   let body;
   try {
@@ -285,6 +304,11 @@ export async function POST(req) {
     } catch (e) {
       console.error("opp: persistencia plano falhou", e?.message);
     }
+  }
+
+  // Contabiliza uso diario apos resposta completa (idempotente).
+  if (userId) {
+    await trackUsage(userId, "opportunities");
   }
 
   return NextResponse.json({

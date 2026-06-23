@@ -11,6 +11,9 @@ vi.mock("@/lib/db", () => {
     tailoredCv: { findMany: vi.fn() },
     assessmentResult: { findMany: vi.fn() },
     evidence: { findMany: vi.fn() },
+    subscription: { findUnique: vi.fn() },
+    usageMeter: { findMany: vi.fn() },
+    billingEvent: { findMany: vi.fn() },
   };
   return { prisma: mock };
 });
@@ -34,6 +37,9 @@ describe("exportUserData", () => {
     prisma.tailoredCv.findMany.mockResolvedValue([]);
     prisma.assessmentResult.findMany.mockResolvedValue([]);
     prisma.evidence.findMany.mockResolvedValue([]);
+    prisma.subscription.findUnique.mockResolvedValue(null);
+    prisma.usageMeter.findMany.mockResolvedValue([]);
+    prisma.billingEvent.findMany.mockResolvedValue([]);
 
     const data = await exportUserData("u1");
 
@@ -59,12 +65,48 @@ describe("exportUserData", () => {
     expect(prisma.evidence.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: "u1" } })
     );
+    expect(prisma.subscription.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "u1" } })
+    );
+    expect(prisma.usageMeter.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "u1" } })
+    );
+    expect(prisma.billingEvent.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "u1" } })
+    );
 
     expect(data.user.id).toBe("u1");
-    expect(data.version).toBe("1");
+    expect(data.version).toBe("2");
     expect(typeof data.exportedAt).toBe("string");
     expect(Array.isArray(data.assessments)).toBe(true);
     expect(Array.isArray(data.evidence)).toBe(true);
+    expect(Array.isArray(data.usageMeters)).toBe(true);
+    expect(Array.isArray(data.billingEvents)).toBe(true);
+  });
+
+  it("sanitiza billingEvents (sem payload completo)", async () => {
+    prisma.user.findUnique.mockResolvedValue({ id: "u1", email: "a@b.com" });
+    prisma.profile.findUnique.mockResolvedValue(null);
+    prisma.scoreSnapshot.findMany.mockResolvedValue([]);
+    prisma.consent.findMany.mockResolvedValue([]);
+    prisma.dataSource.findMany.mockResolvedValue([]);
+    prisma.tailoredCv.findMany.mockResolvedValue([]);
+    prisma.assessmentResult.findMany.mockResolvedValue([]);
+    prisma.evidence.findMany.mockResolvedValue([]);
+    prisma.subscription.findUnique.mockResolvedValue(null);
+    prisma.usageMeter.findMany.mockResolvedValue([]);
+    prisma.billingEvent.findMany.mockResolvedValue([
+      {
+        stripeEventId: "evt_123",
+        type: "checkout.session.completed",
+        processedAt: new Date("2026-06-22"),
+      },
+    ]);
+    const data = await exportUserData("u1");
+    expect(data.billingEvents).toHaveLength(1);
+    expect(data.billingEvents[0]).toHaveProperty("stripeEventId");
+    expect(data.billingEvents[0]).toHaveProperty("type");
+    expect(data.billingEvents[0]).not.toHaveProperty("payload");
   });
 
   it("recusa userId vazio", async () => {

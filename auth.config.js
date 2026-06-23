@@ -10,6 +10,10 @@ const PROTECTED_PREFIXES = [
   "/api/interview",
   "/api/tailor",
   "/api/chat",
+  "/api/billing/checkout",
+  "/api/billing/portal",
+  "/api/billing/plan",
+  // /api/billing/webhook NAO entra aqui — autentica via HMAC, sem session.
 ];
 
 export const authConfig = {
