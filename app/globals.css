@@ -2141,6 +2141,11 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 
 /* ===== /oportunidades ===== */
 .ct-filters-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+.ct-sources-strip { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.ct-source-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--text-soft); background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; letter-spacing: 0.01em; }
+.ct-source-chip strong { color: var(--primary); font-weight: 800; font-variant-numeric: tabular-nums; }
+.ct-source-chip.illustrative { background: var(--attention-soft); border-color: var(--attention-tint); }
+.ct-source-chip.illustrative strong { color: var(--attention-deep); }
 .ct-filters-count { font-size: 12px; font-weight: 700; color: var(--text-soft); }
 .ct-filters-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
 .ct-filter-btn { display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 7px 12px; cursor: pointer; color: var(--text); position: relative; }

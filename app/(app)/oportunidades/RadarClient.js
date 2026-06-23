@@ -18,6 +18,7 @@ export default function RadarClient({ initial }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sources, setSources] = useState([]);
+  const [counts, setCounts] = useState({});
   const [illustrative, setIllustrative] = useState(false);
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function RadarClient({ initial }) {
         if (!ok) throw new Error(data.error || "Falha ao buscar vagas");
         setVagas(data.vagas || []);
         setSources(data.sources || []);
+        setCounts(data.counts || {});
         setIllustrative(!!data.illustrative);
       })
       .catch((e) => {
@@ -101,6 +103,36 @@ export default function RadarClient({ initial }) {
           }}
         >
           Sem provider de vagas configurado — exibindo dados ilustrativos.
+        </div>
+      )}
+
+      {!loading && !illustrative && Object.keys(counts).length > 0 && (
+        <div className="ct-sources-strip" aria-label="Fontes de vagas">
+          {Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([src, n]) => {
+              const label =
+                src === "adzuna"
+                  ? "Adzuna BR"
+                  : src === "jooble"
+                    ? "Jooble"
+                    : src === "greenhouse"
+                      ? "Greenhouse"
+                      : src === "lever"
+                        ? "Lever"
+                        : src === "ashby"
+                          ? "Ashby"
+                          : src === "workable"
+                            ? "Workable"
+                            : src === "fixtures"
+                              ? "Ilustrativas"
+                              : src;
+              return (
+                <span key={src} className={`ct-source-chip${src === "fixtures" ? " illustrative" : ""}`}>
+                  <strong>{n}</strong> {label}
+                </span>
+              );
+            })}
         </div>
       )}
 

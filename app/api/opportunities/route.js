@@ -291,6 +291,7 @@ export async function POST(req) {
     vagas: vagasOut,
     plano,
     sources: payloadJobs.sources,
+    counts: payloadJobs.counts || {},
     illustrative: allIllustrative,
   });
 }
