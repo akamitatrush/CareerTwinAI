@@ -37,7 +37,7 @@ flowchart LR
     C --> G
     E --> H[Plano de ação]
     G --> H
-    H --> I[/dashboard]
+    H --> I["/dashboard"]
 ```
 
 ### Fluxo de diagnóstico
@@ -47,19 +47,20 @@ sequenceDiagram
     participant U as Usuário
     participant N as Next.js
     participant LLM as Claude Sonnet 4.6
+    participant J as Job providers
     participant DB as Postgres
 
     U->>N: cola CV + cargo-alvo
-    N->>N: valida Zod, rate-limit, sanitiza """
+    N->>N: valida Zod, rate-limit, sanitiza
     N->>LLM: prompt diag (system + user separados)
-    LLM-->>N: JSON {perfil, gaps, explicações}
-    N->>N: computeSubScores() + computeOverall() determinístico
+    LLM-->>N: JSON perfil, gaps, explicações
+    N->>N: computeSubScores + computeOverall determinístico
     alt logado
-        N->>DB: upsert Profile + create ScoreSnapshot + Gap[] + Consent
+        N->>DB: upsert Profile + create ScoreSnapshot + Gap + Consent
     end
     N-->>U: diagnóstico
     par paralelo
-        N->>J as Job providers: buscar vagas (6 providers)
+        N->>J: buscar vagas (6 providers)
         N->>LLM: gerar plano + cursos sugeridos
     end
     N-->>U: vagas + plano + cursos

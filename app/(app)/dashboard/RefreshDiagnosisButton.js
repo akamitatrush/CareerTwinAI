@@ -24,6 +24,10 @@ export default function RefreshDiagnosisButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showApplyModal, setShowApplyModal] = useState(false);
+  // Result toast: aparece apos sucesso pra confirmar movimento real do score.
+  // Sem isso, user nao percebia mudanca pequena (ex: 56 -> 60) — pensava que
+  // "nao mexeu" e clicava de novo, criando loop perceptual.
+  const [resultToast, setResultToast] = useState(null);
 
   async function refresh(applyCompletedSkills) {
     setLoading(true);
@@ -49,7 +53,14 @@ export default function RefreshDiagnosisButton({
       }
       // Sucesso: refresh server component pra mostrar novo snapshot/score.
       setShowApplyModal(false);
+      // Mostra delta antes de re-renderizar — toast persiste 6s.
+      const delta = Number(data?.delta) || 0;
+      const score = Number(data?.score) || 0;
+      const previousScore = Number(data?.previousScore) || 0;
+      setResultToast({ delta, score, previousScore, applied: !!applyCompletedSkills });
       router.refresh();
+      // Auto-dismiss apos 6s pra nao poluir.
+      setTimeout(() => setResultToast(null), 6000);
     } catch (e) {
       setError(e?.message || "Tente de novo.");
     } finally {
@@ -108,6 +119,35 @@ export default function RefreshDiagnosisButton({
 
   return (
     <div className="ct-empty-card">
+      {resultToast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={
+            "ct-refresh-toast" +
+            (resultToast.delta > 0 ? " up" : resultToast.delta < 0 ? " down" : "")
+          }
+        >
+          {resultToast.delta > 0 ? (
+            <>
+              <strong>Score subiu +{resultToast.delta} pts!</strong>{" "}
+              De {resultToast.previousScore} para {resultToast.score}.
+              {resultToast.applied && " Conquistas aplicadas ao perfil."}
+            </>
+          ) : resultToast.delta === 0 ? (
+            <>
+              <strong>Score se manteve em {resultToast.score}.</strong>{" "}
+              Adicione mais evidências em <a href="/evidencias">/evidencias</a>{" "}
+              ou marque novas microações pra ver movimento.
+            </>
+          ) : (
+            <>
+              <strong>Score caiu {resultToast.delta} pts.</strong> Algumas
+              skills podem ter sido re-avaliadas — confira em /transparencia.
+            </>
+          )}
+        </div>
+      )}
       {allGapsDone ? (
         <>
           <strong>Você concluiu todas as ações.</strong> O score acima ainda

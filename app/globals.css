@@ -2947,8 +2947,137 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   .ct-microaction-card,
   .ct-microaction-check,
   .ct-microaction-course,
+  .ct-gaps-courses-summary-card,
   .ct-skill-pill { transition: none !important; transform: none !important; }
   .ct-req-freq-bar-fill { transition: none !important; }
+}
+
+/* ===== Cursos sugeridos (secao dedicada no fim do Ato 3) =====
+ * Indice consolidado de cursos curados, agrupado por skill. Reforca a
+ * descoberta da biblioteca pra alem do inline de cada microacao. */
+.ct-gaps-courses-summary {
+  margin-top: 28px;
+  padding: 22px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.ct-gaps-courses-summary-head { margin-bottom: 18px; }
+.ct-gaps-courses-summary-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+.ct-gaps-courses-summary-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 64ch;
+}
+.ct-gaps-courses-summary-sub strong { color: var(--positive-deep); font-weight: 700; }
+
+.ct-gaps-courses-summary-list { display: flex; flex-direction: column; gap: 20px; }
+.ct-gaps-courses-summary-group {
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+.ct-gaps-courses-summary-group:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+.ct-gaps-courses-summary-skill {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: lowercase;
+  color: var(--primary);
+  margin: 0 0 10px;
+  letter-spacing: -.1px;
+}
+.ct-gaps-courses-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.ct-gaps-courses-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-decoration: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  color: var(--text);
+  transition: border-color 160ms var(--ease-standard),
+              box-shadow 160ms var(--ease-standard),
+              transform 160ms var(--ease-standard);
+}
+.ct-gaps-courses-summary-card:hover {
+  border-color: var(--primary-tint);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.ct-gaps-courses-summary-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.ct-gaps-courses-summary-card-provider {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.ct-gaps-courses-summary-card-free {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--positive-deep);
+  background: var(--positive-soft);
+  border: 1px solid var(--positive-tint);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ct-gaps-courses-summary-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  letter-spacing: -.1px;
+  margin: 2px 0 0;
+}
+.ct-gaps-courses-summary-card-meta {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-weight: 600;
+  margin: 2px 0 0;
+}
+.ct-gaps-courses-summary-card-why {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+.ct-gaps-courses-summary-card-cta {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .ct-gaps-courses-summary { padding: 18px 16px; }
+  .ct-gaps-courses-summary-grid { grid-template-columns: 1fr; }
 }
 
 /* ===== Onboarding split-panel — landing hero premium ===== */
@@ -4586,6 +4715,34 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   color: var(--text-muted) !important;
   margin: 10px 0 0 !important;
 }
+
+/* Toast pos-refresh: confirma movimento real do score. Surge sob role="status"
+   pra leitores de tela anunciarem o delta sem precisar de foco. */
+.ct-refresh-toast {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-light);
+  color: var(--text);
+}
+.ct-refresh-toast.up {
+  background: color-mix(in srgb, var(--positive) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--positive) 35%, transparent);
+}
+.ct-refresh-toast.down {
+  background: color-mix(in srgb, var(--attention) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--attention) 35%, transparent);
+}
+.ct-refresh-toast strong { color: var(--text); }
+.ct-refresh-toast a {
+  color: var(--primary);
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 160ms var(--ease-standard);
+}
+.ct-refresh-toast a:hover { border-bottom-color: var(--primary); }
 
 .ct-btn-text {
   background: transparent;

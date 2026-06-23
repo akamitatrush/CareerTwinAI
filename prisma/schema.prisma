@@ -41,6 +41,7 @@ model User {
   usageMeters   UsageMeter[]
   billingEvents BillingEvent[]
   auditLogs     AuditLog[]
+  outcomes      Outcome[]
 }
 
 model Account {
@@ -515,4 +516,67 @@ enum AuditAction {
   SECURITY_RATE_LIMIT_HIT
   SECURITY_BUDGET_EXCEEDED
   SECURITY_INVALID_WEBHOOK
+  OUTCOME_REPORTED
+  OUTCOME_SURVEY_SENT
+  OUTCOME_SURVEY_DECLINED
+}
+
+// Outcome: dataset proprietario pra calcular mediana real de contratados.
+// Daniel + Bianca (Tera) cobraram esse dado. Sem outcomes, lib/metrics/median-stub
+// e vaporware (HIRED_MEDIAN = 78 hardcoded). Cron de survey pergunta aos users
+// 30/60/90 dias apos primeiro snapshot ("como esta a busca?"). Quando >=50
+// outcomes HIRED, mediana stub vira mediana real do scoreAtTime.
+//
+// scoreAtTime + roleAtTime capturados no momento do reporte — correlaciona
+// score historico com outcome (foi contratado com 65? 80? quais skills tinha?).
+// surveyKind discrimina survey programado (30d/60d/90d) de self-reported (user
+// decidiu reportar fora do milestone). evidence e texto livre OPCIONAL — sem
+// PII obrigatorio, user descreve em prosa "consegui no Magalu, 2 meses".
+//
+// Cascade no userId pra "apagar minha conta" levar outcomes junto. Indices:
+//  - (userId, occurredAt): timeline pessoal (debug, perfil do user).
+//  - (kind, occurredAt): agregacao pra mediana real (groupBy kind, sample
+//    do scoreAtTime).
+model Outcome {
+  id              String      @id @default(cuid())
+  userId          String
+  kind            OutcomeKind
+  occurredAt      DateTime    @default(now())
+
+  // Snapshot do score no momento do reporte (do latest ScoreSnapshot do user
+  // no momento do POST). Imutavel apos criacao — historiza pra correlacionar
+  // score -> outcome mesmo que o user faca novo diagnostico depois.
+  scoreAtTime     Int?
+  roleAtTime      String?
+
+  // Contexto opcional. monthsSearching e int (clamped 0-60 no validator).
+  // evidence e texto livre limitado (max 2000 chars) — SEM PII obrigatorio.
+  monthsSearching Int?
+  evidence        String?     @db.Text
+
+  // Discrimina survey programado (cron) de self-reported (user inicia).
+  surveyKind      SurveyKind?
+
+  createdAt       DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([kind, occurredAt])
+}
+
+enum OutcomeKind {
+  HIRED                  // contratado pra cargo-alvo
+  HIRED_DIFFERENT        // contratado pra cargo diferente
+  NOT_HIRED              // continua procurando (decisao explicita)
+  STILL_LOOKING          // ativo, sem decisao
+  PAUSED                 // pausou busca (mudanca de vida, estudo)
+  DECLINED_TO_ANSWER     // user pulou survey (registra pra nao perguntar de novo)
+}
+
+enum SurveyKind {
+  THIRTY_DAYS
+  SIXTY_DAYS
+  NINETY_DAYS
+  SELF_REPORTED
 }

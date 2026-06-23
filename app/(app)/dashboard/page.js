@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WEIGHTS, SS_META } from "@/lib/score";
 import { computeCompleteness } from "@/lib/metrics/completeness";
-import { HIRED_MEDIAN } from "@/lib/metrics/median-stub";
+import { getRealMedian } from "@/lib/metrics/median-real";
 import ActionCardClient from "./ActionCardClient";
 import RefreshDiagnosisButton from "./RefreshDiagnosisButton";
 
@@ -44,7 +44,9 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [profile, snapshots] = await Promise.all([
+  // median e dado agregado (sem PII) — Promise.all paraleliza com queries do user.
+  // getRealMedian tem cache em memoria 1h, entao normalmente nao toca DB.
+  const [profile, snapshots, median] = await Promise.all([
     prisma.profile.findUnique({ where: { userId } }),
     prisma.scoreSnapshot.findMany({
       where: { userId },
@@ -52,6 +54,7 @@ export default async function DashboardPage() {
       take: 30,
       include: { gaps: true, planItems: { orderBy: { semana: "asc" } } },
     }),
+    getRealMedian(),
   ]);
 
   const latest = snapshots[0] || null;
@@ -150,6 +153,7 @@ export default async function DashboardPage() {
             projectedScore={projectedScore}
             projectedGain={projectedGain}
             completedCount={completedGaps.length}
+            median={median}
           />
           <SubScoresCol latest={latest} projectedByDimension={projectedByDimension} />
         </div>
@@ -250,7 +254,13 @@ function ScoreRingCol({
   projectedScore,
   projectedGain,
   completedCount,
+  median,
 }) {
+  // median pode ser undefined (defesa em depth contra alguem chamar
+  // sem prop). Usa stub default e isStub true.
+  const medianValue = Number(median?.value) || 78;
+  const isStub = median?.isStub !== false; // default true
+  const sampleSize = Number(median?.sampleSize) || 0;
   const score = Math.max(0, Math.min(100, currentScore));
   const projScore = Math.max(0, Math.min(100, projectedScore));
   const CIRC = 2 * Math.PI * 74; // r=74
@@ -365,12 +375,12 @@ function ScoreRingCol({
       <div className="ct-mediana">
         <div className="ct-mediana-row">
           <span>Mediana de contratados</span>
-          <span className="ct-mediana-value">{HIRED_MEDIAN}</span>
+          <span className="ct-mediana-value">{medianValue}</span>
         </div>
         <div
           className="ct-mediana-bar"
           role="img"
-          aria-label={`Seu score ${score} comparado com a mediana ${HIRED_MEDIAN}`}
+          aria-label={`Seu score ${score} comparado com a mediana ${medianValue}`}
         >
           <div
             className="ct-mediana-bar-fill"
@@ -378,12 +388,23 @@ function ScoreRingCol({
           />
           <div
             className="ct-mediana-bar-mark"
-            style={{ left: `${HIRED_MEDIAN}%` }}
+            style={{ left: `${medianValue}%` }}
           />
         </div>
         <div className="ct-mediana-foot">
-          Estimativa em construção · você está a{" "}
-          <strong>{Math.max(0, HIRED_MEDIAN - score)} pontos</strong> da mediana.
+          {isStub ? (
+            <>
+              Estimativa em construção · você está a{" "}
+              <strong>{Math.max(0, medianValue - score)} pontos</strong> da
+              mediana.
+            </>
+          ) : (
+            <>
+              Mediana real (N={sampleSize}) · você está a{" "}
+              <strong>{Math.max(0, medianValue - score)} pontos</strong> da
+              mediana de contratados.
+            </>
+          )}
         </div>
       </div>
     </div>

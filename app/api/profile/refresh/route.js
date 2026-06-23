@@ -166,6 +166,19 @@ export async function POST(req) {
   //    sub-scores (cap pra prevenir gaming). Skills armazenadas só após user
   //    explicitar consentimento na UI (modal "Aplicar conquistas?").
   //    Sem applyCompletedSkills, perfilJson fica intacto e nenhum bonus aplicado.
+  //
+  //    Bug fix: gaps antigos podem nao ter impactoDimensao/impactoPontos (LLM
+  //    nao retornava esses campos consistentemente em versoes anteriores).
+  //    Defaults: 5 pts em relevancia_habilidades (skill adicionada = mais
+  //    relevancia). Sem isso, user marca done -> score nao sobe -> loop infinito.
+  const DEFAULT_BONUS_PTS = 5;
+  const DEFAULT_BONUS_DIM = "relevancia_habilidades";
+  const VALID_DIMENSIONS = new Set([
+    "aderencia_vagas",
+    "relevancia_habilidades",
+    "otimizacao_perfil",
+    "experiencia_mercado",
+  ]);
   let appliedSkills = [];
   let mergedSkills = Array.isArray(profile.skills) ? [...profile.skills] : [];
   let completedHabilidades = []; // pra passar pro LLM (evita loop)
@@ -175,6 +188,7 @@ export async function POST(req) {
     otimizacao_perfil: 0,
     experiencia_mercado: 0,
   };
+  let completedGapsDebug = []; // so usado se DEBUG_REFRESH ativo
   if (applyCompletedSkills && previousSnapshot) {
     const completed = previousSnapshot.gaps.filter((g) => g.completedAt);
     const existing = new Set(mergedSkills.map((s) => String(s).toLowerCase()));
@@ -189,16 +203,32 @@ export async function POST(req) {
         mergedSkills.push(skill);
       }
       // Acumula projected gain por dimensao (cap 15 pts por sub-score)
-      if (g.impactoDimensao && g.impactoPontos && projectedGains[g.impactoDimensao] !== undefined) {
-        projectedGains[g.impactoDimensao] = Math.min(
-          15,
-          projectedGains[g.impactoDimensao] + g.impactoPontos,
-        );
-      }
+      // Defaults: se gap nao tem impactoDimensao/impactoPontos (snapshots
+      // antigos), assume DEFAULT_BONUS_DIM + DEFAULT_BONUS_PTS. Garante que
+      // QUALQUER gap concluida contribui pro score (fix do bug do loop).
+      const dim = VALID_DIMENSIONS.has(g.impactoDimensao) ? g.impactoDimensao : DEFAULT_BONUS_DIM;
+      const pts = Number.isFinite(g.impactoPontos) && g.impactoPontos > 0
+        ? g.impactoPontos
+        : DEFAULT_BONUS_PTS;
+      projectedGains[dim] = Math.min(15, projectedGains[dim] + pts);
+      completedGapsDebug.push({
+        hab: skill,
+        dim,
+        pts,
+        ptsFromLLM: g.impactoPontos,
+        dimFromLLM: g.impactoDimensao,
+      });
     }
     if (mergedSkills.length > SKILLS_CAP) {
       mergedSkills = mergedSkills.slice(0, SKILLS_CAP);
     }
+  }
+
+  // Logging diagnostico opt-in via DEBUG_REFRESH=1. Sem isso, log normal
+  // nao mostra esses dados (LGPD: habilidades podem ser PII fraca).
+  if (process.env.DEBUG_REFRESH === "1") {
+    console.log("[refresh] completedGaps:", JSON.stringify(completedGapsDebug));
+    console.log("[refresh] projectedGains:", JSON.stringify(projectedGains));
   }
 
   // 8) LLM: re-extrai perfil + explicações + gaps a partir do mesmo CV.
@@ -284,14 +314,30 @@ export async function POST(req) {
 
   // 11) Score determinístico — mesma função usada em /api/analyze.
   //     Quando applyCompletedSkills, aplica projectedGains como bonus aos
-  //     sub-scores correspondentes (capado a 15 pts por dimensao, 20 total).
+  //     sub-scores correspondentes (capado a 15 pts por dimensao, 25 total).
   //     Sem isso, o score NUNCA subia (loop infinito do user).
+  //
+  //     Cap total subiu de 20 -> 25 pra dar movimento visivel quando user
+  //     conclui 3-4 microacoes. Cap de 15 por dimensao mantido (previne abuso).
+  //     Recalculo do overall *sempre* roda quando applyCompletedSkills=true e
+  //     houve bonus, mesmo que LLM tenha re-extraido skills levemente diferentes
+  //     (que faz o overall base oscilar e mascarava o ganho real do bonus).
   const computed = computeAllSubScores(syntheticProfile, role, jobsForScore);
+
+  if (process.env.DEBUG_REFRESH === "1") {
+    console.log("[refresh] sub_scores antes do bonus:", JSON.stringify(computed.sub_scores));
+    console.log("[refresh] overall antes do bonus:", computed.overall);
+  }
 
   if (applyCompletedSkills) {
     let totalBonus = 0;
-    const MAX_TOTAL_BONUS = 20;
-    for (const dim of Object.keys(projectedGains)) {
+    const MAX_TOTAL_BONUS = 25;
+    // Ordem deterministica de aplicacao: dimensoes com maior gain primeiro,
+    // pra cap nao prejudicar arbitrariamente a dimensao com mais conquistas.
+    const orderedDims = Object.keys(projectedGains).sort(
+      (a, b) => (projectedGains[b] || 0) - (projectedGains[a] || 0),
+    );
+    for (const dim of orderedDims) {
       const gain = projectedGains[dim] || 0;
       if (gain <= 0) continue;
       const remaining = Math.max(0, MAX_TOTAL_BONUS - totalBonus);
@@ -311,6 +357,11 @@ export async function POST(req) {
           computed.sub_scores.otimizacao_perfil.valor * 0.2 +
           computed.sub_scores.experiencia_mercado.valor * 0.1,
       );
+    }
+    if (process.env.DEBUG_REFRESH === "1") {
+      console.log("[refresh] totalBonus aplicado:", totalBonus);
+      console.log("[refresh] sub_scores depois do bonus:", JSON.stringify(computed.sub_scores));
+      console.log("[refresh] overall depois do bonus:", computed.overall);
     }
   }
 

@@ -7,6 +7,7 @@ import Report from "@/components/Report";
 import LinkedinImportButton from "@/components/LinkedinImportButton";
 import PortfolioImportButton from "@/components/PortfolioImportButton";
 import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 // Card visual de fonte conectada (CV / LinkedIn / GitHub). Não recebe ação —
 // é só status visual. As ações ficam nos botões de .ct-onb-extras logo abaixo.
@@ -44,6 +45,28 @@ export default function Home() {
   const [isLogged, setIsLogged] = useState(false);
   const [snapshotId, setSnapshotId] = useState(null);
   const [onbState, setOnbState] = useState(null);
+
+  // === Analytics: HOME_VIEWED uma vez ao montar.
+  // useEffect sem deps => roda 1x. Marca o topo do funil de ativacao.
+  useEffect(() => {
+    track(EVENTS.HOME_VIEWED, {});
+  }, []);
+
+  // === Analytics: CV_PASTE_STARTED com debounce de 500ms.
+  // Dispara so na primeira vez que o user comeca a digitar/colar conteudo
+  // significativo (>= 20 chars). Ref local pra disparar 1x por sessao.
+  // useState pra persistir entre re-renders (vs useRef faria igual, mas
+  // mantemos consistencia com o estilo do arquivo).
+  const [cvPasteTracked, setCvPasteTracked] = useState(false);
+  useEffect(() => {
+    if (cvPasteTracked) return;
+    if (cv.trim().length < 20) return;
+    const t = setTimeout(() => {
+      track(EVENTS.CV_PASTE_STARTED, { chars: cv.trim().length });
+      setCvPasteTracked(true);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [cv, cvPasteTracked]);
 
   // Detecta sessao no client. Endpoint publico do NextAuth, sem expor PII alem
   // do que o proprio user ja sabe (email/nome). Se logged, em sequencia busca
@@ -101,6 +124,11 @@ export default function Home() {
     setStage("proc");
     setProcStep(0);
     setBusy(true);
+    track(EVENTS.DIAGNOSIS_STARTED, {
+      cv_chars: cv.trim().length,
+      role_len: role.trim().length,
+      is_logged: isLogged,
+    });
     try {
       setProcStep(1);
       const dRes = await fetch("/api/analyze", {
@@ -123,7 +151,7 @@ export default function Home() {
       setDiag(d);
       setOpp(o);
       setSnapshotId(d?.snapshotId || null);
-      track("diagnosis_completed", {
+      track(EVENTS.DIAGNOSIS_COMPLETED, {
         cv_chars: cv.trim().length,
         role_len: role.trim().length,
         elapsed_seconds: procElapsed,
@@ -143,6 +171,12 @@ export default function Home() {
       setStage("report");
     } catch (e) {
       const msg = String(e?.message || "").toLowerCase();
+      let errorCode = "unknown";
+      if (msg.includes("timeout") || msg.includes("aborted")) errorCode = "timeout";
+      else if (msg.includes("network")) errorCode = "network";
+      else if (msg.includes("rate") || msg.includes("429")) errorCode = "rate_limited";
+      else if (msg.includes("cv") || msg.includes("currículo") || msg.includes("curriculo")) errorCode = "cv_invalid";
+      track(EVENTS.DIAGNOSIS_FAILED, { error_code: errorCode });
       let friendly;
       if (msg.includes("timeout") || msg.includes("aborted") || msg.includes("network")) {
         friendly = "A IA passou do tempo dessa vez. Respira fundo e tenta de novo daqui a alguns segundos — geralmente roda de primeira.";
@@ -342,12 +376,17 @@ export default function Home() {
                           if (!f) return;
                           setError("");
                           setBusy(true);
+                          track(EVENTS.CV_UPLOAD_STARTED, {
+                            file_type: f.type || "unknown",
+                            size_kb: Math.round((f.size || 0) / 1024),
+                          });
                           try {
                             const fd = new FormData();
                             fd.append("file", f);
                             const r = await fetch("/api/cv/upload", { method: "POST", body: fd });
                             const data = await r.json();
                             if (!r.ok) {
+                              track(EVENTS.CV_UPLOAD_FAILED, { status: r.status });
                               if (r.status === 401) {
                                 setError("Pra enviar arquivo você precisa estar logado. Cole o texto direto aqui, ou entre em /entrar pra salvar.");
                               } else {
@@ -355,8 +394,12 @@ export default function Home() {
                               }
                               return;
                             }
+                            track(EVENTS.CV_UPLOAD_SUCCEEDED, {
+                              extracted_chars: data?.text?.length || 0,
+                            });
                             setCv(data.text);
                           } catch (err) {
+                            track(EVENTS.CV_UPLOAD_FAILED, { status: 0, reason: "network" });
                             setError("Falhou o upload: " + (err.message || "tenta de novo daqui a pouco."));
                           } finally {
                             setBusy(false);

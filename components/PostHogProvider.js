@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import posthog from "posthog-js";
 
 let inited = false;
+let identified = false;
 
 export function initPostHog() {
   const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
@@ -25,11 +26,49 @@ export function initPostHog() {
   inited = true;
 }
 
+// Wrapper de captura. Use sempre via constantes EVENTS de lib/analytics/events.
+// Silencioso quando PostHog nao esta configurado (NEXT_PUBLIC_POSTHOG_KEY
+// ausente em dev local) ou quando estamos no SSR.
 export function track(event, props) {
   if (typeof window === "undefined") return;
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
   try {
     posthog.capture(event, props || {});
+  } catch {}
+}
+
+// Identify + super properties. Chamada uma vez por session quando o user loga.
+// userId e o cuid do Prisma (nao email). Email passa pra PostHog identify
+// (armazenado no SaaS, coberto pelo DPA do PostHog). Nao colocamos email em
+// capture.properties pra evitar PII redundante em cada event.
+export function identifyUser(user) {
+  if (typeof window === "undefined") return;
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
+  if (!user?.id) return;
+  if (identified) return;
+  try {
+    posthog.identify(user.id, {
+      email: user.email || undefined,
+      name: user.name || undefined,
+    });
+    // Super properties — anexadas em TODOS os events subsequentes na session.
+    // Permitem segmentar funis por plano/owner/idade-da-conta sem trackear PII.
+    posthog.register({
+      plan: user.plan || "free",
+      is_owner: !!user.isOwner,
+      signed_up_at: user.createdAt || null,
+    });
+    identified = true;
+  } catch {}
+}
+
+// Reset ao logout (limpa anonymous ID e super properties).
+export function resetIdentity() {
+  if (typeof window === "undefined") return;
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
+  try {
+    posthog.reset();
+    identified = false;
   } catch {}
 }
 
@@ -47,6 +86,25 @@ export default function PostHogProvider({ children }) {
         });
       }
     } catch {}
+
+    // Identify-on-load: se ha sessao ativa, pega userId e roda identify.
+    // Endpoint publico do NextAuth (/api/auth/session) — devolve so o que o
+    // user ja sabe (id/email/name). Falha silenciosa nao quebra a app.
+    fetch("/api/auth/session")
+      .then((r) => r.json())
+      .then((s) => {
+        if (s?.user?.id) {
+          identifyUser({
+            id: s.user.id,
+            email: s.user.email,
+            name: s.user.name,
+            plan: s.user.plan,
+            isOwner: s.user.isOwner,
+            createdAt: s.user.createdAt,
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
   return children;
 }
