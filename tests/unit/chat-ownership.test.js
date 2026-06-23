@@ -114,7 +114,10 @@ describe("auth-protected-paths — single source of truth", () => {
     expect(isProtected("/dashboard")).toBe(true);
     expect(isProtected("/meu-gemeo")).toBe(true);
     expect(isProtected("/meus-dados/qualquer/coisa")).toBe(true);
-    expect(isProtected("/api/chat")).toBe(true);
+    // Rotas LLM NAO sao protegidas no middleware — suportam modo
+    // experimentar anonimo. Cada rota faz auth() interno e tolera userId=null.
+    expect(isProtected("/api/chat")).toBe(false);
+    expect(isProtected("/api/analyze")).toBe(false);
     expect(isProtected("/api/me/export")).toBe(true);
     expect(isProtected("/api/gaps/abc/complete")).toBe(true);
   });
