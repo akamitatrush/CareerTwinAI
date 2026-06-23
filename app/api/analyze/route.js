@@ -88,7 +88,7 @@ export async function POST(req) {
   // 1) LLM: extrai perfil + escreve explicacoes + lista lacunas. Nao gera numeros.
   let diag;
   try {
-    const raw = await completeJSON(promptDiag(role.trim(), cv.trim()), { route: "analyze", userId });
+    const raw = await completeJSON(await promptDiag(role.trim(), cv.trim()), { route: "analyze", userId });
     const valid = DiagShape.safeParse(raw);
     if (!valid.success) {
       console.error("analyze: LLM shape inválido");

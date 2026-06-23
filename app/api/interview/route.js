@@ -65,7 +65,7 @@ export async function POST(req) {
   try {
     if (body.action === "question") {
       const data = await completeJSON(
-        promptInterviewQuestion(body.role, body.gaps, body.asked),
+        await promptInterviewQuestion(body.role, body.gaps, body.asked),
         { route: "interview.question", userId }
       );
       return NextResponse.json(data);

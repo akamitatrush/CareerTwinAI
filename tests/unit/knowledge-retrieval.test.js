@@ -1,23 +1,36 @@
-import { describe, it, expect } from "vitest";
+// tests/unit/knowledge-retrieval.test.js
+// retrieveKnowledge agora e async (RAG real: hybrid vector + keyword).
+// Sem VOYAGE_API_KEY nem OPENAI_API_KEY => vector lane retorna null e cai
+// pra keyword (degradacao graceful). Os testes abaixo rodam nesse modo,
+// que e exatamente o que validamos: comportamento de keyword preservado e
+// interface async correta.
+
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   retrieveKnowledge,
   formatAsContext,
   getAllTopics,
 } from "@/lib/knowledge/retrieval";
 
-describe("retrieveKnowledge — keyword retrieval BM25-lite", () => {
-  it("retorna empty pra query vazia", () => {
-    expect(retrieveKnowledge({ query: "" })).toEqual([]);
-    expect(retrieveKnowledge({})).toEqual([]);
-    expect(retrieveKnowledge()).toEqual([]);
+beforeEach(() => {
+  // Garante modo keyword-only nos testes (sem chamar embedding API real).
+  delete process.env.VOYAGE_API_KEY;
+  delete process.env.OPENAI_API_KEY;
+});
+
+describe("retrieveKnowledge — async, hybrid retrieval com fallback graceful", () => {
+  it("retorna empty pra query vazia", async () => {
+    expect(await retrieveKnowledge({ query: "" })).toEqual([]);
+    expect(await retrieveKnowledge({})).toEqual([]);
+    expect(await retrieveKnowledge()).toEqual([]);
   });
 
-  it("retorna empty quando query so tem tokens curtos (< 3 chars)", () => {
-    expect(retrieveKnowledge({ query: "a e o" })).toEqual([]);
+  it("retorna empty quando query so tem tokens curtos (< 3 chars)", async () => {
+    expect(await retrieveKnowledge({ query: "a e o" })).toEqual([]);
   });
 
-  it("encontra chunk de CV com query relevante", () => {
-    const r = retrieveKnowledge({
+  it("encontra chunk de CV com query relevante (modo keyword fallback)", async () => {
+    const r = await retrieveKnowledge({
       query: "curriculo metodo CAR resultado",
       topic: "cv",
       limit: 1,
@@ -26,8 +39,8 @@ describe("retrieveKnowledge — keyword retrieval BM25-lite", () => {
     expect(r[0].topic).toBe("cv");
   });
 
-  it("respeita topic filter", () => {
-    const r = retrieveKnowledge({
+  it("respeita topic filter", async () => {
+    const r = await retrieveKnowledge({
       query: "curriculo",
       topic: "interview",
       limit: 5,
@@ -35,42 +48,59 @@ describe("retrieveKnowledge — keyword retrieval BM25-lite", () => {
     r.forEach((c) => expect(c.topic).toBe("interview"));
   });
 
-  it("audience match boosta score (mesma query, com e sem audience)", () => {
-    const generic = retrieveKnowledge({ query: "transicao carreira", limit: 1 });
-    const targeted = retrieveKnowledge({
+  it("audience match boosta score (mesma query, com e sem audience)", async () => {
+    const generic = await retrieveKnowledge({
+      query: "transicao carreira",
+      limit: 1,
+    });
+    const targeted = await retrieveKnowledge({
       query: "transicao carreira",
       audience: "transition",
       limit: 1,
     });
     expect(generic.length).toBeGreaterThan(0);
     expect(targeted.length).toBeGreaterThan(0);
-    // Boost nao muda o numero de resultados (a query ja matchou); confirma
-    // que audience targeting nao quebra o pipeline.
+    // Boost nao muda o numero de resultados; confirma que audience targeting
+    // nao quebra o pipeline.
     expect(targeted[0]).toBeDefined();
   });
 
-  it("normalizacao funciona com acento (NFD)", () => {
-    // Query com acento e sem acento devem retornar mesmos resultados.
-    const sem = retrieveKnowledge({ query: "salario negociacao", limit: 2 });
-    const com = retrieveKnowledge({ query: "salário negociação", limit: 2 });
+  it("normalizacao funciona com acento (NFD)", async () => {
+    const sem = await retrieveKnowledge({ query: "salario negociacao", limit: 2 });
+    const com = await retrieveKnowledge({
+      query: "salário negociação",
+      limit: 2,
+    });
     expect(sem.map((c) => c.id)).toEqual(com.map((c) => c.id));
   });
 
-  it("respeita limit", () => {
-    const r = retrieveKnowledge({ query: "carreira", limit: 2 });
+  it("respeita limit", async () => {
+    const r = await retrieveKnowledge({ query: "carreira", limit: 2 });
     expect(r.length).toBeLessThanOrEqual(2);
   });
 
-  it("ranking favorece chunk com mais matches", () => {
-    // "entrevista comportamental STAR" deve trazer o chunk do framework STAR
-    // primeiro, porque tem 3 matches em tags (entrevista, comportamental, star).
-    const r = retrieveKnowledge({
+  it("ranking favorece chunk com mais matches (modo keyword)", async () => {
+    const r = await retrieveKnowledge({
       query: "entrevista comportamental STAR",
       topic: "interview",
       limit: 1,
     });
     expect(r.length).toBe(1);
     expect(r[0].id).toBe("interview-star-framework");
+  });
+
+  it("degradacao graceful: sem embedding API, retorna so keyword sem throw", async () => {
+    // Sem VOYAGE_API_KEY nem OPENAI_API_KEY (beforeEach garante), vectorRetrieve
+    // retorna null mas o pipeline continua via keyword. Nao deve lancar erro.
+    const r = await retrieveKnowledge({ query: "linkedin headline", limit: 2 });
+    expect(Array.isArray(r)).toBe(true);
+    // Pelo menos um chunk de linkedin deve aparecer.
+    expect(r.some((c) => c.topic === "linkedin")).toBe(true);
+  });
+
+  it("retorna promise (interface async)", () => {
+    const result = retrieveKnowledge({ query: "carreira" });
+    expect(result).toBeInstanceOf(Promise);
   });
 });
 

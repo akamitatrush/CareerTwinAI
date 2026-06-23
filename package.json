@@ -11,6 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "ingest:knowledge": "node scripts/ingest-knowledge.mjs",
+    "eval:rag": "node tests/eval/rag/run-eval.mjs",
+    "eval:rag:json": "node tests/eval/rag/run-eval.mjs --json",
     "postinstall": "prisma generate"
   },
   "dependencies": {

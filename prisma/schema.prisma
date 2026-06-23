@@ -334,6 +334,27 @@ enum EvidenceKind {
   CONTRIBUTION
 }
 
+// Knowledge base vetorizada pro RAG real (pgvector + Voyage AI embeddings).
+// embedding = vetor 1024-dim semantico do `content`. contentHash (sha256 dos
+// primeiros 32 chars do hex) garante idempotencia da ingestao: rodar 2x nao
+// duplica. tipo `vector` requer extensao pgvector (criada na migration).
+// `Unsupported` porque Prisma nao tem mapping nativo pra vector — leitura/escrita
+// passa por $queryRaw/$executeRaw com cast ::vector.
+model KnowledgeChunk {
+  id          String                       @id @default(cuid())
+  contentHash String                       @unique
+  topic       String
+  audience    String[]                     @default([])
+  content     String                       @db.Text
+  source      String
+  tags        String[]                     @default([])
+  embedding   Unsupported("vector(1024)")?
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+
+  @@index([topic])
+}
+
 // Historico de CVs adaptados pra vagas especificas. Cada chamada a /api/tailor
 // que vier de um user logado gera um registro aqui. applicationId opcional
 // permite tailor ad-hoc (sem vincular a Application do funil). onDelete:SetNull
