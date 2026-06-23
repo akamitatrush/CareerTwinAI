@@ -539,6 +539,11 @@ function NextActionsCol({ latest, allGapsDone, projectedGain }) {
     ? latest.gaps.filter((g) => g.completedAt).length
     : 0;
 
+  // Mostra botao "Atualizar diagnostico" SEMPRE que ha pelo menos 1 acao
+  // concluida (nao precisa esperar todas). UX: user marca 1 -> ja pode
+  // recalcular pra ver o ganho. Antes era so no empty state (todas done).
+  const showRefreshHint = completedCount > 0 && gaps.length > 0;
+
   return (
     <div>
       <div className="ct-actions-head">
@@ -547,6 +552,17 @@ function NextActionsCol({ latest, allGapsDone, projectedGain }) {
         </h2>
         <span className="ct-actions-sub">priorizado por ganho no score</span>
       </div>
+
+      {showRefreshHint && (
+        <div className="ct-actions-refresh-hint">
+          <RefreshDiagnosisButton
+            allGapsDone={false}
+            projectedGain={projectedGain}
+            completedCount={completedCount}
+          />
+        </div>
+      )}
+
       <div className="ct-actions-list">
         {gaps.length === 0 ? (
           <RefreshDiagnosisButton
