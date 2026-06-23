@@ -59,11 +59,11 @@ function BrandMark({ size = 34, radius = 10 }) {
         width: size,
         height: size,
         borderRadius: radius,
-        background: "linear-gradient(150deg, var(--primary-mid), var(--primary-deep))",
+        background: "linear-gradient(150deg, var(--primary-light), var(--primary-deep))",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        boxShadow: "0 4px 12px -4px rgba(52,53,126,.5)",
+        boxShadow: "0 6px 16px -4px rgba(52,53,126,.45), inset 0 1px 0 0 rgba(255,255,255,0.18)",
         flex: "none",
       }}
       aria-hidden="true"
@@ -159,38 +159,11 @@ export default function AppShell({ children, user }) {
       </a>
       {!showMobile && (
         <aside className="appshell-sidebar" aria-label="Navegação principal">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 11,
-              padding: "6px 8px 22px",
-            }}
-          >
-            <BrandMark />
+          <div className="appshell-brand">
+            <BrandMark size={38} radius={11} />
             <div>
-              <div
-                style={{
-                  fontSize: 15,
-                  fontWeight: 800,
-                  letterSpacing: "-.3px",
-                  lineHeight: 1,
-                  color: "var(--text)",
-                }}
-              >
-                CareerTwin
-              </div>
-              <div
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  color: "var(--text-soft)",
-                  letterSpacing: ".04em",
-                  marginTop: 2,
-                }}
-              >
-                SEU GÊMEO DE CARREIRA
-              </div>
+              <div className="appshell-brand-name">CareerTwin</div>
+              <div className="appshell-brand-tag">SEU GÊMEO DE CARREIRA</div>
             </div>
           </div>
 

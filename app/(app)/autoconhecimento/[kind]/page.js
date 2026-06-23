@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getByKind, kindFromSlug } from "@/lib/assessments/definitions";
+import { AssessmentIcon } from "../icons";
 import AssessmentClient from "./AssessmentClient";
 
 // Render dinamico: auth() le cookies + Prisma. Sem cache estatico.
@@ -49,12 +50,16 @@ export default async function AssessmentPage({ params }) {
 
   // Mandamos apenas o que o cliente precisa renderizar — sem userId, sem
   // detalhes internos. computeScore() roda no servidor; o client so manda
-  // responses.
+  // responses. Inclui agora `palette`, `iconKind`, `howTo` e os campos de
+  // narrativa/grupos pra o resultado ficar rico sem precisar de outra request.
   const definition = {
     kind: def.kind,
     title: def.title,
     intro: def.intro,
     type: def.type,
+    palette: def.palette || "indigo",
+    iconKind: def.iconKind || null,
+    howTo: Array.isArray(def.howTo) ? def.howTo : [],
     ...(def.type === "likert"
       ? {
           scale: def.scale,
@@ -79,27 +84,48 @@ export default async function AssessmentPage({ params }) {
       : {}),
   };
 
+  const palette = definition.palette;
   return (
     <main className="app-container" id="main-content">
-      <div className="ct-gaps-header">
-        <div>
-          <Link href="/autoconhecimento" className="ct-assessment-back">
-            ← Voltar para autoconhecimento
-          </Link>
-          <h1 className="ct-gaps-title" style={{ marginTop: 8 }}>
-            {def.title}
-          </h1>
-          <p className="ct-gaps-sub">{def.intro}</p>
+      <Link href="/autoconhecimento" className="ct-self-back">
+        ← Voltar para autoconhecimento
+      </Link>
+
+      <header className={`ct-self-kind-hero ct-self-kind-hero-${palette}`}>
+        <div
+          className={`ct-self-kind-icon ct-self-kind-icon-${palette}`}
+          aria-hidden="true"
+        >
+          <AssessmentIcon kind={definition.iconKind} size={36} />
         </div>
-      </div>
+        <div className="ct-self-kind-hero-body">
+          <h1 className="ct-self-kind-title">{def.title}</h1>
+          <p className="ct-self-kind-sub">{def.intro}</p>
+        </div>
+      </header>
+
+      {definition.howTo.length > 0 && (
+        <section className="ct-self-howto" aria-label="Como usar essa reflexao">
+          <h2 className="ct-self-howto-title">Como usar essa reflexão</h2>
+          <ol className="ct-self-howto-list">
+            {definition.howTo.map((tip, i) => (
+              <li key={i}>
+                <span className="ct-self-howto-num" aria-hidden="true">
+                  {i + 1}
+                </span>
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       <AssessmentClient definition={definition} initialResult={latest} />
 
-      <div className="ct-assessment-disclaimer" role="note">
-        <strong>Lembrete:</strong> esse assessment é informativo. O resultado não é
-        diagnóstico clínico, não substitui MBTI/DISC oficial nem consulta com
-        psicólogo. Use como reflexão, não como rótulo.
-      </div>
+      <aside className="ct-self-disclaimer" role="note">
+        <strong>Lembrete:</strong> reflexão informativa, não diagnóstico
+        clínico. Não substitui MBTI/DISC oficial nem consulta com psicólogo.
+      </aside>
     </main>
   );
 }

@@ -5,9 +5,12 @@ import {
   IKIGAI,
   ALL_ASSESSMENTS,
   ALLOWED_KINDS,
+  VALUE_GROUPS,
   getByKind,
   kindFromSlug,
   slugFromKind,
+  narrativeFor,
+  ikigaiSynthesis,
 } from "@/lib/assessments/definitions";
 
 // Cobertura: computeScore (3 tipos) + shape do payload + sanitizacao defensiva
@@ -184,5 +187,172 @@ describe("Seguranca / shape do payload", () => {
   it("DISC_LITE retorna sempre as 4 chaves (sem chaves extras do input)", () => {
     const out = DISC_LITE.computeScore({ d1: 3, evil: 99 });
     expect(Object.keys(out).sort()).toEqual(["C", "D", "I", "S"]);
+  });
+});
+
+// ============ UI metadata (howTo, palette, iconKind) ============
+// Garante que toda definition tem o que a UI espera. Se alguem remover um
+// desses campos sem pensar, o redesign quebra silenciosamente — o teste falha
+// em vez disso.
+
+describe("Definitions: UI metadata (howTo, palette, iconKind)", () => {
+  ALL_ASSESSMENTS.forEach((def) => {
+    it(`${def.kind} tem howTo array com pelo menos 3 dicas`, () => {
+      expect(Array.isArray(def.howTo)).toBe(true);
+      expect(def.howTo.length).toBeGreaterThanOrEqual(3);
+      def.howTo.forEach((tip) => {
+        expect(typeof tip).toBe("string");
+        expect(tip.length).toBeGreaterThanOrEqual(20);
+      });
+    });
+
+    it(`${def.kind} tem palette valida (indigo|positive|attention)`, () => {
+      expect(["indigo", "positive", "attention"]).toContain(def.palette);
+    });
+
+    it(`${def.kind} tem iconKind valido (matrix|star|circles)`, () => {
+      expect(["matrix", "star", "circles"]).toContain(def.iconKind);
+    });
+  });
+
+  it("DISC_LITE.quadrantLabels tem narrative + careerHints em cada quadrante", () => {
+    ["D", "I", "S", "C"].forEach((k) => {
+      const q = DISC_LITE.quadrantLabels[k];
+      expect(typeof q.narrative).toBe("string");
+      expect(q.narrative.length).toBeGreaterThanOrEqual(50);
+      expect(Array.isArray(q.careerHints)).toBe(true);
+      expect(q.careerHints.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+});
+
+// ============ narrativeFor() ============
+
+describe("narrativeFor(selected)", () => {
+  it("retorna narrativa do grupo 'explorador' quando bate todos os ids tipicos", () => {
+    const out = narrativeFor(["autonomia", "criatividade", "aprendizado", "impacto", "proposito"]);
+    expect(out.group).toBe("explorador");
+    expect(typeof out.narrative).toBe("string");
+    expect(out.narrative.length).toBeGreaterThanOrEqual(40);
+    expect(Array.isArray(out.cargos)).toBe(true);
+    expect(out.cargos.length).toBeGreaterThan(0);
+  });
+
+  it("retorna narrativa do grupo 'estavel' quando bate ids tipicos", () => {
+    const out = narrativeFor(["estabilidade", "equilibrio", "remuneracao", "saude_mental", "colaboracao"]);
+    expect(out.group).toBe("estavel");
+    expect(typeof out.narrative).toBe("string");
+  });
+
+  it("retorna narrativa do grupo 'lider' quando bate ids tipicos", () => {
+    const out = narrativeFor(["lideranca", "reconhecimento", "desafio", "remuneracao", "impacto"]);
+    expect(out.group).toBe("lider");
+    expect(out.cargos.length).toBeGreaterThan(0);
+  });
+
+  it("cai pra 'misto' (fallback) quando nenhum grupo tem >= 2 ids em comum", () => {
+    // 1 id de cada grupo — ninguem ganha
+    const out = narrativeFor(["diversidade"]);
+    expect(out.group).toBe("misto");
+    expect(typeof out.narrative).toBe("string");
+    expect(out.narrative.length).toBeGreaterThan(0);
+  });
+
+  it("array vazio retorna narrativa indefinida (nao explode)", () => {
+    const out = narrativeFor([]);
+    expect(out.group).toBe("indefinido");
+    expect(typeof out.narrative).toBe("string");
+  });
+
+  it("input invalido (null/string) nao explode, devolve indefinido", () => {
+    const out1 = narrativeFor(null);
+    expect(out1.group).toBe("indefinido");
+    const out2 = narrativeFor("not-array");
+    expect(out2.group).toBe("indefinido");
+  });
+
+  it("VALUE_GROUPS expoe pelo menos 4 arquetipos distintos", () => {
+    expect(Object.keys(VALUE_GROUPS).length).toBeGreaterThanOrEqual(4);
+    Object.values(VALUE_GROUPS).forEach((g) => {
+      expect(Array.isArray(g.match)).toBe(true);
+      expect(g.match.length).toBeGreaterThanOrEqual(3);
+      expect(typeof g.narrative).toBe("string");
+      expect(g.narrative.length).toBeGreaterThanOrEqual(40);
+    });
+  });
+
+  it("todos os ids de match em VALUE_GROUPS existem em VALORES.options (anti-typo)", () => {
+    const validIds = new Set(VALORES.options.map((o) => o.id));
+    Object.entries(VALUE_GROUPS).forEach(([key, group]) => {
+      group.match.forEach((id) => {
+        expect(validIds.has(id)).toBe(true);
+      });
+    });
+  });
+});
+
+// ============ ikigaiSynthesis() ============
+
+describe("ikigaiSynthesis(answers)", () => {
+  const filled = "x".repeat(40);
+
+  it("4 dimensoes preenchidas retorna sintese 'tudo cruzado'", () => {
+    const text = ikigaiSynthesis({
+      ama: filled,
+      fazBem: filled,
+      mundoPrecisa: filled,
+      pagar: filled,
+    });
+    expect(typeof text).toBe("string");
+    expect(text.length).toBeGreaterThan(30);
+    // Sintese de 4/4 deve mencionar a intersecao (sem ser frase exata)
+    expect(text.toLowerCase()).toMatch(/4|encontram|emergir|direção|próximo|proximo/);
+  });
+
+  it("3 dimensoes retorna sintese apontando a lacuna", () => {
+    const text = ikigaiSynthesis({
+      ama: filled,
+      fazBem: filled,
+      mundoPrecisa: filled,
+      pagar: "",
+    });
+    expect(text).toMatch(/3 das 4|falta/i);
+  });
+
+  it("2 dimensoes retorna sintese cedo demais", () => {
+    const text = ikigaiSynthesis({
+      ama: filled,
+      fazBem: filled,
+    });
+    expect(text.length).toBeGreaterThan(20);
+    expect(text.toLowerCase()).toMatch(/2 das 4|falta/);
+  });
+
+  it("1 dimensao retorna sintese de primeiro passo", () => {
+    const text = ikigaiSynthesis({ ama: filled });
+    expect(text.length).toBeGreaterThan(20);
+  });
+
+  it("0 dimensoes retorna sintese vazia/encorajando comecar", () => {
+    const text = ikigaiSynthesis({});
+    expect(text.length).toBeGreaterThan(0);
+  });
+
+  it("answers null/undefined nao explode", () => {
+    expect(() => ikigaiSynthesis(null)).not.toThrow();
+    expect(() => ikigaiSynthesis(undefined)).not.toThrow();
+    const text = ikigaiSynthesis(null);
+    expect(typeof text).toBe("string");
+  });
+
+  it("conta apenas respostas com >= 20 chars (consistente com computeScore)", () => {
+    // 3 com 20+ chars, 1 com 5 chars — deve cair em "3 das 4"
+    const text = ikigaiSynthesis({
+      ama: filled,
+      fazBem: filled,
+      mundoPrecisa: filled,
+      pagar: "curt",
+    });
+    expect(text).toMatch(/3 das 4|falta/i);
   });
 });

@@ -117,11 +117,43 @@ export default function RadarClient({ initial }) {
         </div>
       ) : vagas.length === 0 && !error ? (
         <div className="ct-dash-empty">
-          <h2>Nenhuma vaga voltou pra esses filtros</h2>
+          <h2>Nenhuma vaga voltou agora</h2>
           <p>
-            Tente relaxar os filtros, ou volte daqui a algumas horas. Posso
-            também sugerir refazer o diagnóstico no{" "}
-            <Link href="/dashboard">seu dashboard</Link> com cargo-alvo diferente.
+            As fontes de vagas (Adzuna, Jooble e os ATS) não responderam ou
+            ainda não estão configuradas neste ambiente.
+            {sources.includes("fixtures") && (
+              <>
+                {" "}
+                Estamos exibindo vagas <strong>ilustrativas</strong> baseadas no
+                seu cargo-alvo — funcionalidade plena fica ativa em produção com
+                chaves configuradas.
+              </>
+            )}
+          </p>
+          <p style={{ marginTop: 12 }}>
+            {(seniority || model || minMatch > 0) ? (
+              <>
+                Tente{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSeniority("");
+                    setModel("");
+                    setMinMatch(0);
+                  }}
+                  className="ct-link-btn"
+                >
+                  resetar os filtros
+                </button>{" "}
+                ou volte daqui a algumas horas.
+              </>
+            ) : (
+              <>
+                Volte daqui a algumas horas, ou refaça o diagnóstico no{" "}
+                <Link href="/dashboard">seu dashboard</Link> com um cargo-alvo
+                diferente.
+              </>
+            )}
           </p>
         </div>
       ) : (

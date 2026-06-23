@@ -41,9 +41,11 @@ describe("lib/jobs — fallback ilustrativo", () => {
 });
 
 describe("searchFixtures", () => {
-  it("gera N vagas com titulo derivado do role", async () => {
+  it("retorna vagas relevantes pra um role conhecido", async () => {
     const out = await searchFixtures({ role: "Designer", limit: 3 });
-    expect(out.length).toBe(3);
+    // Catalogo curado pode ter <N fixtures pra esse role — limit e teto, nao piso.
+    expect(out.length).toBeGreaterThan(0);
+    expect(out.length).toBeLessThanOrEqual(3);
     for (const j of out) {
       expect(j.titulo).toContain("Designer");
       expect(j.source).toBe("fixtures");

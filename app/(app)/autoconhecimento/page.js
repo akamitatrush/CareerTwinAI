@@ -3,34 +3,28 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ALL_ASSESSMENTS, slugFromKind } from "@/lib/assessments/definitions";
+import { AssessmentIcon } from "./icons";
 
 // Render dinamico: auth() le cookies + Prisma. Sem cache estatico.
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Autoconhecimento — CareerTwin AI" };
 
-// Card de cada assessment: titulo, descricao curta, status (nao feito / feito em X).
-// Clicar abre /autoconhecimento/[slug] que renderiza o formulario do kind.
-const CARDS = [
-  {
-    kind: "DISC_LITE",
-    title: "Estilo comportamental",
-    desc: "12 perguntas. ~3 minutos. Mapeia teu estilo em 4 quadrantes (D/I/S/C).",
-    glyph: "S",
-  },
-  {
-    kind: "VALORES",
-    title: "Seus valores",
-    desc: "Escolhe os 5 valores que mais te representam no trabalho. ~2 minutos.",
-    glyph: "V",
-  },
-  {
-    kind: "IKIGAI",
-    title: "Ikigai — propósito",
-    desc:
-      "4 reflexões abertas: o que ama, o que faz bem, o que o mundo precisa, pelo que pagariam. ~10 minutos.",
-    glyph: "K",
-  },
-];
+// Microcopy por kind: o que o user GANHA fazendo (1-2 bullets). Mostrado no
+// card pra trocar o "Não feito ainda" frio por motivacao concreta.
+const CARD_BENEFITS = {
+  DISC_LITE: [
+    "Quadrante dominante + leitura por estilo",
+    "3 dicas concretas de onde brilhar",
+  ],
+  VALORES: [
+    "Top 5 valores em radar visual",
+    "Arquetipo + cargos que combinam",
+  ],
+  IKIGAI: [
+    "Diagrama 4-circulos preenchido",
+    "Sintese textual da intersecao",
+  ],
+};
 
 export default async function AutoconhecimentoPage() {
   const session = await auth();
@@ -51,60 +45,143 @@ export default async function AutoconhecimentoPage() {
     latest = [];
   }
   const doneMap = new Map(latest.map((l) => [l.kind, l._max?.completedAt]));
+  const doneCount = Array.from(doneMap.values()).filter(Boolean).length;
+  const totalCount = ALL_ASSESSMENTS.length;
+  const progressPct = Math.round((doneCount / totalCount) * 100);
 
   return (
     <main className="app-container" id="main-content">
-      <div className="ct-gaps-header">
-        <div>
-          <h1 className="ct-gaps-title">Autoconhecimento</h1>
-          <p className="ct-gaps-sub">
-            Três mini-assessments pra te ajudar a entender estilo, valores e propósito.{" "}
-            <strong>Uso informacional</strong> — não são diagnósticos clínicos.
-          </p>
-        </div>
-      </div>
+      <section className="ct-self-hero">
+        <p className="ct-self-hero-eyebrow">Autoconhecimento</p>
+        <h1 className="ct-self-hero-title">
+          Quem você é, antes da próxima vaga
+        </h1>
+        <p className="ct-self-hero-sub">
+          3 reflexões pra mapear estilo, valores e propósito. Não são
+          diagnósticos clínicos — são pontos de partida pra decisões melhores
+          de carreira.
+        </p>
+        <ul className="ct-self-stats" aria-label="Caracteristicas dos assessments">
+          <li>
+            <span className="ct-self-stat-num">~5min</span>
+            <span className="ct-self-stat-label">cada um</span>
+          </li>
+          <li>
+            <span className="ct-self-stat-num">100%</span>
+            <span className="ct-self-stat-label">privado e só seu</span>
+          </li>
+          <li>
+            <span className="ct-self-stat-num">∞</span>
+            <span className="ct-self-stat-label">refaz quando quiser</span>
+          </li>
+        </ul>
+      </section>
 
-      <div className="ct-assessment-list">
-        {CARDS.map((card) => {
-          const def = ALL_ASSESSMENTS.find((a) => a.kind === card.kind);
-          const doneAt = doneMap.get(card.kind);
-          const slug = slugFromKind(card.kind);
+      <section
+        className="ct-self-progress"
+        aria-label={`${doneCount} de ${totalCount} reflexoes feitas`}
+      >
+        <div className="ct-self-progress-head">
+          <span className="ct-self-progress-label">
+            {doneCount} de {totalCount} reflexões feitas
+          </span>
+          <span className="ct-self-progress-value">{progressPct}%</span>
+        </div>
+        <div
+          className="ct-self-progress-track"
+          role="progressbar"
+          aria-valuenow={progressPct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <div
+            className="ct-self-progress-fill"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      </section>
+
+      <div className="ct-self-grid">
+        {ALL_ASSESSMENTS.map((def) => {
+          const doneAt = doneMap.get(def.kind);
+          const slug = slugFromKind(def.kind);
+          const palette = def.palette || "indigo";
+          const benefits = CARD_BENEFITS[def.kind] || [];
+          // Tempo estimado e tipo — texto curto que substitui a descricao
+          // tecnica antiga ("12 perguntas. ~3 minutos.") por algo mais util.
+          const meta =
+            def.type === "likert"
+              ? `${def.questions.length} perguntas · ~3 min`
+              : def.type === "multiselect"
+                ? `Escolha de ${def.maxSelections} · ~2 min`
+                : `${def.questions.length} reflexões abertas · ~10 min`;
           return (
             <Link
-              key={card.kind}
+              key={def.kind}
               href={`/autoconhecimento/${slug}`}
-              className="ct-assessment-card"
+              className={`ct-self-card ct-self-card-${palette}`}
+              data-done={doneAt ? "true" : "false"}
             >
-              <div className="ct-assessment-icon" aria-hidden="true">
-                {card.glyph}
-              </div>
-              <div className="ct-assessment-body">
-                <h3 className="ct-assessment-title">{def?.title || card.title}</h3>
-                <p className="ct-assessment-desc">{card.desc}</p>
-                <p
-                  className={
-                    "ct-assessment-status" + (doneAt ? " done" : "")
-                  }
+              <div className="ct-self-card-head">
+                <div
+                  className={`ct-self-card-icon ct-self-card-icon-${palette}`}
+                  aria-hidden="true"
                 >
-                  {doneAt
-                    ? `Concluído em ${new Date(doneAt).toLocaleDateString("pt-BR")} · refazer?`
-                    : "Não feito ainda"}
-                </p>
+                  <AssessmentIcon kind={def.iconKind} size={26} />
+                </div>
+                {doneAt ? (
+                  <span className="ct-self-badge ct-self-badge-done" aria-label="Concluido">
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M3 8.5l3 3 7-7" />
+                    </svg>
+                    Concluído
+                  </span>
+                ) : (
+                  <span className="ct-self-badge ct-self-badge-todo">Pendente</span>
+                )}
               </div>
-              <span className="ct-assessment-arrow" aria-hidden="true">
-                →
-              </span>
+              <h2 className="ct-self-card-title">{def.title}</h2>
+              <p className="ct-self-card-desc">{def.intro}</p>
+
+              {benefits.length > 0 && (
+                <ul className="ct-self-card-benefits">
+                  {benefits.map((b, i) => (
+                    <li key={i}>{b}</li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="ct-self-card-foot">
+                <span className="ct-self-card-meta">{meta}</span>
+                <span className="ct-self-card-cta" aria-hidden="true">
+                  {doneAt ? "Refazer →" : "Começar →"}
+                </span>
+              </div>
+              {doneAt && (
+                <p className="ct-self-card-date">
+                  Salvo em {new Date(doneAt).toLocaleDateString("pt-BR")}
+                </p>
+              )}
             </Link>
           );
         })}
       </div>
 
-      <div className="ct-assessment-disclaimer" role="note">
-        <strong>Importante:</strong> esses assessments são informativos. Não substituem
-        avaliação psicológica profissional, teste de personalidade validado clinicamente
-        (MBTI/DISC oficial) ou consulta com psicólogo. Use como ponto de partida pra
-        reflexão, não como rótulo definitivo.
-      </div>
+      <aside className="ct-self-disclaimer" role="note">
+        <strong>Importante:</strong> estes assessments são informativos. Não
+        substituem MBTI/DISC oficial, avaliação psicológica ou consulta com
+        psicólogo. Use como ponto de partida.
+      </aside>
     </main>
   );
 }

@@ -105,6 +105,14 @@ export async function POST(req) {
   // o filtro, o fluxo "nenhuma vaga voltou" do componente Report cuida.
   let withMatch = enriched.filter((j) => j.match > 0);
 
+  // Defesa contra "tela vazia": se NENHUMA vaga passou no filtro de match>0
+  // mas ha vagas enriquecidas, mostramos todas mesmo assim. Cobre o caso de
+  // fixtures com descricao pobre em skills (regressao historica) ou de perfis
+  // muito desalinhados — sempre melhor mostrar algo do que zero resultado.
+  if (withMatch.length === 0 && enriched.length > 0) {
+    withMatch = enriched;
+  }
+
   // ---- Filtros opcionais (UI nova) ----------------------------------------
   // Senioridade: bate no titulo (case + acentos normalizados). Aceita
   // "Junior"/"Pleno"/"Senior" + variacoes comuns em vagas BR. "" = qualquer.
