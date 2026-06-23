@@ -52,11 +52,42 @@ function setSecurityHeaders(res) {
   res.headers.set("Content-Security-Policy", buildCsp());
 }
 
+// Whitelist absoluta: rotas que NUNCA podem ser bloqueadas pelo middleware
+// (modo experimentar anonimo da home depende delas). Defesa adicional alem
+// de PROTECTED_PREFIXES — mesmo se algum agente regredir e re-adicionar elas
+// na lista, esse whitelist garante que continuam acessiveis.
+const NEVER_BLOCK_PREFIXES = [
+  "/api/analyze",
+  "/api/opportunities",
+  "/api/interview",
+  "/api/tailor",
+  "/api/chat",
+  "/api/cv/",
+  "/api/linkedin/",
+  "/api/portfolio/",
+];
+
+function isNeverBlocked(pathname) {
+  return NEVER_BLOCK_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(p + "/") || pathname.startsWith(p),
+  );
+}
+
 export default async function middleware(req) {
+  const pathname = req.nextUrl.pathname;
+
+  // Whitelist absoluta — bypass mesmo se isProtected retornar true por bug.
+  // Rotas LLM fazem auth() interno e suportam anonimo (modo experimentar).
+  if (isNeverBlocked(pathname)) {
+    const res = NextResponse.next();
+    setSecurityHeaders(res);
+    return res;
+  }
+
   // Usa a lista unica de lib/auth-protected-paths.js (mesma que auth.config
   // consulta). Garante que middleware e callback `authorized` enxerguem o
   // mesmo conjunto de rotas — sem isso, page nova podia ficar exposta.
-  if (isProtected(req.nextUrl.pathname)) {
+  if (isProtected(pathname)) {
     // Delega ao NextAuth (que pode retornar redirect pra /entrar).
     const authRes = await authMiddleware(req);
     if (authRes) {
