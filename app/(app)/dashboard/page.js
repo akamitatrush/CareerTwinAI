@@ -175,12 +175,11 @@ function EmptyState() {
     <div className="ct-dash-empty">
       <h2>Seu gêmeo ainda está em branco.</h2>
       <p>
-        Cole seu currículo e diga o cargo-alvo em{" "}
-        <Link href="/dashboard">/dashboard</Link> pra começar a ver o
-        diagnóstico aqui.
+        Cole seu currículo e diga o cargo-alvo na <Link href="/">home</Link>{" "}
+        pra começar a ver o diagnóstico aqui.
       </p>
       <Link
-        href="/dashboard"
+        href="/"
         className="btn btn-primary"
         style={{ marginTop: 14, display: "inline-block" }}
       >
