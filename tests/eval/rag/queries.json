@@ -1,0 +1,403 @@
+[
+  {
+    "id": "q-cv-001",
+    "query": "como escrever bullets de curriculo que mostram resultado e nao so tarefa",
+    "expectedChunkIds": ["cv-bullet-method-car"],
+    "topic": "cv",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-cv-002",
+    "query": "metodo CAR contexto acao resultado bullets",
+    "expectedChunkIds": ["cv-bullet-method-car"],
+    "topic": "cv",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-cv-003",
+    "query": "como deixar meu CV ATS-friendly pra passar no filtro automatico",
+    "expectedChunkIds": ["cv-ats-friendly-format", "ats-format-parse-safety"],
+    "topic": "cv",
+    "audience": "pleno",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-cv-004",
+    "query": "qual fonte e formato de PDF usar no curriculo",
+    "expectedChunkIds": ["cv-ats-friendly-format", "ats-format-parse-safety"],
+    "topic": "cv",
+    "audience": "junior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-cv-005",
+    "query": "preciso colocar as palavras exatas da vaga no curriculo",
+    "expectedChunkIds": ["cv-keywords-matching", "ats-keyword-density"],
+    "topic": "cv",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-cv-006",
+    "query": "tailoring de resume pra cada vaga vale a pena",
+    "expectedChunkIds": ["cv-keywords-matching", "ats-keyword-density"],
+    "topic": "cv",
+    "audience": "senior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-cv-007",
+    "query": "que ordem botar as experiencias no curriculo, antiga ou recente primeiro",
+    "expectedChunkIds": ["cv-hierarchy-recency"],
+    "topic": "cv",
+    "audience": "senior",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-cv-008",
+    "query": "quantos bullets devo escrever pras minhas experiencias antigas de mais de 10 anos",
+    "expectedChunkIds": ["cv-hierarchy-recency"],
+    "topic": "cv",
+    "audience": "lead",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-cv-009",
+    "query": "meu CV pode ter 3 paginas ou tem que caber em 1",
+    "expectedChunkIds": ["cv-length-optimal"],
+    "topic": "cv",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-cv-010",
+    "query": "preciso de carta de apresentacao ou resumo profissional resolve",
+    "expectedChunkIds": ["cv-length-optimal"],
+    "topic": "cv",
+    "audience": "pleno",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-li-001",
+    "query": "como escrever um bom headline no LinkedIn",
+    "expectedChunkIds": ["linkedin-headline-formula"],
+    "topic": "linkedin",
+    "audience": "pleno",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-li-002",
+    "query": "formula pra titulo do perfil que aparece na busca de recrutador",
+    "expectedChunkIds": ["linkedin-headline-formula", "linkedin-keywords-discoverability"],
+    "topic": "linkedin",
+    "audience": "senior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-li-003",
+    "query": "como escrever a secao sobre do LinkedIn que prende a atencao",
+    "expectedChunkIds": ["linkedin-about-storytelling"],
+    "topic": "linkedin",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-li-004",
+    "query": "minha bio do linkedin esta generica, como conto minha historia",
+    "expectedChunkIds": ["linkedin-about-storytelling"],
+    "topic": "linkedin",
+    "audience": "junior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-li-005",
+    "query": "como aparecer mais nas buscas de recrutador no LinkedIn",
+    "expectedChunkIds": ["linkedin-keywords-discoverability"],
+    "topic": "linkedin",
+    "audience": "pleno",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-li-006",
+    "query": "quantas skills posso adicionar e quais pinar no topo",
+    "expectedChunkIds": ["linkedin-keywords-discoverability"],
+    "topic": "linkedin",
+    "audience": "pleno",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-li-007",
+    "query": "como pedir recomendacao pra ex chefe sem ser chato",
+    "expectedChunkIds": ["linkedin-recommendations-strategy"],
+    "topic": "linkedin",
+    "audience": "senior",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-li-008",
+    "query": "endorsements valem alguma coisa ou e so click vazio",
+    "expectedChunkIds": ["linkedin-recommendations-strategy"],
+    "topic": "linkedin",
+    "audience": "pleno",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-li-009",
+    "query": "preciso postar coisa no linkedin pra ser visto",
+    "expectedChunkIds": ["linkedin-activity-engagement"],
+    "topic": "linkedin",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-li-010",
+    "query": "que tipo de conteudo postar pra aumentar engajamento no algoritmo",
+    "expectedChunkIds": ["linkedin-activity-engagement"],
+    "topic": "linkedin",
+    "audience": "senior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-int-001",
+    "query": "tecnica pra responder pergunta comportamental em entrevista de emprego",
+    "expectedChunkIds": ["interview-star-framework"],
+    "topic": "interview",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-int-002",
+    "query": "STAR method como aplicar",
+    "expectedChunkIds": ["interview-star-framework"],
+    "topic": "interview",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-int-003",
+    "query": "quantas historias devo preparar pra entrevista comportamental",
+    "expectedChunkIds": ["interview-behavioral-prep"],
+    "topic": "interview",
+    "audience": "senior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-int-004",
+    "query": "como nao travar quando perguntarem sobre lideranca conflito ou fracasso",
+    "expectedChunkIds": ["interview-behavioral-prep"],
+    "topic": "interview",
+    "audience": "pleno",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-int-005",
+    "query": "entrevista tecnica de code, como me sair bem",
+    "expectedChunkIds": ["interview-technical-loud"],
+    "topic": "interview",
+    "audience": "pleno",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-int-006",
+    "query": "system design interview travei o que faco",
+    "expectedChunkIds": ["interview-technical-loud"],
+    "topic": "interview",
+    "audience": "senior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-int-007",
+    "query": "perguntaram minha pretensao salarial na primeira entrevista, o que respondo",
+    "expectedChunkIds": ["interview-salary-question"],
+    "topic": "interview",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-int-008",
+    "query": "ancoragem psicologica numero salario faixa larga",
+    "expectedChunkIds": ["interview-salary-question", "salary-negotiation-framework"],
+    "topic": "interview",
+    "audience": "senior",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-int-009",
+    "query": "o que perguntar pro recrutador no final da entrevista",
+    "expectedChunkIds": ["interview-questions-for-recruiter"],
+    "topic": "interview",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-int-010",
+    "query": "como sair de uma entrevista deixando boa impressao na ultima rodada",
+    "expectedChunkIds": ["interview-questions-for-recruiter"],
+    "topic": "interview",
+    "audience": "lead",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-tr-001",
+    "query": "como explicar minha transicao de carreira sem soar desencanado",
+    "expectedChunkIds": ["transition-narrative-bridge"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-tr-002",
+    "query": "narrativa pra mudar de area com motivacao ponte e evidencia",
+    "expectedChunkIds": ["transition-narrative-bridge"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-tr-003",
+    "query": "quais skills levo comigo quando mudo de area",
+    "expectedChunkIds": ["transition-transferable-skills"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-tr-004",
+    "query": "como contra atacar o gap obvio de skill em transicao",
+    "expectedChunkIds": ["transition-transferable-skills"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-tr-005",
+    "query": "preciso de portfolio pra mudar de carreira pra produto ou dados",
+    "expectedChunkIds": ["transition-portfolio-evidence"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-tr-006",
+    "query": "case study projeto publico github kaggle pra provar que sei",
+    "expectedChunkIds": ["transition-portfolio-evidence"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-tr-007",
+    "query": "como conseguir indicacao em area que nao tenho experiencia",
+    "expectedChunkIds": ["transition-network-warm-intro"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-tr-008",
+    "query": "fazer coffee chat com profissional sem parecer interesseiro",
+    "expectedChunkIds": ["transition-network-warm-intro"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-tr-009",
+    "query": "preciso reformular meu LinkedIn pra mostrar o cargo novo que quero",
+    "expectedChunkIds": ["transition-rebrand-online"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-tr-010",
+    "query": "open to work invisivel no algoritmo, como ajustar",
+    "expectedChunkIds": ["transition-rebrand-online"],
+    "topic": "transition",
+    "audience": "transition",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-soft-001",
+    "query": "como escrever email mais claro no trabalho remoto",
+    "expectedChunkIds": ["soft-communication-clarity"],
+    "topic": "soft-skills",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-soft-002",
+    "query": "BLUF bottom line up front comunicacao escrita",
+    "expectedChunkIds": ["soft-communication-clarity"],
+    "topic": "soft-skills",
+    "audience": "pleno",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-soft-003",
+    "query": "como mostrar lideranca no curriculo se nao tenho cargo de gestor",
+    "expectedChunkIds": ["soft-leadership-influence"],
+    "topic": "soft-skills",
+    "audience": "senior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-soft-004",
+    "query": "lateral leadership influencia sem autoridade formal",
+    "expectedChunkIds": ["soft-leadership-influence"],
+    "topic": "soft-skills",
+    "audience": "lead",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-soft-005",
+    "query": "como pedir feedback de forma que nao vire resposta vaga",
+    "expectedChunkIds": ["soft-self-awareness-feedback"],
+    "topic": "soft-skills",
+    "audience": "pleno",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-sal-001",
+    "query": "onde pesquisar faixa salarial confiavel no Brasil",
+    "expectedChunkIds": ["salary-market-research"],
+    "topic": "salary",
+    "audience": "pleno",
+    "difficulty": "easy"
+  },
+  {
+    "id": "q-sal-002",
+    "query": "como negocio salario com chefe sem perder a oferta",
+    "expectedChunkIds": ["salary-negotiation-framework"],
+    "topic": "salary",
+    "audience": "senior",
+    "difficulty": "medium"
+  },
+  {
+    "id": "q-sal-003",
+    "query": "empresa fez contraproposta pra eu ficar, aceito ou nao",
+    "expectedChunkIds": ["salary-counter-offer"],
+    "topic": "salary",
+    "audience": "senior",
+    "difficulty": "hard"
+  },
+  {
+    "id": "q-ats-001",
+    "query": "vale a pena CLT vs PJ na hora de aceitar oferta",
+    "expectedChunkIds": [],
+    "topic": "salary",
+    "audience": "pleno",
+    "difficulty": "hard",
+    "pending": true
+  },
+  {
+    "id": "q-soft-006",
+    "query": "como nao desanimar em busca de emprego longa, 80 aplicacoes ja",
+    "expectedChunkIds": ["soft-resilience-job-search"],
+    "topic": "soft-skills",
+    "audience": "pleno",
+    "difficulty": "easy"
+  }
+]

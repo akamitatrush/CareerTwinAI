@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, redesign/claude-design]
   pull_request:
-    branches: [main]
+    branches: [main, redesign/claude-design]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -12,20 +12,68 @@ concurrency:
 
 jobs:
   test:
-    name: Unit tests (vitest)
+    name: Tests + lint + audit
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Prisma format check
+        run: npx prisma format --check
+        # `format --check` retorna nao-zero se o schema esta deformatado.
+        # Garante consistencia, mas falha nao bloqueia (formatacao e cosmetica).
+        continue-on-error: true
+
+      - name: Prisma validate
+        run: npx prisma validate
+
+      - name: Unit tests (vitest)
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+        # Lint warnings ainda nao sao zero — deixamos warning visivel mas nao gate.
+        # Quando estabilizar baseline, remover continue-on-error.
+        continue-on-error: true
+
+      - name: npm audit (high+)
+        # Bloqueia merge se houver CVE alto/critico em deps de prod. Dependabot
+        # abre PR pra corrigir; humano avalia se e falso positivo. Sem essa
+        # gate, Vercel deployava com vulneravel.
+        run: npm audit --audit-level=high --omit=dev
+
+  build:
+    name: Next build
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
           cache: npm
 
       - run: npm ci
 
-      - run: npx prisma generate
-
-      - run: npm test
+      - name: Build
+        # AUTH_DEV_CREDENTIALS vazio garante que o gate de isRealProduction
+        # nao trava o build (lib/auth.js:60 throw se "true" em prod).
+        # Build precisa de DATABASE_URL pra prisma generate; valor placeholder
+        # serve pra etapa de build (sem migrate deploy).
+        run: AUTH_DEV_CREDENTIALS= npx next build
+        env:
+          DATABASE_URL: postgres://placeholder:placeholder@localhost:5432/placeholder
+          AUTH_SECRET: build-only-secret-not-used-at-runtime
+          NEXT_TELEMETRY_DISABLED: "1"

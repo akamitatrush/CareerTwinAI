@@ -23,8 +23,8 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Monitoramento: cron-digest checa para nao mandar 2x na mesma semana.
-  lastDigestAt   DateTime?
-  digestEnabled  Boolean   @default(true)
+  lastDigestAt  DateTime?
+  digestEnabled Boolean   @default(true)
 
   accounts      Account[]
   sessions      Session[]
@@ -33,6 +33,14 @@ model User {
   consents      Consent[]
   dataSources   DataSource[]
   applications  Application[]
+  tailoredCvs   TailoredCv[]
+  notifications Notification[]
+  assessments   AssessmentResult[]
+  evidence      Evidence[]
+  subscription  Subscription?
+  usageMeters   UsageMeter[]
+  billingEvents BillingEvent[]
+  auditLogs     AuditLog[]
 }
 
 model Account {
@@ -84,16 +92,29 @@ model Profile {
   rawCv       String?  @db.Text
   perfilJson  Json?
 
+  // LGPD — storage limitation: rawCv/linkedinRaw tem TTL de 90 dias.
+  // rawCvExpiresAt e setado no upsert (analyze/upload). Cron diario apaga
+  // rawCv/linkedinRaw quando expiresAt < now e marca rawCvRedactedAt.
+  // perfilJson/linkedinJson (estruturados, anonimizaveis) ficam — sao o "gemeo".
+  rawCvExpiresAt  DateTime?
+  rawCvRedactedAt DateTime?
+
   // LinkedIn (texto colado, parseado pra estrutura).
   linkedinRaw  String? @db.Text
   linkedinJson Json?
 
   // Portfolio (GitHub username + projetos extraidos + sites pessoais).
-  githubUser   String?
+  githubUser    String?
   portfolioJson Json?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // Welcome flow. firstDiagnosisAt e setado no primeiro ScoreSnapshot persistido
+  // (detecta "primeira vez de verdade"). welcomedAt e setado quando o usuario
+  // dismissa o banner welcome no /dashboard — junto, decidem se o banner aparece.
+  firstDiagnosisAt DateTime?
+  welcomedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -152,6 +173,7 @@ enum PlanStatus {
 enum ConsentSource {
   CV_PASTE
   CV_PDF
+  CV_DOCX
   LINKEDIN_EXPORT
   LINKEDIN_OIDC
   LINKEDIN_PASTE
@@ -171,24 +193,25 @@ enum ApplicationStatus {
 }
 
 model Application {
-  id          String            @id @default(cuid())
-  userId      String
-  titulo      String
-  empresa     String
-  local       String?
-  url         String?
-  salario     String?
-  source      String?
-  status      ApplicationStatus @default(SAVED)
-  notes       String?           @db.Text
-  savedAt     DateTime          @default(now())
-  appliedAt   DateTime?
-  rejectedAt  DateTime?
-  offerAt     DateTime?
-  updatedAt   DateTime          @updatedAt
+  id         String            @id @default(cuid())
+  userId     String
+  titulo     String
+  empresa    String
+  local      String?
+  url        String?
+  salario    String?
+  source     String?
+  status     ApplicationStatus @default(SAVED)
+  notes      String?           @db.Text
+  savedAt    DateTime          @default(now())
+  appliedAt  DateTime?
+  rejectedAt DateTime?
+  offerAt    DateTime?
+  updatedAt  DateTime          @updatedAt
 
-  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events ApplicationEvent[]
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events      ApplicationEvent[]
+  tailoredCvs TailoredCv[]
 
   @@index([userId, status])
   @@index([userId, updatedAt])
@@ -231,4 +254,265 @@ model DataSource {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, ingestedAt])
+}
+
+// Notificacoes in-app. Geradas pontualmente quando eventos importantes
+// acontecem (microacao concluida, novo snapshot salvo, status de candidatura
+// alterado, digest enviado). readAt=null => unread. Cascade no userId pra
+// que "apagar tudo" leve junto. Indices duplos: timeline (userId,createdAt)
+// e contador de unread (userId,readAt).
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  kind      NotificationKind
+  title     String
+  body      String?          @db.Text
+  link      String?
+  meta      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}
+
+enum NotificationKind {
+  GAP_COMPLETED
+  PLAN_ITEM_COMPLETED
+  SCORE_UPDATED
+  DIGEST_SENT
+  APPLICATION_STATUS
+  WELCOME
+}
+
+// Resultado de mini-assessments de autoconhecimento (DISC-lite, Valores, Ikigai).
+// scoresJson tem shape livre por tipo (ver lib/assessments/definitions.js).
+// USO INFORMACIONAL — nao sao diagnosticos clinicos. Cascade no userId leva tudo
+// junto em "apagar minha conta". Indice composto pra buscar o resultado mais
+// recente por kind por user (groupBy/findFirst com orderBy).
+model AssessmentResult {
+  id          String         @id @default(cuid())
+  userId      String
+  kind        AssessmentKind
+  scoresJson  Json
+  insights    String?        @db.Text
+  completedAt DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, completedAt])
+}
+
+enum AssessmentKind {
+  DISC_LITE
+  VALORES
+  IKIGAI
+}
+
+// Evidencias de competencia — usuario DEMONSTRA skills (nao so declara) com
+// cases/projetos/metricas. Cada Evidence vincula um conjunto de skills (mesma
+// sintaxe de Profile.skills) a uma narrativa concreta com URL/periodo/metrica
+// opcionais. Skills-first: recrutador acredita em evidencia especifica, nao
+// em declaracao generica. Cascade no userId pra "apagar minha conta" levar
+// junto. Indice (userId,createdAt) atende a listagem ordenada cronologicamente.
+model Evidence {
+  id          String       @id @default(cuid())
+  userId      String
+  kind        EvidenceKind
+  title       String
+  description String       @db.Text
+  skills      String[]     @default([])
+  metricLabel String?
+  metricValue String?
+  url         String?
+  whenLabel   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+enum EvidenceKind {
+  PROJECT
+  CASE
+  PUBLICATION
+  CERTIFICATION
+  AWARD
+  CONTRIBUTION
+}
+
+// Knowledge base vetorizada pro RAG real (pgvector + Voyage AI embeddings).
+// embedding = vetor 1024-dim semantico do `content`. contentHash (sha256 dos
+// primeiros 32 chars do hex) garante idempotencia da ingestao: rodar 2x nao
+// duplica. tipo `vector` requer extensao pgvector (criada na migration).
+// `Unsupported` porque Prisma nao tem mapping nativo pra vector — leitura/escrita
+// passa por $queryRaw/$executeRaw com cast ::vector.
+model KnowledgeChunk {
+  id          String                       @id @default(cuid())
+  contentHash String                       @unique
+  topic       String
+  audience    String[]                     @default([])
+  content     String                       @db.Text
+  source      String
+  tags        String[]                     @default([])
+  embedding   Unsupported("vector(1024)")?
+  createdAt   DateTime                     @default(now())
+  updatedAt   DateTime                     @updatedAt
+
+  @@index([topic])
+}
+
+// ============ Billing (Stripe Phase 1+2) ============
+
+// Subscription: relacao 1:1 com User. planId guarda o plano logico (free,
+// pro_monthly, pro_yearly, team_monthly) — facilita auditar sem ir no Stripe.
+// stripeCustomerId/stripeSubscriptionId tornam-se UNIQUE depois que webhook
+// confirma assinatura; nullables porque user pode existir sem nunca ter
+// passado pelo Stripe (free). currentPeriodEnd e atualizado em todo evento
+// subscription.updated; quando vence sem renovacao, status cai pra CANCELED
+// via webhook. cancelAtPeriodEnd reflete intencao do user via Customer Portal.
+// Cascade no userId pra "apagar tudo" remover historico de assinatura junto.
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  planId               String             @default("free")
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  trialEndsAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  PAUSED
+}
+
+// UsageMeter: contador (userId, feature, periodKey) com unique pra upsert atomico.
+// periodKey="2026-06" pra features mensais ("analyze", "tailor", "interview");
+// "2026-06-22" (YYYY-MM-DD) pra diarias ("opportunities"). Periodo muda
+// naturalmente sem cron — basta sufixar pelo periodo atual no dia da consulta.
+// Cron mensal limpa registros >3 meses (housekeeping). Index (userId, periodKey)
+// atende dashboard "uso do mes" sem full-scan.
+model UsageMeter {
+  id        String   @id @default(cuid())
+  userId    String
+  feature   String
+  count     Int      @default(0)
+  // Telemetria de custo LLM: incrementada em trackTokenUsage apos chamada de
+  // LLM. costUsd e Decimal(10,6) pra suportar fracoes < $0.000001 (Voyage AI
+  // embeddings sao $0.06/1M tokens => ~$0.00000006 por token). Hard-cap diario
+  // por plano em checkDailyBudget defende contra runaway cost de attacker.
+  tokensIn  Int      @default(0)
+  tokensOut Int      @default(0)
+  costUsd   Decimal  @default(0) @db.Decimal(10, 6)
+  periodKey String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feature, periodKey])
+  @@index([userId, periodKey])
+}
+
+// BillingEvent: log auditavel de eventos Stripe processados. stripeEventId UNIQUE
+// garante idempotencia — webhooks da Stripe sao retried; segundo processamento
+// pega P2002 e retorna 200 sem reaplicar efeito. payload contem o data.object
+// (subscription/invoice/etc) sem sanitizar — Stripe nao envia PII de outros
+// users, somente os do customer dono. userId nullable pra eventos pre-customer
+// (signup pendente) e onDelete:SetNull preserva auditoria quando user e apagado
+// (LGPD: deixar rastro de cobrancas e legitimo).
+model BillingEvent {
+  id            String   @id @default(cuid())
+  userId        String?
+  stripeEventId String   @unique
+  type          String
+  payload       Json
+  processedAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type, processedAt])
+}
+
+// Historico de CVs adaptados pra vagas especificas. Cada chamada a /api/tailor
+// que vier de um user logado gera um registro aqui. applicationId opcional
+// permite tailor ad-hoc (sem vincular a Application do funil). onDelete:SetNull
+// no applicationId garante que apagar uma Application nao apaga o historico.
+model TailoredCv {
+  id            String   @id @default(cuid())
+  userId        String
+  applicationId String?
+  vagaTitulo    String
+  vagaEmpresa   String?
+  beforeText    String   @db.Text
+  afterText     String   @db.Text
+  bullets       Json?
+  createdAt     DateTime @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+// ============ Audit Log (LGPD/OWASP A09) ============
+
+// AuditLog: trace de eventos sensiveis. Resolve gap A09 (Security Logging &
+// Monitoring) do audit OWASP. Cada evento carrega userId (nullable pra acoes
+// de sistema/anonimas), IP hasheado (LGPD: nao raw — sha256+salt), action
+// (enum tipado), target (recurso afetado) e meta sanitizado (sem PII raw).
+// onDelete:SetNull preserva auditoria quando user e apagado — LGPD permite
+// reter rastros minimos legitimos pra defesa de direitos (ANPD investigation).
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String? // null = acao de sistema/anonimo
+  actorIp   String? // hash sha256 do IP (LGPD: nao raw)
+  action    AuditAction
+  target    String? // ex: "User:cuid123" pra qual recurso foi afetado
+  meta      Json? // payload sanitizado
+  createdAt DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  PASSWORD_RESET
+  ACCOUNT_CREATED
+  ACCOUNT_DELETED
+  DATA_EXPORTED
+  CONSENT_GRANTED
+  CONSENT_REVOKED
+  PROFILE_UPDATED
+  BILLING_SUBSCRIPTION_CREATED
+  BILLING_SUBSCRIPTION_CANCELED
+  BILLING_PAYMENT_FAILED
+  CV_UPLOADED
+  CV_DELETED
+  SECURITY_RATE_LIMIT_HIT
+  SECURITY_BUDGET_EXCEEDED
+  SECURITY_INVALID_WEBHOOK
 }

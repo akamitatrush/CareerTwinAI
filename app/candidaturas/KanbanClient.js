@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { track } from "@/components/PostHogProvider";
+import { safeHref } from "@/lib/url-safe";
 
 const STATUS_NEXT = {
   SAVED: ["APPLIED", "WITHDRAWN"],
@@ -202,8 +203,10 @@ export default function KanbanClient({ initialItems, columns }) {
                       {it.local && ` · ${it.local}`}
                     </div>
                     {it.source && <div className="kanban-card-src">{it.source}</div>}
-                    {it.url && (
-                      <a href={it.url} target="_blank" rel="noopener noreferrer" className="kanban-card-link">
+                    {/* safeHref bloqueia javascript:/data: que poderia ter entrado
+                        no DB antes do safeExternalUrl validator. */}
+                    {safeHref(it.url) && (
+                      <a href={safeHref(it.url)} target="_blank" rel="noopener noreferrer" className="kanban-card-link">
                         ver vaga ↗
                       </a>
                     )}
@@ -257,7 +260,7 @@ export default function KanbanClient({ initialItems, columns }) {
         .kanban-x { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; cursor: pointer; color: var(--text-subtle); font-size: 11px; }
         .kanban-x:hover { color: var(--alert); border-color: var(--alert); }
         .kanban-empty-hero { margin-bottom: 20px; padding: 22px; border: 1px dashed var(--border-strong); border-radius: 12px; background: var(--surface-2); }
-        .kanban-empty-hero-inner h2 { margin: 0 0 8px; font-size: 20px; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; }
+        .kanban-empty-hero-inner h2 { margin: 0 0 8px; font-size: 20px; font-family: var(--font-display); font-weight: 700; }
         .kanban-empty-hero-inner p { margin: 0 0 14px; color: var(--text-muted); font-size: 14px; line-height: 1.55; max-width: 620px; }
         :global(.ks-input) { padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 13px; font-family: inherit; background: var(--surface); }
       `}</style>

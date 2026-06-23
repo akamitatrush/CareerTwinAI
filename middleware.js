@@ -1,10 +1,9 @@
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
 import { authConfig } from "@/auth.config";
+import { isProtected } from "@/lib/auth-protected-paths";
 
 const { auth: authMiddleware } = NextAuth(authConfig);
-
-const PROTECTED = [/^\/meu-gemeo(\/|$)/, /^\/meus-dados(\/|$)/];
 
 // CSP. Trade-off pragmatico:
 //  - Next 14 + Vercel + chunks estaticos = nonce + strict-dynamic NAO funciona
@@ -26,9 +25,15 @@ function buildCsp() {
   const scriptSrc = IS_DEV
     ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
     : "script-src 'self' 'unsafe-inline'";
+  // PostHog + Sentry precisam de connect-src liberado pra mandar eventos.
+  // - us.i.posthog.com: ingestion da PostHog Cloud (US)
+  // - *.posthog.com: cobre subdomínios extras (assets, session recording, etc)
+  // - *.ingest.sentry.io e *.ingest.us.sentry.io: ingestion do Sentry
+  const observabilityHosts =
+    "https://us.i.posthog.com https://*.posthog.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io";
   const connectSrc = IS_DEV
-    ? "connect-src 'self' ws: wss:"
-    : "connect-src 'self'";
+    ? `connect-src 'self' ws: wss: ${observabilityHosts}`
+    : `connect-src 'self' ${observabilityHosts}`;
   return [
     "default-src 'self'",
     scriptSrc,
@@ -48,9 +53,10 @@ function setSecurityHeaders(res) {
 }
 
 export default async function middleware(req) {
-  const isProtected = PROTECTED.some((re) => re.test(req.nextUrl.pathname));
-
-  if (isProtected) {
+  // Usa a lista unica de lib/auth-protected-paths.js (mesma que auth.config
+  // consulta). Garante que middleware e callback `authorized` enxerguem o
+  // mesmo conjunto de rotas — sem isso, page nova podia ficar exposta.
+  if (isProtected(req.nextUrl.pathname)) {
     // Delega ao NextAuth (que pode retornar redirect pra /entrar).
     const authRes = await authMiddleware(req);
     if (authRes) {

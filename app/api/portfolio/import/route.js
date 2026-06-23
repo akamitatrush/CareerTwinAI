@@ -5,84 +5,57 @@ import { completeJSON } from "@/lib/llm";
 import { promptPortfolio } from "@/lib/prompts";
 import { PortfolioImportBody, PortfolioShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { safeFetchExternal, isPrivateIp } from "@/lib/safe-fetch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const FETCH_TIMEOUT = 6000;
 
-async function fetchWithTimeout(url, init = {}) {
-  const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), FETCH_TIMEOUT);
-  try {
-    return await fetch(url, { ...init, signal: ctl.signal });
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-// SSRF: bloqueia hostnames internos (IPv4 + IPv6 + nomes locais).
-// Hostname literal IPv6 vem entre colchetes na URL (ex.: http://[::1]/).
-function isPrivateIpv4(h) {
-  if (h === "localhost" || h === "0.0.0.0") return true;
-  if (/^127\./.test(h)) return true;
-  if (/^10\./.test(h)) return true;
-  if (/^192\.168\./.test(h)) return true;
-  if (/^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h)) return true;
-  if (/^169\.254\./.test(h)) return true; // link-local (cloud metadata 169.254.169.254)
-  if (/^100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\./.test(h)) return true; // CGNAT 100.64/10
-  return false;
-}
-function isPrivateIpv6(h) {
-  const x = h.toLowerCase();
-  if (x === "::1" || x === "::") return true;
-  if (x.startsWith("fe80:") || x.startsWith("fe80::")) return true; // link-local
-  if (x.startsWith("fc") || x.startsWith("fd")) return true; // ULA fc00::/7
-  // IPv4-mapped IPv6: ::ffff:x.x.x.x — extrai e checa
-  const m = x.match(/^::ffff:([0-9.]+)$/);
-  if (m && isPrivateIpv4(m[1])) return true;
-  return false;
-}
+// Validacao previa do hostname/URL antes mesmo de bater no DNS. Bloqueia
+// schemes nao-http(s), nomes especiais (.local/.internal/.lan), e IPs
+// privados quando o usuario passa URL literal por IP.
+//
+// A defesa REAL anti-TOCTOU contra DNS rebinding e o IP pinning dentro de
+// safeFetchExternal (lib/safe-fetch.js): resolve+pina IP no socket via
+// lookup custom no node:https/node:http — sem novo DNS lookup durante connect.
 function isAllowedUrl(u) {
   try {
     const url = new URL(u);
     if (!/^https?:$/.test(url.protocol)) return false;
-    let h = url.hostname.toLowerCase();
-    // IPv6 vem entre colchetes — `new URL` remove no `hostname`, mas garantia:
-    h = h.replace(/^\[|\]$/g, "");
+    let h = url.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+    if (!h) return false;
+    if (h === "localhost" || h === "0.0.0.0") return false;
     if (h.endsWith(".local") || h.endsWith(".internal") || h.endsWith(".lan")) return false;
-    if (isPrivateIpv4(h)) return false;
-    if (h.includes(":") && isPrivateIpv6(h)) return false;
+    // Literal IP: checa diretamente. Hostname: deixa pro safeFetchExternal
+    // (que faz DNS + isPrivateIp depois). isPrivateIp aceita IP literal IPv4
+    // ou IPv6.
+    if (/^[\d.]+$/.test(h) && isPrivateIp(h, 4)) return false;
+    if (h.includes(":") && isPrivateIp(h, 6)) return false;
     return true;
   } catch {
     return false;
   }
 }
 
-// Mitigação parcial de DNS rebinding: resolve o hostname AGORA e usa o IP no
-// fetch (via `lookup` custom do Node fetch). Bloqueia se o IP resolvido for
-// privado. Não é proteção perfeita (multi-A, IPv6+IPv4 mix), mas fecha o caso
-// trivial de "DNS retorna 8.8.8.8, fetch resolve pra 127.0.0.1".
-async function safeLookup(hostname) {
-  const dns = await import("node:dns/promises");
-  const recs = await dns.lookup(hostname, { all: true, verbatim: true });
-  for (const r of recs) {
-    if (r.family === 4 && isPrivateIpv4(r.address)) {
-      throw new Error("hostname resolve para IP privado");
-    }
-    if (r.family === 6 && isPrivateIpv6(r.address)) {
-      throw new Error("hostname resolve para IPv6 privado");
-    }
-  }
-  return recs[0];
-}
-
 async function fetchGithubRepos(user) {
   // API publica do GitHub — sem auth = 60 req/h por IP. Suficiente pra MVP.
-  const res = await fetchWithTimeout(
-    `https://api.github.com/users/${encodeURIComponent(user)}/repos?per_page=30&sort=updated`,
-    { headers: { "user-agent": "CareerTwin", accept: "application/vnd.github+json" } }
-  );
+  // Endpoint HARDCODED (api.github.com) — sem SSRF surface, nao precisa de
+  // IP pinning. Mantemos fetch nativo aqui.
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), FETCH_TIMEOUT);
+  let res;
+  try {
+    res = await fetch(
+      `https://api.github.com/users/${encodeURIComponent(user)}/repos?per_page=30&sort=updated`,
+      {
+        headers: { "user-agent": "CareerTwin", accept: "application/vnd.github+json" },
+        signal: ctl.signal,
+      }
+    );
+  } finally {
+    clearTimeout(t);
+  }
   if (!res.ok) {
     return { error: `github status ${res.status}`, repos: [] };
   }
@@ -104,16 +77,22 @@ async function fetchGithubRepos(user) {
 }
 
 async function fetchSiteText(url) {
-  // Anti DNS-rebinding: valida IP do hostname antes de fazer o fetch real.
+  // safeFetchExternal faz: DNS lookup -> isPrivateIp check -> pin do IP no
+  // socket (lookup custom no http/https.request) -> request. Garante que o IP
+  // que validamos e o IP usado no socket. Antes, safeLookup + fetch deixavam
+  // o socket fazer novo lookup (TOCTOU exploravel via DNS rebinding com TTL=0).
+  let res;
   try {
-    const u = new URL(url);
-    await safeLookup(u.hostname.replace(/^\[|\]$/g, ""));
+    res = await safeFetchExternal(url, {
+      headers: { "user-agent": "CareerTwin" },
+      timeoutMs: FETCH_TIMEOUT,
+      maxBytes: 500_000, // sites pessoais cabem facil
+    });
   } catch {
     return "";
   }
-  const res = await fetchWithTimeout(url, { headers: { "user-agent": "CareerTwin" } });
   if (!res.ok) return "";
-  const ct = res.headers.get("content-type") || "";
+  const ct = String(res.headers["content-type"] || "");
   if (!ct.includes("text/html") && !ct.includes("text/plain")) return "";
   const html = (await res.text()).slice(0, 200_000);
   // Strip tags, scripts, styles — bruto mas funciona pra MVP.
@@ -130,7 +109,7 @@ export async function POST(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const limit = guardLLM(req, { name: "portfolio", userId, perMinuteAnon: 2, perMinuteUser: 8 });
+  const limit = await guardLLM(req, { name: "portfolio", userId, perMinuteAnon: 2, perMinuteUser: 8 });
   if (!limit.ok) return tooMany(limit);
 
   let body;

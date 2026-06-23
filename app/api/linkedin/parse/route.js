@@ -14,7 +14,7 @@ export async function POST(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const limit = guardLLM(req, { name: "linkedin", userId, perMinuteAnon: 2, perMinuteUser: 8 });
+  const limit = await guardLLM(req, { name: "linkedin", userId, perMinuteAnon: 2, perMinuteUser: 8 });
   if (!limit.ok) return tooMany(limit);
 
   let body;

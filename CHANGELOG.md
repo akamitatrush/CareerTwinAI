@@ -5,6 +5,71 @@ Todas as mudancas notaveis deste projeto sao documentadas aqui.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.9.0] — MVP completo (branch redesign/claude-design)
+
+### Added — 4 pilares completos
+
+**Autoconhecimento (Pilar 1):**
+- `/autoconhecimento` com 3 mini-assessments (DISC-lite, Valores, Ikigai)
+- Schema `AssessmentResult` + 1 migration
+- Endpoints `/api/assessments/[kind]` (GET/POST)
+- Disclaimer ético em todas as telas
+
+**Diagnóstico (Pilar 2):**
+- Sub-scores 100% determinísticos em `lib/scoring/subscores.js`
+- LLM só gera explicações (não valores)
+- 4 fórmulas: TF-like + count/validity/diversity + completude + year-range
+- Score auditável em `/transparencia`
+
+**Ação (Pilar 3):**
+- Skill Gap Mapper completo: gaps + microactions com completion endpoints + **cursos sugeridos** curados
+- Evidências de competência: schema `Evidence` + `/evidencias` UI
+- CVs adaptados: schema `TailoredCv` + `/cvs-adaptados` UI com diff antes/depois
+
+**Oportunidade (Pilar 4):**
+- 6 ATS providers: Adzuna BR, Jooble, Greenhouse, Lever, Ashby, Workable
+- Filtros senioridade/modelo/aderência mínima
+- Match breakdown "Por que?" inline com fórmula matemática
+
+### Added — Plataforma
+- AppShell sidebar 252px desktop + header mobile (Claude Design)
+- 12 telas autenticadas + 5 públicas
+- Notifications in-app com sininho na sidebar
+- Welcome flow first-time experience
+- Onboarding state X/3 sources tracking
+- RAG-lite com knowledge base JSON + keyword retrieval
+- `/api/health` pra UptimeRobot
+- LGPD: export JSON inclui assessments + evidence + tailoredCvs
+
+### Added — Quality
+- 200+ testes unit (vitest)
+- 5 specs E2E Playwright (skipped em CI por padrão)
+- A11y audit (~85% score AA estimado)
+- UX audit completo de 6 telas
+- Hover micro-interactions + skeletons consistentes
+- Light/dark theme toggle com persistência
+
+### Added — Docs
+- ALGORITHMS.md (4500+ palavras)
+- OBSERVABILITY.md (Sentry + PostHog + UptimeRobot)
+- HANDOFF_TIME_TERA.md
+- Master plan + Frontend/Backend/Production architecture docs
+- UX_REVIEW_PREVIEW.md + A11Y_AUDIT.md
+
+### Changed
+- Paleta verde-limão → Índigo Sereno (V2.zip mock)
+- Fontes: Bricolage Grotesque + Source Serif → Plus Jakarta Sans + Spectral
+- Default theme: dark → light
+- `/meu-gemeo` → redirect pra `/dashboard`
+- Positioning: "recolocação" → "gestão de carreira" (proposta Daniel Scharf)
+
+### Fixed
+- CSP bloqueando PostHog/Sentry (connect-src expandido)
+- Sub-scores LLM-generated violando "número = cálculo"
+- Resend signIn provider id mismatch
+- Bricolage hardcoded em ~6 componentes
+- 30+ violações WCAG AA com `--text-faint` recalibrado
+
 ## [0.4.0] — Fase "Pitch" (LinkedIn, Portfolio, Tracking, Digest)
 
 ### Added

@@ -1,0 +1,1274 @@
+[
+  {
+    "id": "cv-bullet-method-car",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Metodo CAR: Contexto, Acao, Resultado. Cada bullet do CV deve seguir: situacao enfrentada, o que voce fez especificamente, e qual resultado mensuravel saiu disso. Evite verbos genericos como 'auxiliei', 'participei'. Use 'liderei', 'reduzi', 'aumentei', 'implementei'. Sempre que possivel, numeros: '40% reducao', '3x throughput', 'R$ 200k economia'.",
+    "source": "Bianca Silva Matos, mentoria de carreira BR 2025",
+    "tags": ["metodo", "estrutura", "bullets", "resultado", "metricas", "verbos", "curriculo"]
+  },
+  {
+    "id": "cv-ats-friendly-format",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "CV ATS-friendly: use formato simples de uma coluna, fontes padrao (Arial, Calibri, Helvetica), evite tabelas, caixas de texto, headers/footers e graficos. ATS le top-to-bottom; layout criativo quebra parse. Use secoes nomeadas explicitamente: 'Experiencia Profissional', 'Formacao', 'Habilidades'. Salve em PDF text-based (nao escaneado).",
+    "source": "Jobscan + Ladders ATS Study 2024",
+    "tags": ["ats", "formato", "pdf", "scanability", "layout", "curriculo"]
+  },
+  {
+    "id": "cv-keywords-matching",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Keywords da vaga devem aparecer no CV exatamente como no anuncio (singular vs plural, sigla vs nome completo). Se a vaga pede 'SQL' e voce escreve so 'banco de dados relacional', ATS nao casa. Espalhe keywords em contexto real (bullets de experiencia), nao em lista separada de 'palavras-chave' — recrutador humano percebe stuffing. Faca match de 60-80% das keywords listadas.",
+    "source": "best practice mercado BR + Jobscan benchmark",
+    "tags": ["keywords", "ats", "match", "vaga", "tailoring", "curriculo"]
+  },
+  {
+    "id": "cv-hierarchy-recency",
+    "topic": "cv",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Ordem cronologica reversa: experiencia mais recente primeiro. Dedique mais espaco (3-5 bullets) pras ultimas 2 posicoes; experiencias com mais de 10 anos podem virar uma linha. Coloque resultados quantitativos no topo de cada cargo (primeiro bullet = maior impacto). Recrutador da scan de 6-10 segundos: o que importa precisa estar nos primeiros 30% da folha.",
+    "source": "Lou Adler, Hire With Your Head + adaptacao BR",
+    "tags": ["estrutura", "hierarquia", "ordem", "recencia", "scan", "curriculo"]
+  },
+  {
+    "id": "cv-length-optimal",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Comprimento ideal do CV no Brasil: 1 pagina pra ate 5 anos de experiencia; 2 paginas pra senior/lead/diretor (max 15 anos relevantes); raramente 3+ paginas (so academico ou C-level com publicacoes). Cortar = priorizar. Se nao cabe em 2, voce nao filtrou bem. Resumo profissional no topo (3-4 linhas) substitui carta de apresentacao.",
+    "source": "best practice mercado BR 2025",
+    "tags": ["tamanho", "paginas", "resumo", "filtragem", "curriculo"]
+  },
+  {
+    "id": "cv-photo-or-not",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Foto no CV BR: opcional e em queda. Empresas tech modernas (Nubank, iFood, Stone) pedem sem foto pra reduzir vies. Corporate tradicional (bancos, industria) ainda espera foto. Regra pratica: se aplicar via LinkedIn ou Gupy, sem foto. Se for empresa familiar/industrial via email direto, foto profissional ajuda. Nunca foto de festa, selfie, ou com fundo bagunçado — fundo branco/cinza, sorriso leve, ombros enquadrados.",
+    "source": "best practice mercado BR 2025 + recrutadores tech",
+    "tags": ["foto", "imagem", "vies", "tech", "corporate", "curriculo"]
+  },
+  {
+    "id": "cv-summary-headline",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Resumo profissional (3-4 linhas) no topo do CV substitui carta de apresentacao. Formula: [Anos de experiencia] [Cargo/area] com [especialidade/stack]. [1 conquista grande com numero]. [O que busca/diferencial]. Ex: '8 anos como Engenheiro de Dados focado em pipelines AWS+dbt. Liderei migracao on-prem -> cloud que cortou 60% custo de infra. Busco posicao com escopo de arquitetura cross-area.'",
+    "source": "best practice mercado BR 2025",
+    "tags": ["resumo", "headline", "topo", "summary", "curriculo"]
+  },
+  {
+    "id": "cv-chronological-vs-functional",
+    "topic": "cv",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Formato funcional (skill-first, sem timeline) levanta bandeira vermelha pra 80%+ dos recrutadores BR — sinal de 'escondendo gap'. Use cronologico-reverso sempre, mesmo em transicao. Se tem gap, explique em uma linha ('2022: sabatica + curso XP&Co em produto'). Hibrido (cronologico + secao 'Projetos relevantes' antes da experiencia) funciona pra transicao com portfolio.",
+    "source": "best practice recrutadores BR 2025",
+    "tags": ["formato", "cronologico", "funcional", "transicao", "gap", "curriculo"]
+  },
+  {
+    "id": "cv-quantify-everything",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Quantificacao bate adjetivo. 'Melhorei performance' (vago) vs 'Reduzi tempo de resposta de 800ms pra 120ms (85%)' (especifico). Mesmo sem dados oficiais, estime grandeza: '~5k usuarios/mes', 'time de 8 pessoas', '3 produtos paralelos'. Sem numero o bullet vira ruido. Pelo menos 60% dos bullets devem ter numero (%, R$, quantidade, tempo).",
+    "source": "Bianca Silva Matos + Lou Adler",
+    "tags": ["quantificacao", "metricas", "numeros", "bullets", "impacto", "curriculo"]
+  },
+  {
+    "id": "cv-language-pt-en",
+    "topic": "cv",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "CV em ingles e PT-BR sao DOIS documentos diferentes — nao traducao literal. Versao EN para vagas internacionais ou empresa gringa contratando BR. Cuidado com falsos cognatos ('pretende' != 'pretend', 'eventualmente' != 'eventually'). Datas em formato MM/YYYY (nao DD/MM). Evite 'graduated in 2018' (americano usa 'BSc, 2018'). Pra vaga BR, sempre PT-BR — versao EN nao impressiona se nao foi pedida.",
+    "source": "best practice mercado tech BR 2025",
+    "tags": ["idioma", "ingles", "portugues", "traducao", "internacional", "curriculo"]
+  },
+  {
+    "id": "linkedin-headline-formula",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Formula de headline LinkedIn: [Cargo atual] | [Especializacao/stack] | [Diferencial ou foco]. Ex: 'Engenheiro de Dados Senior | Python, Airflow, dbt | Pipelines escalaveis em fintechs'. Evite buzzwords vazios ('apaixonado por inovacao'). Headline e o que recrutador ve no resultado de busca — 220 caracteres pra ser achavel e diferenciado.",
+    "source": "LinkedIn Talent Solutions Brasil 2024",
+    "tags": ["headline", "titulo", "formula", "buscavel", "diferenciacao"]
+  },
+  {
+    "id": "linkedin-about-storytelling",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Secao 'Sobre' do LinkedIn em primeira pessoa, 3-5 paragrafos curtos. Estrutura: 1) o que voce faz hoje em uma frase, 2) tres conquistas concretas com numero, 3) o que te diferencia tecnicamente, 4) o que voce procura ou esta aberto, 5) call-to-action (email, link projeto). Primeiras 3 linhas aparecem antes do 'ver mais' — comece forte. Use keywords da area pra busca por recrutador.",
+    "source": "Reid Hoffman / LinkedIn playbook + Bianca Silva Matos",
+    "tags": ["sobre", "storytelling", "narrativa", "first-person", "cta", "perfil"]
+  },
+  {
+    "id": "linkedin-keywords-discoverability",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "LinkedIn search ranking usa keywords em: headline, titulo de cargo, descricao, skills (max 50), recomendacoes e atividade. Skills sao o sinal mais forte — pin 3 prioritarias no topo. Recrutador filtra por skill antes de abrir perfil. Use termos canonicos do mercado ('Product Manager' nao 'Lider de Inovacao'). Atualize titulos antigos com terminologia atual.",
+    "source": "LinkedIn Algorithm Notes 2024",
+    "tags": ["keywords", "skills", "busca", "discoverability", "ranking", "perfil"]
+  },
+  {
+    "id": "linkedin-recommendations-strategy",
+    "topic": "linkedin",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Pelo menos 3 recomendacoes ativas no LinkedIn (alvo: 5-10). Peca pra: 1 chefe direto recente, 1 par/colega, 1 subordinado se aplicavel. Texto da peticao deve sugerir 1-2 entregas especificas pro recomendador lembrar — generico vira recomendacao generica. Retribua: ofereca escrever uma de volta. Recomendacoes pesam mais que endorsements (clicks vazios).",
+    "source": "best practice mercado BR + linkedin coaches",
+    "tags": ["recomendacoes", "network", "social-proof", "endorsements", "perfil"]
+  },
+  {
+    "id": "linkedin-activity-engagement",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Atividade no LinkedIn (posts, comentarios) aumenta visibilidade no algoritmo e mostra que voce esta vivo na area. 1-2 posts curtos por mes ja diferencia. Topicos que funcionam: licao aprendida em projeto, opiniao tecnica fundamentada, indicacao de conteudo com seu take. Evite repostar virais, vagas alheias sem contexto, ou auto-elogio. Comentar posts de referencias na area gera mais visibilidade que postar.",
+    "source": "LinkedIn Creator Insights BR 2024",
+    "tags": ["atividade", "post", "engajamento", "algoritmo", "visibilidade", "perfil"]
+  },
+  {
+    "id": "linkedin-featured-section",
+    "topic": "linkedin",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Use o 'Featured' do LinkedIn como mini-portfolio: fixe 3-5 itens — posts seus que viralizaram, palestras (youtube), artigos do medium/dev.to, repos relevantes, certificados pesados. Aparece em destaque visual logo apos o 'Sobre'. Recrutador economiza tempo vendo evidencia rapida. Em transicao, featured = artefatos do novo dominio. Atualize a cada 6 meses; conteudo de 2020 envelhece mal.",
+    "source": "LinkedIn Coaches BR 2025",
+    "tags": ["featured", "portfolio", "evidencia", "destaque", "perfil"]
+  },
+  {
+    "id": "linkedin-recommendations-request",
+    "topic": "linkedin",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Pedido de recomendacao bem-feito: 1) escolha alguem que trabalhou com voce nos ultimos 2 anos, 2) escreva mensagem personalizada (nao a default do LinkedIn) lembrando 2-3 entregas especificas que voces fizeram juntos, 3) sugira 2-3 angulos possiveis ('lideranca tecnica', 'gestao de stakeholder', 'mentoria'), 4) ofereca rascunho se a pessoa pedir. Taxa de resposta: ~60% sem follow-up, ~85% com cutucada amigavel apos 2 semanas.",
+    "source": "best practice mercado BR + Bianca Silva Matos",
+    "tags": ["recomendacoes", "pedido", "template", "personalizacao", "follow-up"]
+  },
+  {
+    "id": "linkedin-posts-cadence",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Cadencia sustentavel de posts: 1 post/semana > 5 numa semana e depois sumir 3 meses. Algoritmo penaliza inconsistencia. Tipos que performam em BR: 1) carrossel de aprendizado (8-10 slides), 2) texto-storytelling com lecao no fim, 3) opiniao tecnica com tradeoff. Horarios bons: Ter-Qui 8h-10h ou 18h-19h (horario comercial BR). Evite finais de semana e segundas — engajamento cai 40%.",
+    "source": "LinkedIn Creator Insights BR 2025",
+    "tags": ["posts", "cadencia", "frequencia", "horario", "consistencia", "perfil"]
+  },
+  {
+    "id": "linkedin-hashtags-br",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Hashtags no LinkedIn BR: use 3-5 por post (mais que isso vira spam). Mix de: 1 hashtag grande (#tecnologia #carreira #desenvolvimento — milhoes seguindo), 1 media (#engenhariadesoftware #produto #dados — 100k-1M), 1 nicho (#fintechbrasil #devbr #pythonbrasil — 10k-100k). Nicho gera engajamento real; grande gera alcance vazio. Hashtag funciona como tag-de-discoverability, nao decorativa.",
+    "source": "LinkedIn Algorithm Notes BR 2025",
+    "tags": ["hashtags", "discoverability", "tags", "br", "posts"]
+  },
+  {
+    "id": "linkedin-2nd-degree-connections",
+    "topic": "linkedin",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Conexoes 2nd degree (amigo de amigo) sao ouro pra warm intro. Antes de aplicar pra empresa X, busque 'pessoas na empresa X' filtrado por '2nd' — voce vai achar 5-15 pessoas com conexao comum. Peca apresentacao de 5 linhas ao amigo comum ('Conheco Y na empresa X? Posso fazer intro?'). Taxa de resposta a referral 2nd-degree: 10-15x maior que aplicacao fria. Nao peca pra alguem que so 'curtiu' seu post 1 vez fazer intro — relacao precisa ser real.",
+    "source": "best practice network BR 2025",
+    "tags": ["conexoes", "2nd-degree", "warm-intro", "referral", "network", "perfil"]
+  },
+  {
+    "id": "interview-star-framework",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Metodo STAR: Situacao, Tarefa, Acao, Resultado. Em entrevistas comportamentais, cada resposta deve mapear esses 4 elementos. Situacao: contexto factual breve. Tarefa: o que precisava ser resolvido. Acao: o que VOCE fez (nao o time). Resultado: impacto mensuravel. Evite respostas hipoteticas ou genericas — recrutador quer evidencia especifica.",
+    "source": "Amazon Leadership Principles + adaptacao BR",
+    "tags": ["entrevista", "comportamental", "star", "narrativa", "framework"]
+  },
+  {
+    "id": "interview-behavioral-prep",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Prepare 5-7 historias 'curinga' (situacoes reais com inicio, meio, fim) que cubram: lideranca, conflito, fracasso e aprendizado, decisao com dado incompleto, conquista de impacto. Cada historia precisa de 2-3 minutos de narracao confortavel. Em entrevista, recombine elementos das historias pra responder perguntas diferentes. Decore a primeira frase de cada — ela ancora o resto.",
+    "source": "Decode and Conquer, Lewis Lin + adaptacao BR",
+    "tags": ["entrevista", "comportamental", "preparacao", "historias", "narrativa"]
+  },
+  {
+    "id": "interview-technical-loud",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Em entrevista tecnica (code/system design), 'pense alto' — verbalize hipoteses, trade-offs, opcoes que voce descartou. Entrevistador avalia raciocinio, nao so resposta final. Comece restringindo o problema ('posso assumir que X?'). Quando travar, diga o que esta tentando, nao silencie por 3 minutos. Erro tecnico explicado bem > resposta perfeita silenciosa.",
+    "source": "Steve Yegge interview anti-patterns + adaptacao",
+    "tags": ["entrevista", "tecnica", "code", "system-design", "raciocinio", "pensar-alto"]
+  },
+  {
+    "id": "interview-salary-question",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Quando perguntado sobre pretensao salarial na primeira entrevista, prefira devolver: 'Qual a faixa orcada pra essa posicao?'. Se insistirem, de uma faixa larga (variancia 25-30%) baseada em pesquisa de mercado, ancorando NO ALTO da faixa. Nunca de um numero exato. Razao: ancoragem psicologica favorece quem joga primeiro. Se voce ancorar baixo, sera oferecido baixo. Faixa larga preserva flexibilidade.",
+    "source": "Never Split the Difference, Chris Voss + Glassdoor BR data",
+    "tags": ["salario", "negociacao", "ancoragem", "pretensao", "entrevista"]
+  },
+  {
+    "id": "interview-questions-for-recruiter",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "No final da entrevista, sempre faca 2-3 perguntas. Boas perguntas: 'Como e medido sucesso nessa posicao nos primeiros 6 meses?', 'Qual o maior desafio que a area enfrenta hoje?', 'Como e o ciclo de feedback do time?'. Evite: salario, ferias, beneficio na 1a rodada — soa transacional. Boas perguntas mostram que voce avalia ajuste mutuo, nao so quer o emprego.",
+    "source": "Ask The Headhunter, Nick Corcodilos + adaptacao BR",
+    "tags": ["entrevista", "perguntas", "recrutador", "ajuste", "final"]
+  },
+  {
+    "id": "interview-behavioral-medium",
+    "topic": "interview",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Pergunta comportamental media (peso intermediario): 'me conta uma vez que voce discordou da sua lideranca'. Armadilha: ou voce concorda com tudo (sem voz) ou bate forte na lideranca (sinal de conflito). Estrutura segura: contexto -> dado/argumento que sustentou sua visao -> como apresentou (escuta + dado) -> resultado (mesmo que sua opiniao nao tenha vencido, mostre o que voce levou de aprendizado). Avalia maturidade, nao quem ganhou.",
+    "source": "best practice entrevistas tech BR 2025",
+    "tags": ["entrevista", "comportamental", "discordancia", "lideranca", "maturidade"]
+  },
+  {
+    "id": "interview-live-coding-tips",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Live coding: 1) clarifique requisitos antes (5 min) — entrada, saida, edge cases, restricoes, 2) anuncie abordagem em voz alta antes de codar (brute force primeiro, refinar depois), 3) escreva pseudo-codigo ou steps em comentario, 4) implemente devagar, narrando, 5) teste com 1-2 exemplos manualmente, 6) discuta complexidade tempo/espaco e otimizacao. Plataformas comuns BR: CoderPad, HackerRank, Codility, ou shared editor (VSCode Live Share).",
+    "source": "Cracking the Coding Interview + tech BR practices",
+    "tags": ["entrevista", "tecnica", "live-coding", "code", "estrutura"]
+  },
+  {
+    "id": "interview-salary-initial-br",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Salario inicial BR 2026 (faixas tipicas mensais CLT em capitais tech, salario base, sem PLR): Junior dev R$ 4-7k, pleno R$ 8-14k, senior R$ 15-22k, tech lead R$ 22-32k, staff R$ 30-50k. PJ adiciona ~30-50% (sem encargos). Empresa gringa contratando BR (USD): junior $1.5-3k, pleno $3-6k, senior $6-10k, staff $10-18k. Hub (SP/RJ) +10-15% vs interior. Sempre triangule 3+ fontes — variancia entre empresas e grande.",
+    "source": "Glassdoor BR + Levels.fyi + comunidades BR 2025-2026",
+    "tags": ["salario", "faixa", "br", "junior", "pleno", "senior", "mercado"]
+  },
+  {
+    "id": "interview-culture-question",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Pergunte sobre cultura DE FORMA QUE DA RESPOSTA SUBSTANTIVA. Ruim: 'como e a cultura?' (vira propaganda). Bom: 'me da um exemplo recente de conflito tecnico no time e como foi resolvido?', 'qual a ultima vez que um IC discordou de uma decisao de produto e foi ouvido?'. Boas perguntas pegam empresa de calcas curtas — se a pessoa nao tem exemplo concreto, e bandeira amarela.",
+    "source": "best practice entrevistas tech 2025",
+    "tags": ["entrevista", "cultura", "perguntas", "fit", "bandeira-vermelha"]
+  },
+  {
+    "id": "interview-follow-up-thank-you",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Follow-up pos-entrevista: email curto em 24h pro recrutador e/ou hiring manager. Estrutura: 1 frase agradecendo, 1-2 frases reforcando 1 ponto especifico discutido ('gostei da conversa sobre arquitetura X — coincide com o que fiz na empresa Y'), 1 frase reafirmando interesse. Nao seja exagerado — 4-6 linhas total. Aumenta taxa de retorno em ~20%, e ainda crava memoria sobre voce em meio a 10 outros candidatos.",
+    "source": "best practice mercado BR + Carolina Manfrinato",
+    "tags": ["entrevista", "follow-up", "email", "agradecimento", "pos-entrevista"]
+  },
+  {
+    "id": "transition-narrative-bridge",
+    "topic": "transition",
+    "audience": ["transition", "pleno", "senior"],
+    "content": "Narrativa de transicao precisa de 3 ingredientes: 1) o porque (motivacao real, nao 'busco novos desafios'), 2) a ponte (skills transferiveis com exemplo concreto), 3) a evidencia (curso, projeto, freela, comunidade). Sem ponte, parece capricho; sem evidencia, parece nao-comprometido. 'Sai de TI pra Produto: ja fazia priorizacao com PM no ultimo time, fiz curso XP&Co + dois projetos como PM voluntario na ONG Y'.",
+    "source": "Carolina Manfrinato, So Coragem + transition coaches BR",
+    "tags": ["transicao", "narrativa", "ponte", "evidencia", "motivacao", "story"]
+  },
+  {
+    "id": "transition-transferable-skills",
+    "topic": "transition",
+    "audience": ["transition", "pleno", "senior"],
+    "content": "Skills transferiveis = habilidades que vao com voce entre areas. Mais valiosas em transicao: analise de dado (SQL/Excel), comunicacao escrita, gestao de stakeholder, priorizacao, didatica, ingles. Mapeie suas top 5 transferiveis ANTES de aplicar; ancore cada bullet do CV de transicao em uma delas. Recrutador olha gap obvio (falta skill X); voce contra-ataca com transferiveis aplicaveis a X.",
+    "source": "Designing Your Life, Bill Burnett + carreira BR",
+    "tags": ["transicao", "transferiveis", "skills", "gap-bridging", "ancora"]
+  },
+  {
+    "id": "transition-portfolio-evidence",
+    "topic": "transition",
+    "audience": ["transition"],
+    "content": "Em transicao de carreira, evidencia bate diploma. Construa portfolio publico de 2-3 projetos relevantes pra area nova antes de aplicar. Pra produto: case studies de produto refeito. Pra dados: kaggle + dashboards publicos. Pra dev: 1-2 apps deployados com codigo no GitHub e README de qualidade. Sem portfolio em transicao, o ATS te corta automaticamente. Recrutador precisa de algo concreto pra defender voce internamente.",
+    "source": "Cassidy Williams transition advice + adaptacao BR",
+    "tags": ["transicao", "portfolio", "evidencia", "github", "kaggle", "case-study"]
+  },
+  {
+    "id": "transition-network-warm-intro",
+    "topic": "transition",
+    "audience": ["transition", "pleno", "senior"],
+    "content": "Em transicao, 70-80% das vagas vem por indicacao. Lista 30 pessoas: gente da area nova que voce conhece. Faca 'coffee chat' (15min, sem pedir vaga) com 5 por mes pra entender o mercado e ser lembrado quando aparecer vaga. Pergunta-chave: 'O que voce gostaria de ter sabido quando entrou em [area]?'. Conversas viram indicacoes em 3-6 meses. Aplicacao fria sem network em transicao = taxa de resposta < 2%.",
+    "source": "The 2-Hour Job Search, Steve Dalton + BR network coaches",
+    "tags": ["transicao", "network", "indicacao", "coffee-chat", "warm-intro"]
+  },
+  {
+    "id": "transition-rebrand-online",
+    "topic": "transition",
+    "audience": ["transition"],
+    "content": "Em transicao, rebrand online antes de aplicar. LinkedIn headline e sobre devem refletir o cargo-alvo (nao o atual). Adicione 'open to' com palavras-chave da area nova. Mude 2-3 skills antigas por 3-5 novas relevantes. Recomendacoes que falem da aplicabilidade ao novo dominio. Se headline ainda diz 'Especialista X' mas voce quer 'Y', algoritmo nao te indexa pra busca de Y. Rebrand leva 2-4 semanas pra LinkedIn re-indexar.",
+    "source": "LinkedIn + transition consultants BR 2025",
+    "tags": ["transicao", "rebrand", "linkedin", "headline", "open-to", "perfil"]
+  },
+  {
+    "id": "transition-bridge-experiences",
+    "topic": "transition",
+    "audience": ["transition"],
+    "content": "Bridge experiences = experiencias pequenas (3-12 meses) que comprovam intencao de mudar. Exemplos: voluntariado tecnico em ONG (Vetor Brasil, TechNonprofit), freela pago num projeto da area nova, projeto interno na empresa atual cross-area, hackathon especializado. Recrutador acredita em movimento + tempo, nao em curso de 40h. 6 meses de freela em produto pesa mais que MBA executivo de Produto sem aplicacao.",
+    "source": "Carolina Manfrinato + Vetor Brasil",
+    "tags": ["transicao", "bridge", "freela", "voluntariado", "experiencia", "evidencia"]
+  },
+  {
+    "id": "transition-side-projects-evidence",
+    "topic": "transition",
+    "audience": ["transition", "junior"],
+    "content": "Side projects como evidencia em transicao: 1 projeto bem feito > 5 medianos. Criterios pra escolha: 1) resolve problema real (nao tutorial reproduzido), 2) tem deploy publico (link funciona), 3) usa stack da area nova, 4) tem README explicando decisoes (por que React vs Vue, por que esse banco), 5) commits regulares por 1-3 meses (nao 1 dia de comit em massa). Recrutador clica em projeto so se README convencer em 30s.",
+    "source": "GitHub portfolio best practices + BR mentores tech",
+    "tags": ["transicao", "side-projects", "github", "evidencia", "portfolio", "readme"]
+  },
+  {
+    "id": "transition-certifications-weight",
+    "topic": "transition",
+    "audience": ["transition", "junior", "pleno"],
+    "content": "Certificacoes em transicao: nem todas pesam igual. Peso ALTO: AWS Solutions Architect Associate, GCP Professional, PMP, CFA, AICPA. Peso MEDIO: Coursera/EDX especializacoes serias (Andrew Ng ML), Tera/XP Educacao courses long-form. Peso BAIXO: certificados de 40h sem prova, badges genericos LinkedIn Learning. Recrutador BR tech valida hands-on > diploma. Cert vale como ticket de entrada, nao como diferencial.",
+    "source": "best practice mercado BR 2025",
+    "tags": ["transicao", "certificacoes", "peso", "aws", "tera", "coursera"]
+  },
+  {
+    "id": "transition-explaining-gap",
+    "topic": "transition",
+    "audience": ["transition", "senior"],
+    "content": "Gap de carreira (3-12 meses) precisa ser explicado em 1 linha sem desculpa. Bom: 'Mar/2024 - Set/2024: sabatica + bootcamp em ciencia de dados (Tera)' ou 'Pausa pra cuidar de familiar; uso o tempo pra aprofundar em Python e dbt'. Ruim: ocultar (recrutador conta meses), 'em busca de oportunidades' (vago), ou desculpa longa. Gap honesto e curto vence omissao detectada. Empresas tech BR 2025 sao mais tolerantes a gap do que ha 5 anos.",
+    "source": "best practice recrutadores BR 2025",
+    "tags": ["transicao", "gap", "explicacao", "honestidade", "sabatica"]
+  },
+  {
+    "id": "transition-network-target-list",
+    "topic": "transition",
+    "audience": ["transition"],
+    "content": "Construa lista de 20-30 empresas-alvo na area nova ANTES de aplicar. Pra cada: 1) o que faz, 2) cultura/glassdoor, 3) 2-3 pessoas no LinkedIn (de preferencia 2nd degree), 4) vagas tipicas. Pesquisa de 1h por empresa investe em qualidade. Em 8 semanas voce conhece o mercado e tem 60 conversas planejadas. 'Spray and pray' (aplicar pra tudo) em transicao tem taxa de conversao < 1%; target list focada chega a 5-10%.",
+    "source": "The 2-Hour Job Search, Steve Dalton + transition coaches BR",
+    "tags": ["transicao", "target-list", "empresas", "network", "pesquisa"]
+  },
+  {
+    "id": "salary-market-research",
+    "topic": "salary",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Faixa salarial: NUNCA chegue em entrevista sem pesquisar. Fontes BR: Glassdoor, Levels.fyi (tech), Catho, Vagas.com, levantamentos de comunidades (Tera, Alura, Reprograma). Triangule pelo menos 3 fontes pra mesmo cargo/senioridade/regiao. Cidade pesa: SP/RJ ~+15% vs interior; remoto pra fora do BR pode ser 2-3x. Inclua beneficios (PLR, ferias estendidas, stock) na conta total — salario base nao e tudo.",
+    "source": "Glassdoor + Levels.fyi + comunidades BR",
+    "tags": ["salario", "pesquisa", "mercado", "faixa", "fontes", "regiao"]
+  },
+  {
+    "id": "salary-negotiation-framework",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Negociacao: nunca aceite na hora. Peca 24-48h pra pensar mesmo se for sim. Quando negociar, ancore alto (5-15% acima do que querer) com justificativa concreta (responsabilidades extras, mercado, conta dependentes, etc). Use silencio depois da contra-oferta — desconforto trabalha a seu favor. Negocie o pacote, nao so o base: signing bonus, ferias, equipamento, treinamento, equity, data de inicio.",
+    "source": "Never Split the Difference + Chris Voss + Carlota Pereira BR",
+    "tags": ["salario", "negociacao", "ancoragem", "pacote", "silencio", "contraproposta"]
+  },
+  {
+    "id": "salary-counter-offer",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Contraproposta da empresa atual quando voce pede pra sair: cuidado. ~50% dos que aceitam contraproposta saem em 12 meses (o motivo nao era so dinheiro). Use o convite externo como leverage so se voce esta REALMENTE disposto a ficar mediante mudancas estruturais (projeto, gestor, escopo) — nao so dinheiro. Se motivo e ambiente, dinheiro nao resolve. Tome a decisao racional, nao reativa.",
+    "source": "Harvard Business Review counter-offer research + carreira BR",
+    "tags": ["salario", "contraproposta", "retencao", "leverage", "decisao"]
+  },
+  {
+    "id": "salary-hike-realistic",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Hike percentual realista entre empregos BR 2025: 15-30% e normal pra mesma senioridade; 30-50% e ambicioso (precisa de subida de nivel ou stack mais escassa); 50%+ acontece quando voce esta MUITO sub-pago ou vai pra empresa gringa em USD. Aumento interno tipico (mesma empresa, sem promocao): 5-10% anual. Pra valer a pena trocar emprego, regra pratica: hike >= 20% + melhora em pelo menos 2 dimensoes (escopo, gestor, projeto, cultura).",
+    "source": "Glassdoor BR + Levels.fyi BR 2024-2025",
+    "tags": ["salario", "hike", "aumento", "negociacao", "troca", "br"]
+  },
+  {
+    "id": "salary-clt-vs-pj",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "CLT vs PJ comparativo: CLT salario X tem custo real pra empresa ~1.7x (encargos, INSS, FGTS, 13º, ferias, vale). PJ recebe ~1.3-1.5x do CLT bruto, mas paga ISS (2-5%), INSS-proprio, contador (R$ 200-500/mes), sem FGTS/ferias/13º. Liquido similar OU pior se voce nao reinvestir. PJ ganha em flexibilidade fiscal (pode optar por Simples/Lucro Presumido). CLT ganha em estabilidade: seguro-desemprego, FGTS, plano coletivo, multa em demissao. Faca planilha real, nao deduza nominal.",
+    "source": "best practice BR 2025 + contadores tech",
+    "tags": ["salario", "clt", "pj", "tributacao", "comparativo", "br"]
+  },
+  {
+    "id": "salary-benefits-non-monetary",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Beneficios nao-monetarios pesam mais com o tempo. Avalie: plano de saude (R$ 500-2k/mes pra familia), VR/VA, Gympass, day-off no aniversario, ferias estendidas (alem dos 30 obrigatorios), home-office subsidio (R$ 200-500/mes), equipamento (notebook bom + monitor), orcamento de treinamento (R$ 3-10k/ano), conferences pago, licenca parental estendida. Soma facil 30-50% sobre o base. Pergunte na proposta: 'me manda a tabela completa'.",
+    "source": "best practice tech BR 2025",
+    "tags": ["salario", "beneficios", "pacote", "saude", "vr", "equipamento"]
+  },
+  {
+    "id": "salary-equity-startup-br",
+    "topic": "salary",
+    "audience": ["senior", "lead", "transition"],
+    "content": "Equity (stock options) em startup BR: cuidado. Diferenca chave: empresa pre-IPO X publica. Pre-IPO sem evento de liquidez = papel sem valor de mercado. Avalie: 1) qual o valuation atual e o ultimo round?, 2) qual o strike price?, 3) qual o vesting (cliff 1 ano + 4 anos linear e padrao)?, 4) o que acontece se a empresa for vendida abaixo do valuation?. Trate equity como bonus de loteria, nao salario. Em startup early-stage, equity raramente paga mais que o desconto no base.",
+    "source": "best practice tech BR + startups SP 2025",
+    "tags": ["salario", "equity", "startup", "stock", "vesting", "br"]
+  },
+  {
+    "id": "soft-communication-clarity",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Comunicacao escrita > falada em ambiente remoto/hibrido. Pratica que diferencia: comece email/mensagem com a conclusao (BLUF: Bottom Line Up Front), depois contexto. 'Precisamos atrasar o lancamento pra dia 15. Razao: bug critico no checkout. Plano: hotfix ate dia 10, QA 11-14.' Ninguem tem tempo de ler 4 paragrafos pra chegar no pedido. Em call: 'Tenho 2 itens: 1) X, 2) Y' — anuncia estrutura.",
+    "source": "Amazon writing culture (BLUF) + adaptacao remoto BR",
+    "tags": ["comunicacao", "escrita", "bluf", "clareza", "remoto", "soft"]
+  },
+  {
+    "id": "soft-leadership-influence",
+    "topic": "soft-skills",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Lideranca sem autoridade formal: 'lateral leadership'. Voce ja lidera tecnicamente colegas — capitalize isso no CV. Frases que funcionam: 'mentorei 3 juniors', 'liderei design review semanal', 'levei a discussao tecnica pra arquitetura X'. Demonstre influencia, nao titulo. Recrutador pra senior/lead procura quem ja age como lider antes de ter o cargo. Documente o quanto puder.",
+    "source": "The Manager's Path, Camille Fournier + adaptacao",
+    "tags": ["lideranca", "influencia", "autoridade", "mentor", "soft"]
+  },
+  {
+    "id": "soft-self-awareness-feedback",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Autoconhecimento de carreira vem de feedback estruturado. Faca 'after-action review' a cada trimestre: 1) o que entreguei?, 2) o que aprendi?, 3) o que preciso melhorar?, 4) o que vou fazer diferente?. Peca feedback ESPECIFICO ('como posso melhorar em apresentacao em call?') em vez de generico ('alguma dica?'). Generico vira resposta vaga. Feedback ruim = pergunta ruim, na maior parte dos casos.",
+    "source": "Radical Candor, Kim Scott + after-action reviews militar US",
+    "tags": ["autoconhecimento", "feedback", "after-action", "especifico", "soft"]
+  },
+  {
+    "id": "soft-resilience-job-search",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Busca de emprego e maratona — 80-100 aplicacoes pra fechar oferta em senior BR (Q1-Q2 2025). Cada 'nao' bate diferente. Estrategia: trate como funil estatistico — 100 aplicacoes -> 10 entrevistas iniciais -> 3 finais -> 1 oferta sao numeros normais. Diaria de 5-10 aplicacoes alta-qualidade > 50 spray. Pause 1 dia/semana pra evitar burnout. Conte conquistas por semana ('mandei 30 customizadas') nao por resultado ('nada saiu') — preserva moral.",
+    "source": "best practice mercado BR 2024-2025 + community insights",
+    "tags": ["resiliencia", "funil", "busca", "burnout", "moral", "soft"]
+  },
+  {
+    "id": "soft-async-communication",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Comunicacao assincrona em remoto: assume que a outra pessoa NAO vai poder responder na hora. Inclua sempre no message: 1) contexto suficiente (link, screenshot), 2) qual a pergunta/pedido especifico, 3) prazo se houver, 4) qual decisao voce ja tomou se nao houver resposta. 'Stand-up update' assincrono > daily call. Use Slack/Discord pra texto, Loom/video pra explicacao visual, sincrono so quando bloqueio real.",
+    "source": "GitLab Handbook (remote-first) + adaptacao BR",
+    "tags": ["assincrono", "comunicacao", "remoto", "contexto", "slack", "soft"]
+  },
+  {
+    "id": "soft-remote-time-management",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Gestao de tempo em remoto: blocos de 90min foco + 15min pausa (variacao Pomodoro estendido). Defina 2 'horarios sagrados' por dia (sem reuniao, sem Slack): 9-11h pra trabalho profundo, 14-16h pra outro deep work. Reuniao depois das 16h e curta (30min max). Sinal de overload: voce so 'apaga incendio' e nao avanca em projeto. Reagende quando isso virar regra. Use calendar blocks visiveis pro time respeitar.",
+    "source": "Deep Work, Cal Newport + remoto BR",
+    "tags": ["tempo", "foco", "pomodoro", "remoto", "deep-work", "soft"]
+  },
+  {
+    "id": "soft-conflict-peer",
+    "topic": "soft-skills",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Conflito com par (ngum chefe): nunca 'esconde'. Sequencia: 1) reflita 24h pra esfriar (em conflito tecnico vale ler de novo o texto/PR), 2) 1:1 direto (texto NAO resolve conflito real, marque call), 3) comece pelo que concorda + agradeca, 4) descreva fato observavel ('vi que voce fechou meu PR sem comentar'), 5) impacto que isso teve em voce, 6) pergunte o que ele esta vendo (talvez voce nao tem o contexto todo). Se nao resolve em 2 tentativas, escalada pro gestor.",
+    "source": "Nonviolent Communication, Marshall Rosenberg + tech BR",
+    "tags": ["conflito", "peer", "comunicacao", "escalada", "1-1", "soft"]
+  },
+  {
+    "id": "soft-lateral-leadership",
+    "topic": "soft-skills",
+    "audience": ["senior", "lead"],
+    "content": "Lideranca lateral: liderar peers sem autoridade hierarquica e a habilidade mais subestimada de senior+. Tres mecanismos: 1) influencia tecnica (qualidade do code review, qualidade de RFC), 2) influencia organizacional (puxa decisao com dado, nao opiniao), 3) influencia social (mentor informal, presenca em conversas dificeis). Senior que so produz codigo otimo mas nao tem voz em decisao trava em senior. Tech lead pesa o 'efeito multiplicador' acima do output individual.",
+    "source": "The Staff Engineer's Path, Tanya Reilly + The Manager's Path",
+    "tags": ["lideranca", "lateral", "influencia", "tech-lead", "rfc", "soft"]
+  },
+  {
+    "id": "ats-keyword-density",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Sistemas ATS (Gupy, Kenoby, Greenhouse, Lever, etc.) fazem parse + match de keywords da vaga vs CV. Score tipico de corte: 60-75%. Pra passar, replique 60-80% dos termos exatos da JD: tools, certificacoes, metodologias, dominio. Cada vaga = um CV. Customizar 5 minutos antes de aplicar dobra taxa de resposta. CV unico generico = taxa de resposta < 5% em vagas competitivas.",
+    "source": "Jobscan ATS benchmark 2024 + Gupy BR data",
+    "tags": ["ats", "keywords", "match", "customizacao", "tailoring", "score"]
+  },
+  {
+    "id": "ats-format-parse-safety",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "ATS-safe format: salve sempre como PDF text-based (Word -> Salvar Como PDF, nao 'Imprimir como PDF' escaneado). Evite: caixa de texto, headers/footers, dois colunas (alguns ATS quebram), graficos pra skills (parse falha), fonts decorativas. Teste: abra seu PDF, selecione tudo (Ctrl+A), cole no Bloco de Notas. Se virou tabuleiro embaralhado, ATS tambem nao vai entender. Versao .doc/.docx tambem aceita; nunca envie imagem (jpg/png).",
+    "source": "Gupy + Lever + Greenhouse parsing docs",
+    "tags": ["ats", "formato", "pdf", "parse", "scan", "teste"]
+  },
+  {
+    "id": "ats-scanability-recruiter-eye",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Depois do ATS vem o recrutador humano — 6-10 segundos de scan inicial. Estrutura que sobrevive ao scan: nome + headline no topo, resumo de 3 linhas, depois experiencia ordenada por recencia. Bold em palavras-chave (cargo, empresas notorias, conquistas com numero). Bullets curtos (max 2 linhas), comecando com verbo de acao. Espaco em branco e amigo — CV apertado em letra 8 espanta. Recrutador escaneia em 'Z' visual: titulo, ultima posicao, formacao.",
+    "source": "Lou Adler + The Ladders eye-tracking study 2018",
+    "tags": ["ats", "scanability", "recrutador", "scan", "bold", "espacamento"]
+  },
+  {
+    "id": "ats-keyword-scanner-tool",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Use scanners (Jobscan, Resume Worded, JobHero free trials) pra comparar seu CV vs a JD antes de enviar. Score abaixo de 70% = retrabalho. O scanner mostra keywords ausentes — adicione naturalmente em bullets de experiencia ou skills section. Nao stuffing (recrutador humano percebe), mas honesto: se voce tem a skill e nao listou, adicione. ATS interno de empresa BR (Gupy) usa logica similar — score externo correlaciona.",
+    "source": "Jobscan + Resume Worded benchmarks",
+    "tags": ["ats", "scanner", "jobscan", "score", "ferramentas", "tailoring"]
+  },
+  {
+    "id": "ats-pdf-vs-docx",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "PDF vs DOCX em ATS BR 2025: PDF text-based passa em 95%+ dos sistemas modernos (Gupy, Kenoby, Greenhouse). DOCX e seguro tambem mas pode mudar de fonte/layout em sistemas antigos. Evite DOC (.doc — formato 1997-2003) e nunca imagem (.jpg/.png). Quando vaga pede 'envie em formato editavel', mande DOCX. Quando livre escolha, PDF preserva apresentacao. Teste sempre: parse no jobscan ou simulador online antes da aplicacao final.",
+    "source": "Gupy + Kenoby ATS docs 2024",
+    "tags": ["ats", "pdf", "docx", "formato", "parse", "br"]
+  },
+  {
+    "id": "ats-headers-parsing",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Headers e secoes — ATS busca termos canonicos. Use 'Experiencia Profissional' (nao 'Trajetoria', 'Meu Percurso'), 'Formacao Academica' (nao 'Estudos'), 'Habilidades' ou 'Skills' (nao 'O que eu sei fazer'). Cada secao em linha separada, fonte 1-2 pt maior que o corpo, e bold. ATS usa esses headers pra estruturar o JSON interno do CV. Headers criativos quebram parse: o sistema 'nao acha' sua experiencia e descarta.",
+    "source": "Gupy + Greenhouse parsing best practices",
+    "tags": ["ats", "headers", "secoes", "parse", "estrutura", "curriculo"]
+  },
+  {
+    "id": "ats-light-customization",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Customizacao light por vaga (5-10min): 1) adicione 3-5 keywords da JD ao resumo, 2) reordene 2-3 bullets das ultimas posicoes pra dar foco a experiencia relevante a vaga, 3) ajuste headline pra refletir cargo-alvo. Nao reescreva CV inteiro pra cada vaga — overhead nao paga. Mantenha 1 CV mestre + 'patches' por categoria de vaga (ex: backend senior, tech lead, freela). Taxa de resposta sobe ~2x com customizacao leve vs CV unico.",
+    "source": "best practice mercado BR 2025",
+    "tags": ["ats", "customizacao", "tailoring", "keywords", "patch", "curriculo"]
+  },
+  {
+    "id": "mercado-br-clt-tributacao",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "CLT BR tributacao 2026: IRRF tabela progressiva 0% (ate ~R$ 2.3k) a 27.5% (acima R$ 4.6k). INSS empregado 7.5%-14% (ate teto R$ 7.7k). FGTS 8% (pagado pela empresa em conta vinculada). 13º salario (1 salario extra/ano) e 1/3 ferias adicional. Custo total pra empresa: salario bruto x ~1.7. Beneficio CLT: FGTS sacavel em demissao + multa 40%, seguro-desemprego (3-5 parcelas), plano de saude coletivo.",
+    "source": "Receita Federal + contadores tech BR 2026",
+    "tags": ["clt", "tributacao", "inss", "fgts", "irrf", "br"]
+  },
+  {
+    "id": "mercado-br-pj-tributacao",
+    "topic": "mercado-br",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "PJ BR tributacao 2026: MEI ate R$ 81k/ano (5% INSS + R$ 75-80/mes DAS) — limite restritivo pra senior+. Simples Nacional ate R$ 4.8M/ano: aliquota 6-15.5% sobre faturamento, anexo III (servico) ou V (consultoria com folha < 28%). Lucro Presumido: ~13.33% IRPJ+CSLL+PIS+COFINS+ISS sobre faturamento. Contador essencial (R$ 200-500/mes). PJ-tech otimiza em Simples anexo III com 'fator R' bom (faz pro-labore pra reduzir aliquota).",
+    "source": "Receita Federal + contadores tech BR 2026",
+    "tags": ["pj", "tributacao", "simples", "lucro-presumido", "mei", "br"]
+  },
+  {
+    "id": "mercado-br-cnpj-quando-abrir",
+    "topic": "mercado-br",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Quando abrir CNPJ: se voce vai receber 1+ pagamento pra mais de 1 cliente, ou se cliente exige PJ pra contratar. MEI rapido (online em 10 min via gov.br/mei). LTDA/EIRELI requer contador, capital social, contrato social. Custo inicial: ~R$ 500-1000 + mensal R$ 200-500. NAO abra CNPJ pra 'caso isso aconteca' — abra so quando tem contrato em mao. Empresa fechada com inatividade ainda paga DAS ou multa por nao-declaracao.",
+    "source": "Sebrae + contadores tech BR 2026",
+    "tags": ["cnpj", "abertura", "mei", "ltda", "contador", "br"]
+  },
+  {
+    "id": "mercado-br-salario-tech-faixas",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Salario tech BR 2026 (CLT base mensal, capitais hub): Dev junior R$ 4-7k, pleno R$ 8-14k, senior R$ 15-22k, lead R$ 22-32k, staff R$ 30-50k. PJ +30-50%. Empresa gringa via BR (USD): junior $1.5-3k, pleno $3-6k, senior $6-10k, staff $10-18k, principal $15-25k. Stack escassa (Rust, Go senior, ML eng senior) +10-20% sobre tabela. Hubs (SP/RJ/BH) +10-15% vs interior.",
+    "source": "Levels.fyi BR + Glassdoor 2025-2026 + comunidades",
+    "tags": ["salario", "tech", "faixa", "br", "junior", "senior", "mercado"]
+  },
+  {
+    "id": "mercado-br-salario-dados-faixas",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Salario dados BR 2026 (CLT mensal hub): Analista junior R$ 4-7k, pleno R$ 7-12k, senior R$ 12-18k. Engenheiro de dados junior R$ 5-9k, pleno R$ 10-16k, senior R$ 16-25k, lead R$ 25-35k. Cientista de dados junior R$ 6-10k, pleno R$ 11-18k, senior R$ 18-28k. ML eng senior (com prod LLM/RAG) R$ 22-35k. Empresa gringa USD: cientista senior $7-12k. Variancia grande por empresa: fintech > corporate tradicional.",
+    "source": "Levels.fyi BR + Hashtag Treinamentos + Tera + Alura 2025-2026",
+    "tags": ["salario", "dados", "ml", "data-eng", "faixa", "br"]
+  },
+  {
+    "id": "mercado-br-salario-produto-faixas",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Salario produto BR 2026 (CLT mensal hub): APM/PM junior R$ 6-10k, PM pleno R$ 10-16k, PM senior R$ 16-25k, GPM R$ 25-40k, head de produto R$ 40-70k+. Designer junior R$ 4-8k, pleno R$ 8-13k, senior R$ 13-20k, lead R$ 20-30k. Marketing tech junior R$ 4-7k, pleno R$ 7-12k, senior R$ 12-20k. Empresa unicornio BR (Nubank/iFood) +15-25% sobre tabela. Empresa gringa USD: PM senior $7-13k.",
+    "source": "Tera + Cursos de Produto + Glassdoor BR 2025-2026",
+    "tags": ["salario", "produto", "pm", "design", "marketing", "br"]
+  },
+  {
+    "id": "mercado-br-hubs-2026",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Hubs tech BR 2026: Sao Paulo (maior densidade de vagas e maiores salarios, hub fintech/unicornio), Rio de Janeiro (oil&gas, energia, algumas tech), Belo Horizonte (Movile, Hotmart, ecossistema saude tech), Florianopolis (estrutura tech consolidada, qualidade de vida), Porto Alegre (Procergs, Dell, ThoughtWorks), Recife (Porto Digital, parque tech ativo, ascendente). Salario nas capitais hub +10-15% vs interior. Remoto-friendly em alta — gringas e fintechs lideram.",
+    "source": "Brasscom + StartSe + comunidades tech BR 2025-2026",
+    "tags": ["hubs", "cidades", "sp", "rj", "bh", "recife", "br"]
+  },
+  {
+    "id": "mercado-br-remoto-presencial",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Remoto vs hibrido vs presencial BR 2026: ~30% tech 100% remoto, ~45% hibrido (1-3 dias presencial), ~25% 100% presencial. Hibrido cresce desde 2024 (RTO movement). Empresas gringas pagando BR: quase 100% remoto. Bancos/corporate BR: hibrido majoritario. Startups iniciais: hibrido. Big tech BR (Nubank, Mercado Livre): hibrido com 'anchor days'. Pra senior+, negociar dias presenciais e parte do pacote.",
+    "source": "Glassdoor BR + LinkedIn Talent Insights 2025-2026",
+    "tags": ["remoto", "hibrido", "presencial", "rto", "br", "mercado"]
+  },
+  {
+    "id": "mercado-br-empresa-nativa-vs-gringa",
+    "topic": "mercado-br",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Empresa BR nativa vs gringa contratando BR: nativa paga em BRL, contrato CLT ou PJ-via-BR, beneficios em BRL (VR, plano), tributacao BR padrao. Gringa contrata via 1) PJ BR ('contractor agreement', vc emite NF em USD/EUR), 2) EOR (Deel, Remote, Globant — eles sao seu empregador local), 3) entidade BR da gringa (CLT BR padrao). PJ via gringa: maior salario, sem FGTS/13/ferias, sem protecao trabalhista BR. EOR: protege protecoes locais. Avalie risco/retorno.",
+    "source": "Deel + Remote.com docs + contadores tech BR 2025",
+    "tags": ["empresa", "nativa", "gringa", "eor", "contractor", "br"]
+  },
+  {
+    "id": "mercado-br-regulacao-trabalhista",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Regulacao trabalhista BR pra tech 2026: home office regulamentado por Lei 14.442/2022 (precisa acordo escrito). MP 1108 tratou itens emergenciais 2022. CLT direitos: 30 dias ferias + 1/3, 13º (Nov-Dez), FGTS 8% mensal, multa 40% em demissao sem justa causa, aviso previo 30-90 dias, seguro-desemprego (3-5 parcelas). Banco de horas, escala 6x1, 12x36 tem regras especificas. Tech CLT muitas vezes funciona como 'flexivel' mas mantem direitos.",
+    "source": "CLT + MTE + advogados trabalhistas BR 2025",
+    "tags": ["regulacao", "clt", "home-office", "fgts", "13", "br"]
+  },
+  {
+    "id": "mercado-br-pj-disfarcado",
+    "topic": "mercado-br",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "PJ disfarcado de CLT (pejotizacao) — bandeira vermelha. Sinais: 1) horario fixo obrigatorio, 2) chefe direto definindo prioridades diarias, 3) ferramenta da empresa (laptop, email com dominio), 4) exclusividade (so trabalha pra essa empresa), 5) carteira de trabalho nao assinada apesar de funcao continuada. Risco: ate processo trabalhista pode ser perdido pela empresa, MAS voce ja tomou anos sem direitos. Questione 'porque PJ?' na entrevista. Se a resposta e 'pra pagar mais', pondere riscos.",
+    "source": "MTE + advogados trabalhistas BR 2025 + comunidades tech",
+    "tags": ["pj", "pejotizacao", "clt", "trabalhista", "risco", "br"]
+  },
+  {
+    "id": "mercado-br-pos-demissao",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Pos-demissao sem justa causa BR: receba 1) saldo de salario, 2) ferias proporcionais + vencidas, 3) 13º proporcional, 4) FGTS + multa 40% (sacavel imediatamente), 5) aviso previo (trabalhado ou indenizado). Solicite seguro-desemprego em 7-120 dias da demissao no gov.br/empregabrasil — 3-5 parcelas de ~R$ 1.4-2.3k cada. Plano de saude: maioria das empresas mantem 30-90 dias. Apos isso, considere portabilidade individual ou plano familiar. Reserva financeira ideal: 6 meses de gastos.",
+    "source": "MTE + Caixa + ANS 2025",
+    "tags": ["demissao", "fgts", "seguro-desemprego", "13", "plano-saude", "br"]
+  },
+  {
+    "id": "mercado-br-diversidade-iniciativas",
+    "topic": "mercado-br",
+    "audience": ["junior", "transition"],
+    "content": "Diversidade em tech BR: empresas com vagas afirmativas (mulheres, pretos, LGBTQIA+, PCD) cresceram 3x desde 2020. Comunidades-ponte: Reprograma (mulheres em programacao, gratuito), Codamos (devs negras), QuilomboTech, AfroPython, JaqueAnselmo Career, Pretalab, Programaria, MovTech, Profissionais Tech, Vetor Brasil (transicao social). Cursos com bolsa: Tera, Trybe, RocketSeat. Aplique pelas iniciativas ANTES das gerais — taxa de resposta 5-10x.",
+    "source": "Reprograma + Pretalab + Mova-se Tech + 2024-2026",
+    "tags": ["diversidade", "afirmativa", "reprograma", "pretalab", "tech", "br"]
+  },
+  {
+    "id": "mercado-br-cultura-tech-corporate",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Cultura tech BR vs corporate BR: tech startup/unicornio (Nubank, iFood, Stone) — feedback continuo, OKRs, ferramentas modernas, dress code casual, ingles operacional, tomada de decisao distribuida. Corporate BR tradicional (Itau, Bradesco, Petrobras, Ambev) — hierarquia rigida, processos formais, ascensao por tempo, dress code formal, decisoes em comite. Ambos validos — qual te energiza? Em transicao de corporate -> tech, choque cultural normal nos primeiros 6 meses.",
+    "source": "best practice mercado BR + Glassdoor 2025",
+    "tags": ["cultura", "tech", "corporate", "startup", "ajuste", "br"]
+  },
+  {
+    "id": "mercado-br-tendencias-2026",
+    "topic": "mercado-br",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Tendencias mercado BR 2026 (WEF Future of Jobs + Brasscom): demanda alta — AI eng, data eng, security, cloud arquitetos, devops/SRE, ML/MLOps. Demanda crescente — produto, design de sistemas, gestao de mudanca. Demanda estavel — fullstack senior, mobile, QA automation. Demanda em queda — desenvolvimento manual de testes, sysadmin tradicional, COBOL (excecao bancos legados pagando bem por escassez). Saude tech, EdTech, GovTech crescendo. Web3 caiu de 2022 pra ca.",
+    "source": "WEF Future of Jobs 2025 + Brasscom + ABE",
+    "tags": ["tendencias", "futuro", "ai", "demanda", "carreira", "br"]
+  },
+  {
+    "id": "tech-modern-ai-engineering-2026",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "AI Engineering 2026 e skill diferenciadora pra dev moderno. Core: prompt engineering (system prompts robustos, few-shot, chain-of-thought), RAG (retrieval-augmented generation com embeddings + vector store tipo pgvector/Pinecone), agents (multi-step tool use, MCP - Model Context Protocol), avaliacao (eval datasets, hallucination detection). Stack BR comum: OpenAI/Anthropic API, LangChain ou direto SDK, pgvector ou Qdrant, Vercel AI SDK. Senior dev sem fundamento em LLM em 2026 perde escopo.",
+    "source": "best practice tech BR 2025-2026 + Anthropic/OpenAI docs",
+    "tags": ["ai", "llm", "rag", "agents", "mcp", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-fullstack-vs-specialist",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Fullstack vs especialista em 2026 com IA: pendulo voltou pro fullstack. Razao: IA acelera produtividade em areas que voce sabe menos, baixando custo de polyglot. Especialista profundo (DBE, ML, security) ainda paga premio em empresas com escala. Mid-career: 'T-shaped' (1 area profunda + 2-3 secundarias usaveis com IA) e o melhor posicionamento. Pure especialista corre risco se a area encolhe; pure generalista corre risco em senior+ quando profundidade pesa.",
+    "source": "best practice tech 2025-2026 + observacao mercado",
+    "tags": ["fullstack", "especialista", "t-shaped", "ai", "carreira", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-ic-vs-manager",
+    "topic": "tech-modern",
+    "audience": ["senior", "lead"],
+    "content": "IC (Individual Contributor) vs management track senior+: IC continua subindo via senior -> staff -> principal -> distinguished (cada nivel = aumentar escopo de impacto, nao so codigo). Manager track: senior -> tech lead -> manager -> sr manager -> diretor. IC track preserva foco tecnico; manager track troca por gestao de gente. Em BR, IC track menos formalizado fora unicornios. Decisao: voce sente energia codando ou cuidando das pessoas?",
+    "source": "Staff Engineer's Path, Tanya Reilly + The Manager's Path",
+    "tags": ["ic", "manager", "carreira", "track", "staff", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-tech-lead-skills",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior"],
+    "content": "Tech Lead: 70% tecnico + 30% pessoas. Skills ESSENCIAIS alem do tecnico: 1) RFC writing (decisao arquitetural documentada), 2) PR review pedagogico (ensina, nao so corrige), 3) onboarding de novos no time, 4) representar o time em sync com produto/biz, 5) priorizacao tecnica (tech debt vs feature), 6) mentoria de juniors/plenos. Codar deixa de ser metrica de output — voce mede output do time. Frustracao comum: produtividade pessoal cai, ansiedade sobe.",
+    "source": "The Manager's Path + Tech Lead practices BR 2025",
+    "tags": ["tech-lead", "rfc", "review", "mentoria", "skills", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-em-first-year",
+    "topic": "tech-modern",
+    "audience": ["lead", "senior"],
+    "content": "Engineering Manager primeiro ano: a transicao mais dolorosa em tech. Voce nao codifica mais (ou codifica < 20%), mede sucesso por output do time, vira responsavel por 1:1s, hiring, performance reviews, conflito interpessoal, comunicacao pra cima e pra baixo. Sindrome 'sem produzir nada' nos primeiros 3-6 meses e normal — seu trabalho e invisivel em codigo. Indicadores de sucesso: retencao do time, NPS interno, entrega de OKRs do time. Reserve 30% do tempo pra reflexao/leitura.",
+    "source": "The Manager's Path, Camille Fournier",
+    "tags": ["engineering-manager", "transicao", "primeiro-ano", "lideranca", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-github-side-projects",
+    "topic": "tech-modern",
+    "audience": ["junior", "pleno", "transition"],
+    "content": "GitHub como portfolio: o que CONTA — 1) projeto deployado funcional (link no README), 2) commits regulares por meses (consistencia > 1 dia massivo), 3) README profissional (motivacao, stack, como rodar, screenshot), 4) testes basicos, 5) docs em ingles ou bilingue. O que NAO CONTA — 50 forks sem commit, projetos abandonados em 1 semana, repos com 'WIP' eterno, codigo de tutorial sem variacao, README copy-paste. 3 projetos bem feitos > 50 medianos.",
+    "source": "GitHub profile best practices + recrutadores tech BR",
+    "tags": ["github", "portfolio", "side-projects", "readme", "deploy", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-open-source-evidence",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Open source como evidencia profissional: 1 contribuicao significativa (feature aceita, bug critico resolvido) > 50 pequenas (typo, doc). Comece em projetos que voce USA (biblioteca do seu dia-a-dia). Sequencia: 1) leia CONTRIBUTING.md, 2) pegue 'good first issue' (mas nao so essas), 3) leia codigo por uma semana antes de propor, 4) PR pequena focada, 5) responda code review com humildade. Projetos famosos com manutencao BR ativa: tech-debt-tracker, brazillian-utils, validadores BR.",
+    "source": "First Contributions GitHub + comunidades OSS BR",
+    "tags": ["open-source", "github", "contribuicao", "oss", "pr", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-senior-plateau",
+    "topic": "tech-modern",
+    "audience": ["senior", "lead"],
+    "content": "Senior que estagna: comum. Sinais — voce ja resolve qualquer ticket do time, mas nao ganha promocao, nao mexe em arquitetura, nao mentora. Saidas: 1) puxe um projeto cross-time (nao espere chamada), 2) escreva 1 RFC de impacto por trimestre, 3) ofereca-se pra mentor formal de juniores, 4) apresente em meetups (visibilidade externa), 5) mude pra empresa onde o nivel acima esta a 1 passo. Estagnacao em senior por 3+ anos sinaliza: ou voce nao quer subir ou voce esta na empresa errada.",
+    "source": "best practice carreira tech BR 2025",
+    "tags": ["senior", "plateau", "estagnacao", "promocao", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-stack-jump",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Pulo de stack (ex: .NET -> Node, PHP -> Python, Java -> Go): mais facil que parece se voce tem 5+ anos. Fundamentos transferem (estrutura, padroes, debugging, design). Estrategia: 1) 1-2 projetos paralelos na stack nova (3-6 meses), 2) contribuir em OSS na nova stack, 3) certificacao se aplicavel (AWS, Kubernetes), 4) aplicar em empresas que aceitam 'background polyglot' (geralmente startups e consultoria). Senior em stack X tem mais facilidade em pular stack que junior, porque conceitos pesam mais que sintaxe.",
+    "source": "best practice tech BR + transition coaches",
+    "tags": ["stack", "pulo", "polyglot", "transicao", "linguagem", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-area-jump",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Pulo de area (dev -> devops/SRE, dev -> DS, dev -> seguranca): 12-24 meses de transicao realista. Estrategia: 1) pegue projetos da area nova na empresa atual (ex: dev faz pipeline CI/CD = ponte pra DevOps), 2) cert ou curso forte (AWS DevOps Pro, OSCP pra security, DataCamp/Tera pra DS), 3) side project mostrando area nova, 4) network ativo na area nova (eventos, comunidades). Senioridade NAO 'transfere' inteiro — voce pode entrar como pleno na area nova com salario perto do anterior.",
+    "source": "best practice tech BR + transition coaches",
+    "tags": ["area", "pulo", "devops", "sre", "data-science", "transicao", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-remote-vs-hybrid-tradeoffs",
+    "topic": "tech-modern",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Remote-first vs hybrid tradeoffs reais: remote-first ganha em — concentracao em deep work, sem deslocamento, geografia livre, fit familiar. Perde em — onboarding mais lento, isolamento social, evolucao por proximidade dificultada, sinal cultural fraco. Hybrid ganha em — momentos de colaboracao espontanea, visibilidade pra gestao, network interno. Perde em — split de tempo, deslocamento parcial, calls 'hibridas' frequentemente quebradas. Junior tende a se beneficiar mais de hybrid (onboarding + mentoria). Senior+ pode performar bem em qualquer modelo.",
+    "source": "GitLab Handbook + remote consultants 2025",
+    "tags": ["remoto", "hibrido", "tradeoff", "onboarding", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-compensation-package",
+    "topic": "tech-modern",
+    "audience": ["senior", "lead", "transition"],
+    "content": "Compensation package BR moderno: base + variavel (PLR, bonus), beneficios (saude, VR, Gympass, day-off), equity (RSU em empresa publica, stock options em startup), profit share (fintechs/scale-ups), L&D budget (R$ 3-10k/ano). Empresa unicornio BR e gringa via BR oferecem RSU. Calcule total comp em 12 meses, nao so base. Pra senior+, 30-50% do TC pode estar em variavel/equity. Sempre peca 'comp summary' por escrito antes de aceitar.",
+    "source": "Levels.fyi BR + compensation consultants BR 2025",
+    "tags": ["compensation", "tc", "rsu", "stock", "plr", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-burnout-signs",
+    "topic": "tech-modern",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Burnout sinais (OMS reconhece como sindrome ocupacional): 1) exaustao cronica (cansaco que ferias nao cura), 2) cinismo/distanciamento ('nada importa'), 3) queda de produtividade percebida apesar de mais horas, 4) sono ruim/insonia, 5) sintomas fisicos (dor cronica, gastrite). Prevencao: limites claros (Slack desliga 19h), 1 dia 100% offline por semana, terapia preventiva (psicologo 1x/quinzena), reserva financeira de 6m. Burnout instalado precisa de 3-6 meses de tratamento — nao 'forca de vontade'.",
+    "source": "OMS CID-11 + psicologos saude ocupacional BR 2025",
+    "tags": ["burnout", "saude-mental", "exaustao", "limites", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-long-term-planning",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Carreira tech longo prazo (5-10 anos): 1) escreva 'eu daqui 5 anos' uma vez por ano (cargo, escopo, salario, lifestyle), 2) compare ano apos ano — convergencia ou drift?, 3) liste 3 skills pra desenvolver no proximo ano (1 tecnica, 1 lateral, 1 pessoal), 4) review trimestral: o que eu fiz que aproxima do '5 anos'?. Carreira sem revisao = drift random. Carreira com revisao trimestral converge ate em mercado volatil. 90% das pessoas nao fazem isso — diferenciacao barata.",
+    "source": "Designing Your Life, Bill Burnett + carreira coaches BR",
+    "tags": ["planejamento", "longo-prazo", "5-anos", "review", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-senior-trap-manager",
+    "topic": "tech-modern",
+    "audience": ["senior", "lead"],
+    "content": "'Senior trap': empresa promove senior pra manager 'porque era a melhor opcao'. Voce aceita por status/salario, mas perde 80% do tempo codando. Em 1-2 anos, voce nao acompanha mais a stack viva e fica 'preso' em gestao. Risco: se voltar pra IC, voce esta defasado tecnicamente. Pergunte ANTES de aceitar: 'tem IC track aqui ate principal/staff?'. Se nao tem, e voce ama codar, recuse manager mesmo com 30% de aumento. Manager nao e 'promocao natural' do senior — e mudanca lateral.",
+    "source": "Staff Engineer's Path + The Manager's Path",
+    "tags": ["senior-trap", "manager", "ic-track", "armadilha", "tech-moderno"]
+  },
+  {
+    "id": "identidade-disc-aplicado",
+    "topic": "identidade",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "DISC aplicado a carreira (sem mistificacao): D (dominancia) — tendencia a liderar, decidir rapido, foco em resultado. I (influencia) — tendencia social, motivacional, gosta de pessoas. S (estabilidade) — paciente, leal, prefere consistencia. C (conformidade) — analitico, detalhista, busca precisao. Perfil DC alto comum em devs senior. Perfil IS alto comum em PMs/scrum masters. Uso pratico: identificar ambiente que te energiza (caos vs estavel), nao definir quem voce 'eh'.",
+    "source": "DISC original Marston + adaptacao carreira BR",
+    "tags": ["disc", "perfil", "comportamental", "identidade", "ambiente"]
+  },
+  {
+    "id": "identidade-valores-trabalho",
+    "topic": "identidade",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Valores no trabalho — descubra fazendo exercicio: liste 20 valores possiveis (autonomia, impacto social, dinheiro, estabilidade, aprendizado, criatividade, status, equilibrio, etc), corte pra 10, depois pra 5, depois pra 3 (top 3 e o que importa). Em decisao de oferta, avalie 'essa vaga atende meus top 3?'. Quando 2 dos 3 estao ausentes, voce vai sofrer em 6 meses mesmo com salario bom. Valores mudam com idade — refaca exercicio a cada 3-5 anos.",
+    "source": "Designing Your Life + values exercises BR 2025",
+    "tags": ["valores", "autoconhecimento", "decisao", "identidade"]
+  },
+  {
+    "id": "identidade-ikigai-pratico",
+    "topic": "identidade",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Ikigai pratico BR (sem mistica): 4 circulos sobrepostos — 1) o que voce ama fazer (motivacao intrinseca), 2) o que voce e bom (skill), 3) o que o mundo precisa (relevancia social/mercado), 4) o que paga bem. Intersecao 1+2 = paixao sem renda. Intersecao 1+3 = missao sem skill. Intersecao 2+4 = profissao sem proposito. Intersecao 3+4 = vocacao sem alegria. Centro dos 4 = ikigai (raro, mas norte). Maioria de carreira BR fica em 2+4 estavel; 3+4 paga mais; 1+2+4 = carreira saudavel sustentavel.",
+    "source": "Ikigai (Garcia/Miralles) + adaptacao carreira BR",
+    "tags": ["ikigai", "proposito", "identidade", "valores", "vocacao"]
+  },
+  {
+    "id": "identidade-imposter-syndrome",
+    "topic": "identidade",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Imposter syndrome — sentir que voce nao merece estar onde esta. 70%+ dos profissionais sentem em algum momento. NAO se 'vence' — se gerencia. Praticas: 1) registro de wins (lista mensal de entregas — combate amnesia seletiva), 2) feedback externo regular ('o que eu fiz que voces valorizam?'), 3) terapia se virar paralisia, 4) reframe — 'sentir imposter = estar em ambiente desafiador, sinal de crescimento'. Senior que NUNCA sentiu imposter provavelmente esta em situacao estagnada.",
+    "source": "Imposter Syndrome research + Brene Brown + psicologos BR",
+    "tags": ["imposter", "sindrome", "autoconfianca", "identidade"]
+  },
+  {
+    "id": "identidade-proposito-vs-felicidade",
+    "topic": "identidade",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Proposito vs felicidade no trabalho — distincao util. Felicidade e estado emocional flutuante (dia bom, dia ruim). Proposito e direcao consistente que da sentido aos dias ruins. Voce pode ter trabalho com proposito mas dia ruim. Voce pode ter trabalho 'feliz' (confortavel, agradavel) sem proposito — e em 2-3 anos sente vazio. Carreira saudavel: 70%+ dos dias com sentimento de contribuicao (proposito), nao 100% felizes (impossivel). Buscar 'felicidade no trabalho' como objetivo central frustra.",
+    "source": "Drive, Daniel Pink + Man's Search for Meaning, Frankl + adaptacao",
+    "tags": ["proposito", "felicidade", "sentido", "identidade"]
+  },
+  {
+    "id": "identidade-energia-vs-drena",
+    "topic": "identidade",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Identifique trabalho que te energiza vs drena: por 2 semanas, anote ao final de cada bloco (90min) — 'isso me deu energia (+) ou tirou (-)'. Padrao aparece. Energiza tipico: criar, ensinar, resolver problema complexo, conversas 1:1 profundas. Drena tipico: reuniao sem decisao, retrabalho politico, ambiente conflitivo, microgerencia. Carreira sustentavel = 60%+ do tempo em atividades que energizam. Cargo perfeito no papel pode te drenar — confia mais no padrao real do que na descricao.",
+    "source": "Designing Your Life + energy audit + carreira coaches BR",
+    "tags": ["energia", "drena", "audit", "identidade", "sustentabilidade"]
+  },
+  {
+    "id": "identidade-mudanca-fuga-vs-proposito",
+    "topic": "identidade",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Mudanca de area: fuga vs proposito. Sinal de fuga: voce odeia o lugar atual e qualquer alternativa parece boa, voce nao consegue articular o que quer da area nova, voce evita decisoes proximas (gestor, colega, projeto). Sinal de proposito: voce tem curiosidade ativa pela area nova (le, conversa, faz freela), voce articula 'em 5 anos quero X' alinhado com a area nova, voce ja experimentou e gostou. Fuga so muda o pano de fundo — em 6 meses, mesma sensacao em lugar novo. Proposito sustenta a transicao por anos.",
+    "source": "Carolina Manfrinato + Designing Your Life + coaches BR",
+    "tags": ["mudanca", "fuga", "proposito", "transicao", "identidade"]
+  },
+  {
+    "id": "identidade-coach-humano-vs-tools",
+    "topic": "identidade",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Coach humano vs ferramentas (CareerTwin, journaling, IA): cada um pra um momento. IA/ferramenta — exploracao inicial, 'eu preciso pensar em voz alta', validacao de hipotese, escalavel. Coach humano — momento de decisao grande (transicao, demissao, contraposta dificil), padrao recorrente que voce nao sai (terapia ajuda), valida + responsabiliza. Mentor — diferente de coach: alguem mais experiente na sua area especifica. Use os tres com clareza de para que serve cada um.",
+    "source": "International Coaching Federation + carreira coaches BR 2025",
+    "tags": ["coach", "mentor", "ferramentas", "ia", "identidade"]
+  },
+  {
+    "id": "identidade-mentoria-informal",
+    "topic": "identidade",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Mentoria informal — como pedir: NUNCA 'voce quer ser meu mentor?' (compromisso aberto, vago, assusta). Faca: 1) identifique pessoa cuja carreira voce admira, 2) interaja 2-3 vezes (comentario em post, pergunta em meetup) antes do convite, 3) peca conversa especifica 'voce ja viveu transicao X, eu estou nessa, posso te perguntar 3 coisas em 20min de call?', 4) chegue preparado, valorize o tempo, mande follow-up agradecendo + atualizacao em 1-2 meses. Mentoria informal cresce a partir da primeira conversa boa.",
+    "source": "best practice network BR + mentoria carreira",
+    "tags": ["mentoria", "informal", "pedido", "network", "identidade"]
+  },
+  {
+    "id": "identidade-mid-career-crisis",
+    "topic": "identidade",
+    "audience": ["senior", "lead", "transition"],
+    "content": "Mid-career crisis (35-45 anos) e padrao reconhecido. Sintomas: sucesso 'no papel' mas vazio sentido, comparacao constante com pares, pergunta 'isso e tudo?'. Causas: 1) atingiu metas externas (salario, cargo) sem alinhamento com valores reais, 2) papel familiar (filhos, idosos) muda referencia, 3) ver mortalidade explicitamente. Saidas saudaveis: terapia, sabatica curta (1-3 meses), mudanca lateral, reduzir carga por opcao. Saidas perigosas: mudanca radical impulsiva, gastos altos pra preencher vazio.",
+    "source": "Daniel Levinson + psicologia desenvolvimento + carreira BR",
+    "tags": ["mid-career", "crise", "35-45", "vazio", "sentido", "identidade"]
+  },
+  {
+    "id": "network-linkedin-portfolio",
+    "topic": "network",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "LinkedIn como portfolio (vs apenas CV): CV e estatico, LinkedIn e dinamico. Use Featured pra fixar artefatos, sobre pra narrativa, posts pra 'memoria pesquisavel'. Pro recrutador moderno, LinkedIn substitui CV em 60-70% dos primeiros contatos. Estrategia: pelo menos 1 post tecnico/lecao por mes pra alimentar 'memoria publica'. Em 12 meses voce tem 12 posts que recrutador pode ler pra entender como voce pensa — diferenciacao versus CV de 2 paginas.",
+    "source": "LinkedIn Talent Solutions BR + creators tech 2025",
+    "tags": ["linkedin", "portfolio", "posts", "memoria", "network"]
+  },
+  {
+    "id": "network-posts-organic-types",
+    "topic": "network",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Posts organicos no LinkedIn — tipos que funcionam em BR: 1) carrossel de aprendizado (8-10 slides com 1 lecao concreta), 2) storytelling de fracasso/recuperacao (vulnerabilidade controlada), 3) opiniao tecnica com tradeoff (nao 'X e melhor que Y', mas 'X serve pra A, Y pra B'), 4) lista pratica ('5 coisas que aprendi em projeto Y'), 5) thread (texto longo separado em paragrafos curtos). Foto/video aumentam alcance 2-3x. Nao copie templates virais — sua voz unica e o ativo.",
+    "source": "LinkedIn Creator Insights BR 2025",
+    "tags": ["posts", "linkedin", "tipos", "storytelling", "network"]
+  },
+  {
+    "id": "network-newsletter-personal",
+    "topic": "network",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Newsletter pessoal (Substack, Beehiiv, ConvertKit) vale a pena? Sim se: 1) voce escreve mesmo sem audiencia (sustentavel), 2) sua area se beneficia de aprofundamento (tech, produto, gestao), 3) voce mantem cadencia (semanal/quinzenal/mensal — escolha uma). Custos: tempo (4-8h por edicao decente), curiosidade saturada (escrever 50 edicoes sem readers cansa). Beneficios: rede de leitores qualificados em 1-2 anos, posicionamento como referencia, leads pra freela/consultoria. Pra senior+ em area especifica, ROI bom em 18+ meses.",
+    "source": "Newsletter creators BR + Substack 2024-2025",
+    "tags": ["newsletter", "substack", "audiencia", "escrita", "network"]
+  },
+  {
+    "id": "network-events-br-2026",
+    "topic": "network",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Eventos tech BR relevantes 2026: The Developer's Conference (TDC) — multi-cidade, multi-trilha. QCon SP/RJ — arquitetura senior. RubyConf BR, RustConf BR — linguagens especificas. FISL (POA) — open source. Latinoware — open source Latin. Devs Day. Frontmania BR. AWS Summit, Google Cloud Next BR. Eventos de produto: ProductSP, ProductCamp. Pra senior+, eventos com 'unconference' track entregam mais que keynotes. Sempre prepare 'elevator pitch' de 30s sobre voce, e duas perguntas pra fazer.",
+    "source": "Brasscom + comunidades tech BR 2025-2026",
+    "tags": ["eventos", "tdc", "qcon", "fisl", "network", "br"]
+  },
+  {
+    "id": "network-comunidades-online",
+    "topic": "network",
+    "audience": ["junior", "pleno", "transition"],
+    "content": "Comunidades online tech BR ativas 2026: RocketSeat (Discord, foco dev frontend/mobile), Alura (forum + Discord, vasto), Tera (alunos + alumni produto/dados), DIO (gratuita, multi-area), Codecademy/freeCodeCamp BR. Comunidades de pratica: brdevs.org, dotnetbr, GruPy, Frontend BR Telegram, Mulheres na TI (BR), WoMakersCode, Reprograma alumni. Aplique pra eventos online (lives, workshops) — networking de baixo custo e bom ROI. Comunidade pra mid/senior: WebSummit Slack, devs Telegram especificos.",
+    "source": "comunidades tech BR 2025-2026",
+    "tags": ["comunidades", "rocketseat", "alura", "tera", "discord", "network"]
+  },
+  {
+    "id": "network-mentor-formal-informal",
+    "topic": "network",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Mentor formal vs informal: formal — contrato (pago ou via programa empresa, plataformas tipo MentorCruise, ADPList, Mais Mulheres Tech), cadencia definida (1x/mes), agenda estruturada. Informal — relacao organica, sem cadencia fixa, baseada em afinidade. Formal entrega mais em transicao/momento especifico (3-12 meses). Informal entrega mais ao longo da vida (mentor que vira referencia 10+ anos). Tenha 1 mentor formal ATIVO se voce esta em transicao; tenha 2-3 informais sempre.",
+    "source": "International Coaching Federation + mentoria BR 2025",
+    "tags": ["mentor", "formal", "informal", "mentorcruise", "adplist", "network"]
+  },
+  {
+    "id": "network-introvert-strategy",
+    "topic": "network",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Networking pra introvertidos: eventos grandes drenam — use estrategia low-touch. 1) Online > presencial (texto/sincronizacao reduzida). 2) 1:1 calls > grupos. 3) Conteudo > conversa (deixe seu conteudo abrir portas). 4) Eventos pequenos (workshops, meetups < 30 pessoas) > congressos. 5) Quality > quantity — 5 relacoes profundas em 2 anos > 200 conexoes superficiais. Introvertido com 50 conexoes em areas certas pode ter mais ROI de network que extrovertido com 5000.",
+    "source": "Susan Cain (Quiet) + network coaches BR",
+    "tags": ["network", "introvertido", "estrategia", "1-1", "conteudo"]
+  },
+  {
+    "id": "network-events-vs-1on1-roi",
+    "topic": "network",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Eventos vs 1:1 — ROI comparado. Eventos: alcance amplo, ~5-10 conexoes superficiais por evento, ~1-2 conexoes que viram algo. 1:1 calls (coffee chat): cada call e ~20-30min focado, conversao alta (~60% viram relacao). Investimento: 1 evento = 1 dia + R$ 100-1000 = ~10 conexoes superficiais. 10 calls 1:1 = 5-6 horas distribuidas = 6-7 relacoes reais. Senior+ tem ROI muito melhor em 1:1 que evento. Junior+ pode equilibrar — evento pra descobrir gente, 1:1 pra aprofundar.",
+    "source": "best practice network BR + transition coaches 2025",
+    "tags": ["network", "eventos", "1-1", "roi", "estrategia"]
+  },
+  {
+    "id": "network-personal-brand-vs-hype",
+    "topic": "network",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Personal brand vs hype — linha tenue. Brand genuino: voce e referencia em area X porque entrega valor concreto (posts substantivos, projetos, palestras com conteudo). Hype: voce parece referencia mas seu conteudo e generico, motivacional, sem evidencia. Brand sustenta 5+ anos. Hype dura 6-12 meses, queima reputacao quando descoberto. Pergunta-teste: se alguem buscar 'X feito por voce' em git, palestra, artigo — acha algo concreto? Se nao, e hype. Brand precisa de hands-on, nao so opinion piece.",
+    "source": "Personal Brand research + carreira BR 2025",
+    "tags": ["personal-brand", "hype", "reputacao", "autenticidade", "network"]
+  },
+  {
+    "id": "network-asking-referral",
+    "topic": "network",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Pedir referral sem ser oportunista: regra de ouro — invista na relacao ANTES de precisar. Se voce so aparece quando quer algo, e oportunismo. Sequencia saudavel: 1) interaja com a pessoa por 3+ meses (comentarios, conversa, ajuda quando puder), 2) quando aparecer vaga relevante, pergunte 'voce conhece o time? consegue me dizer se vale aplicar e me indicar?', 3) ofereca CV pra pessoa avaliar antes de submeter, 4) atualize se for selecionado, 5) agradeca independente do resultado. Referral pedido bem feito tem taxa de aceitacao ~80%.",
+    "source": "best practice network BR + warm intro practices",
+    "tags": ["referral", "indicacao", "pedido", "network", "warm-intro"]
+  },
+  {
+    "id": "cv-cover-letter-need",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Carta de apresentacao no BR 2026: opcional na maioria das vagas, obrigatoria em ~15% (corporate, governo, consultoria). Quando pedida, NAO repita o CV — use pra contar 'porque essa empresa especifica' em 1 pagina (3-4 paragrafos). Estrutura: 1) abertura conectando a empresa, 2) 2 conquistas relevantes a vaga, 3) o que te atrai naquele time/produto/missao especifica, 4) call to action curto. Carta generica copy-paste e pior que carta nenhuma — recrutador percebe.",
+    "source": "best practice mercado BR 2025",
+    "tags": ["carta-apresentacao", "cover-letter", "personalizacao", "curriculo"]
+  },
+  {
+    "id": "cv-projects-section",
+    "topic": "cv",
+    "audience": ["junior", "transition"],
+    "content": "Secao 'Projetos' no CV — essencial pra junior e transicao com pouca experiencia formal. Coloque ANTES de experiencia profissional (ou depois se ja tem 1+ ano). Por projeto: nome + link, stack/tools, 2-3 bullets descrevendo problema resolvido + resultado. Priorize 2-3 projetos PROFUNDOS sobre 8-10 superficiais. Projeto deployado com link funcional > codigo no GitHub apenas. Senior+ tipicamente nao usa essa secao a menos que seja side project notavel (OSS contrib, projeto pessoal com tracao).",
+    "source": "best practice tech BR + recrutadores 2025",
+    "tags": ["projetos", "secao", "junior", "transicao", "curriculo"]
+  },
+  {
+    "id": "cv-certifications-where",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Onde colocar certificacoes no CV: secao propria 'Certificacoes' DEPOIS de formacao academica. Liste so as relevantes (AWS, GCP, PMP, CFA, Kubernetes CKA) — nao polua com 30 cursos de 4h da Coursera. Por certificacao: nome oficial + emissor + ano. Se expira, mencione validade. Pra senior+, certs pesam menos que projetos reais; pra junior/transicao, certs ajudam ATS. Maximo 5-6 certs no CV — alem disso vira ruido.",
+    "source": "best practice mercado tech BR 2025",
+    "tags": ["certificacoes", "secao", "ats", "aws", "curriculo"]
+  },
+  {
+    "id": "cv-skills-section-structure",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Secao 'Habilidades' / 'Skills': organize por categoria com headers (Linguagens, Frameworks, Cloud/Infra, Bancos, Ferramentas). Liste 4-8 itens por categoria — mais que isso vira lista de leitura. Coloque os mais relevantes pra vaga PRIMEIRO em cada categoria (ATS pondera ordem). Nao use barras de proficiencia (visual quebra ATS, e percentual subjetivo). Evite buzzwords sem skill real (nao liste 'AI/ML' se voce so chamou OpenAI API uma vez).",
+    "source": "best practice tech BR + ATS docs 2025",
+    "tags": ["skills", "habilidades", "secao", "categoria", "ats", "curriculo"]
+  },
+  {
+    "id": "linkedin-creator-mode",
+    "topic": "linkedin",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Modo Creator no LinkedIn: ative se voce posta > 1 vez/mes. Beneficios: 1) botao 'Seguir' substitui 'Conectar' como padrao (cresce audiencia sem aceitar todos), 2) destaque a 5 hashtags-tema na sua bio, 3) acesso a LinkedIn Live e Newsletter, 4) analytics mais ricos. Trade-off: se voce so usa LinkedIn pra rede privada de conhecidos, Creator mode polui o feed. Use Creator mode em transicao ou quando quer ampliar voz publica.",
+    "source": "LinkedIn Creator docs 2025",
+    "tags": ["creator", "modo", "alcance", "audiencia", "perfil"]
+  },
+  {
+    "id": "linkedin-open-to-work",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Open to Work: opcoes — 'visivel a todos' (banner verde na foto) ou 'so recrutadores' (LinkedIn Recruiter ve). Banner publico aumenta contato de recrutador, mas pode sinalizar 'urgencia' (algumas pessoas evitam por imagem). 'So recrutadores' e o sweet spot pra maioria — discreto e funcional. Configure especificando: tipos de cargo, locais, modelos (remoto/hibrido/presencial). Atualize toda vez que mudar foco. Tirar Open to Work apos pegar oferta evita 'spam' de recrutador.",
+    "source": "LinkedIn docs + practice BR 2025",
+    "tags": ["open-to-work", "recrutador", "banner", "configuracao", "perfil"]
+  },
+  {
+    "id": "linkedin-skills-endorsements",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Skills + endorsements no LinkedIn: skills pesam mais no algoritmo do que endorsements. Pin 3 skills prioritarias (as que voce quer ser achado por). Para endorsements, troca reciproca com 5-10 conexoes proximas e suficiente — 50+ endorsements em 1 skill nao move o ranking depois de certo limite. Skill assessment (badge do LinkedIn): vale pra junior em skill que voce nao tem cert formal. Senior+, ja tem evidencia melhor (projetos, experiencia) — badge nao move tanto.",
+    "source": "LinkedIn Algorithm Notes 2024",
+    "tags": ["skills", "endorsements", "ranking", "badge", "perfil"]
+  },
+  {
+    "id": "linkedin-easy-apply-warning",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "transition"],
+    "content": "LinkedIn Easy Apply: facil = competitivo. Vagas com Easy Apply recebem 5-50x mais candidatos que vagas que pedem aplicacao no site da empresa. Taxa de resposta cai. Estrategia: use Easy Apply pra 30% das aplicacoes (volume), aplicacao direta no ATS da empresa pra 70% (qualidade). Mesmo em Easy Apply, customize as 1-2 perguntas que aparecem — recrutador le. Aplicacao espalhada sem nenhuma customizacao = preenchedor de funil sem retorno.",
+    "source": "LinkedIn Talent Insights + practice BR 2025",
+    "tags": ["easy-apply", "competicao", "estrategia", "aplicacao", "linkedin"]
+  },
+  {
+    "id": "linkedin-update-frequency",
+    "topic": "linkedin",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Frequencia de update do perfil LinkedIn: revisao completa 1x/ano (sobre, experiencia, skills, headline). Update menor (1 conquista, 1 projeto) toda vez que entrega coisa relevante. Em busca ativa: atualize antes de comecar — algoritmo demora 1-2 semanas pra re-indexar. Nao atualize por estetica sem mudanca real ('headline polido pela 5a vez no mes') — sinal vazio. Estatistica: ~40% dos profissionais tem perfil desatualizado >18 meses, e ficam em surpresa quando precisam buscar.",
+    "source": "LinkedIn data + practice BR 2025",
+    "tags": ["update", "frequencia", "manutencao", "perfil"]
+  },
+  {
+    "id": "interview-system-design-prep",
+    "topic": "interview",
+    "audience": ["senior", "lead"],
+    "content": "Entrevista de system design (senior+): estrutura tipica de 45min. 1) requirements (5min — funcional e nao-funcional, scale estimate), 2) high-level design (10min — caixas + setas, fluxo principal), 3) deep dive (20min — pegue 1-2 componentes pra detalhar: banco, cache, queue, API design), 4) tradeoffs + scale-up (10min). Recursos: livro 'Designing Data-Intensive Applications' (Kleppmann), 'System Design Interview' (Alex Xu). Pratique falando alto — system design e show de tradeoffs, nao de solucao perfeita.",
+    "source": "Cracking the Coding Interview + Alex Xu + practice BR",
+    "tags": ["entrevista", "system-design", "senior", "tradeoffs", "tecnica"]
+  },
+  {
+    "id": "interview-takehome-strategy",
+    "topic": "interview",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Take-home challenge: avaliar antes de fazer. Bom take-home: 4-8h, requisito claro, voce mantem o codigo (nao 'doa' IP). Ruim: 16h+, requisito vago ('faca o que achar'), exige stack/feature de produto real (sinal de trabalho gratis). Recuse polidamente take-homes abusivos — empresa que pede 20h sem pagamento ja sinaliza cultura. Quando aceitar: respeite o time-box, entregue funcional + README explicando decisoes/tradeoffs/o que faria diferente com mais tempo > entregar 'perfeito' em 20h.",
+    "source": "best practice tech BR + Cracking Coding Interview",
+    "tags": ["entrevista", "take-home", "challenge", "tempo", "estrategia"]
+  },
+  {
+    "id": "interview-virtual-setup",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Entrevista virtual setup: 1) iluminacao de frente (janela na sua frente, nao atras), 2) audio com headset/microfone decente (audio ruim cansa entrevistador), 3) fundo limpo ou virtual neutro (nao distraia), 4) camera na altura do olho (nao olhar pra baixo), 5) testar Zoom/Meet 10min antes (login, audio, video). Vestimenta: camisa simples sem estampa forte (moire em camera), camisa social pra finais. 70% das entrevistas BR 2026 sao virtuais — setup ruim derruba candidato.",
+    "source": "best practice virtual interviews 2025",
+    "tags": ["entrevista", "virtual", "setup", "zoom", "camera"]
+  },
+  {
+    "id": "interview-reject-recovery",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Recuperacao apos rejeicao: 1) peca feedback especifico ('o que poderia ter sido melhor?') — 30% dos recrutadores respondem, 70% nao, ambos sao normais. 2) Faca debrief pessoal: o que VOCE achou que foi forte? Fraco? 3) Anote padrao se rejeitar 3+ vezes na mesma fase (tecnica? comportamental? final?). 4) Nao internalize como 'eu sou ruim'. Rejeicao em entrevista e principalmente sobre 'fit + numero de vagas + variancia do dia', nao so sobre voce. Re-aplicar na mesma empresa em 6-12 meses e padrao aceitavel.",
+    "source": "best practice rejeicao + carreira coaches BR",
+    "tags": ["entrevista", "rejeicao", "feedback", "recuperacao", "resiliencia"]
+  },
+  {
+    "id": "transition-finance-runway",
+    "topic": "transition",
+    "audience": ["transition"],
+    "content": "Reserva financeira em transicao: minimo 6 meses de gastos totais (aluguel, contas, comida, lazer minimo, plano saude, imprevistos). Ideal 9-12 meses pra senior+ ou famiglia. Calculo: gastos mensais x meses de transicao realistica (3-9 meses pra junior, 6-12 pra senior). Sem reserva, voce aceita primeira oferta (qualquer) e perde leverage de negociacao. Reserva tambem reduz ansiedade — transicao com pressao financeira e bem mais dura mentalmente. Comece a juntar pelo menos 6 meses ANTES do plano de saida.",
+    "source": "personal finance + transition coaches BR",
+    "tags": ["financeiro", "reserva", "runway", "transicao", "planejamento"]
+  },
+  {
+    "id": "transition-internal-move",
+    "topic": "transition",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Transicao interna (mesma empresa, area diferente) e subestimada — mais facil que externa em 60-70% dos casos. Vantagens: 1) network ja existe internamente, 2) cultura familiar, 3) gestor atual pode advogar por voce, 4) gap de skill resolvido com tempo on-the-job, 5) RH ja te conhece. Sequencia: 1) converse com gestor atual abertamente, 2) faca projetos cross-area (volunteer), 3) network com gestor da area-alvo, 4) aguarde vaga interna ou negocie transferencia. Movimento interno bem feito retem talento sem custo de troca.",
+    "source": "best practice carreira BR + HR consultants",
+    "tags": ["interno", "transferencia", "movimento", "transicao", "empresa"]
+  },
+  {
+    "id": "transition-age-bias",
+    "topic": "transition",
+    "audience": ["transition", "senior"],
+    "content": "Etarismo (idadismo) em transicao 40+ em tech BR: existe mas e gerenciavel. Estrategia: 1) NAO esconda idade no CV (recrutador deduz por anos de experiencia), 2) demonstre energia/atualizacao tecnica com projetos recentes (githubs ativos, side projects), 3) evite linguagem 'antiga' (nao chame ferramenta atual de 'novo'), 4) aplique pra empresas com fitness etario diverso (Nubank, Globo, Movile tem mid-career senior+) e nao so startup early com time 25-30 anos. Senioridade adulta vende em escala/regulado/B2B, menos em early-stage hype.",
+    "source": "best practice diversidade carreira BR 2025",
+    "tags": ["idade", "etarismo", "40+", "transicao", "vies"]
+  },
+  {
+    "id": "transition-down-level-strategy",
+    "topic": "transition",
+    "audience": ["transition", "senior"],
+    "content": "Down-level estrategico em transicao: aceitar nivel um abaixo (de senior em area X pra pleno em area Y) com salario menor por 1-2 anos pode ser saudavel pra mudar de area. Argumento: voce ganha tempo pra construir base na area nova com pagamento, depois sobe rapido por leverage de senioridade existente. Risco: ficar 'preso' em pleno se a empresa nao tem trilha clara de upgrade pos-transicao. Negocie ANTES: 'aceito pleno por 12 meses; me chamamos pra senior depois disso se entrega bater'. Down-level sem clausula de upgrade vira armadilha.",
+    "source": "best practice transicao BR 2025",
+    "tags": ["down-level", "transicao", "estrategia", "salario", "trilha"]
+  },
+  {
+    "id": "salary-pj-conversion-calc",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "transition"],
+    "content": "Conversao CLT -> PJ calculo simples: PJ deve receber ~1.5-1.7x do CLT bruto pra equivalencia liquida. Razao: voce paga ~6-15% Simples (faturamento), perde FGTS (~8%), 13º (~8%), ferias (~12% incluindo 1/3), sem multa em demissao, sem seguro-desemprego. Soma: ~35-45% de 'desconto invisivel'. Pra valer a pena PJ, multiplicador minimo: 1.5x. Se a empresa oferece o mesmo salario em PJ que em CLT, voce esta perdendo dinheiro. Use calculadora online (CalcPJ, Contador Online) pra projetar liquido em 12 meses.",
+    "source": "Contadores tech BR + simulators online 2025",
+    "tags": ["salario", "pj", "clt", "conversao", "calculo", "br"]
+  },
+  {
+    "id": "salary-equity-vesting-cliff",
+    "topic": "salary",
+    "audience": ["senior", "lead", "transition"],
+    "content": "Vesting de equity (stock/options): padrao 4 anos com cliff de 1 ano. Cliff = se voce sai antes de 1 ano, NADA vesta. Depois do cliff, 25% vesta de uma vez (cobre o ano 1) e o resto vesta linearmente (mensal ou trimestral) ao longo dos 3 anos seguintes. Implicacao: pra capturar 100% do equity, ficar 4 anos. Sair em 2 anos = 50% vested. Negocie em oferta: cliff menor (6 meses), accelerated vesting em caso de acquisition, refresh anual. Equity sem vesting = nao serio.",
+    "source": "compensation consultants + startup BR 2025",
+    "tags": ["salario", "equity", "vesting", "cliff", "stock"]
+  },
+  {
+    "id": "salary-relocation-package",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Relocation package em mudanca de cidade/pais: itens negociaveis — passagens, frete (container ou airfreight pra itens essenciais), hotel/Airbnb 30-60 dias, assistencia visa/imigracao (advogado, taxas, exames), curso de idioma local, escola dos filhos (se aplica), assistencia spouse pra recolocacao. Valor tipico: USD 5-30k pra mudancas internacionais, R$ 5-15k pra inter-estadual. Sempre peca POR ESCRITO no offer letter — verbal nao vale. Tax gross-up (empresa cobre imposto sobre o beneficio) e diferenca grande no liquido.",
+    "source": "compensation consultants + relocation BR 2025",
+    "tags": ["salario", "relocation", "mudanca", "pacote", "negociacao"]
+  },
+  {
+    "id": "soft-presentation-skills",
+    "topic": "soft-skills",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Apresentacao em call/sala: estrutura 'tell-show-tell'. 1) Tell: anuncie em 1 frase o que voce vai apresentar e o que voce quer no final ('em 10min vou propor mudanca X; preciso de aprovacao pra prosseguir'). 2) Show: 3-5 slides ou pontos sustentando o argumento (problema, opcoes, recomendacao, riscos). 3) Tell: repita o pedido + proximos passos. Pratique em voz alta 2-3 vezes (cronometre). Conteudo bom mal apresentado = nao convence; apresentacao boa de conteudo medio convence mais. Pra senior+, apresentacao 1-2 niveis acima abre porta de IC->staff.",
+    "source": "Resonate, Nancy Duarte + practice BR 2025",
+    "tags": ["apresentacao", "comunicacao", "estrutura", "tell-show-tell", "soft"]
+  },
+  {
+    "id": "soft-saying-no",
+    "topic": "soft-skills",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Dizer nao profissionalmente: senior+ que nao diz nao vira fila de obrigacao. Tecnica: 'sim, e' — 'sim, posso ajudar com X, e isso significa que Y vai atrasar 1 semana — quem prefere?' (transfere decisao de tradeoff pra quem pediu). Quando nao da pra fazer: 'nao consigo fazer X agora, mas posso oferecer A ou B como alternativa'. Recusa direta cega ('nao') queima relacao; recusa que oferece caminho preserva. Trabalho 'oculto' (sem visibilidade pra gestao) que voce aceita por nao saber dizer nao = burnout invisivel.",
+    "source": "Essentialism, Greg McKeown + practice BR",
+    "tags": ["nao", "limites", "tradeoff", "alternativa", "soft"]
+  },
+  {
+    "id": "soft-receiving-feedback",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Receber feedback (especialmente critico): 1) ouvir sem interromper, 2) parafrasear pra confirmar ('o que voce esta dizendo e que X, certo?'), 3) NAO defender na hora — agradeca, peca 24h pra pensar, 4) separe a critica do critico (mesmo critico desajeitado pode ter ponto valido), 5) reflita: o que tem de verdade nisso? Mesmo 30% verdade vale agir. 6) Retorne ao critico em 1-2 semanas com acao concreta ('voce mencionou X; comecei a fazer Y'). Quem recebe feedback bem cresce 2-3x mais rapido em senioridade.",
+    "source": "Thanks for the Feedback, Stone & Heen + practice BR",
+    "tags": ["feedback", "receber", "critica", "reflexao", "soft"]
+  },
+  {
+    "id": "soft-meeting-facilitation",
+    "topic": "soft-skills",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Facilitacao de reuniao (skill subestimada): antes — pauta enviada 24h antes com objetivos claros, lista de itens (max 5), tempo por item. Durante — abra com objetivo ('saimos daqui com decisao Y'), pegue notas visiveis (alguem escrevendo), 5min antes do fim sumarize decisoes + acoes + responsaveis + prazos. Apos — envie ata por escrito (Slack/email) em 24h. Reuniao bem facilitada vale 3x mais que mal facilitada. Senior+ que facilita bem ganha visibilidade cross-area sem promocao formal.",
+    "source": "Death by Meeting, Patrick Lencioni + practice BR",
+    "tags": ["reuniao", "facilitacao", "pauta", "ata", "soft"]
+  },
+  {
+    "id": "ats-name-formatting",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Nome do arquivo CV: padrao 'Nome Sobrenome - CV.pdf' ou 'Nome Sobrenome - Cargo.pdf'. Evite 'cv_final_v2_revisado_atualizado.pdf' (parece amador) ou 'untitled.pdf' (parece descuidado). Cargo no nome ajuda recrutador a encontrar arquivo no Google Drive depois. ATS aceita PDF text-based via campo de upload. Pra envio por email, anexe PDF + texto curto no body. Em LinkedIn Easy Apply, geralmente ja tem seu PDF no perfil. Sempre que enviar, abra o PDF voce mesma uma ultima vez pra checar.",
+    "source": "best practice mercado BR 2025",
+    "tags": ["ats", "arquivo", "nome", "pdf", "envio", "curriculo"]
+  },
+  {
+    "id": "ats-gupy-specifics",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Gupy (principal ATS BR): aceita PDF/DOCX, usa NLP pra parse + ranking de candidatos. Score visivel pro recrutador. Dicas: 1) preencha TODOS os campos do formulario, nao so anexe CV (Gupy puxa keywords de campos individuais), 2) respostas a perguntas pre-triagem ('voce tem X anos de experiencia?') sao filtro duro — minta menos que omitir, 3) testes situacionais e gamificados pesam no score. Gupy tambem usa video-pitch — grave em ambiente silencioso, fundo neutro, 2-3min focado.",
+    "source": "Gupy docs + recrutadores BR usando Gupy 2025",
+    "tags": ["ats", "gupy", "video-pitch", "score", "campos", "br"]
+  },
+  {
+    "id": "ats-multi-platform-strategy",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Estrategia multi-plataforma ATS: cada plataforma tem nuance — Gupy (BR, NLP forte, video), Kenoby (BR, mais simples), Greenhouse (gringa, customizavel pelo recrutador), Lever (gringa, candidate-friendly), Workday (corporate, formal). Pra cada, faca: 1) login + perfil completo, 2) ative job alerts pra cargo-alvo, 3) salve CV master + 1-2 versoes customizadas. Plataformas de empresas especificas (career sites) geralmente sao um desses por baixo. Tempo de setup inicial: ~30min por plataforma; depois e so aplicar.",
+    "source": "best practice ATS + recrutadores BR 2025",
+    "tags": ["ats", "gupy", "greenhouse", "lever", "workday", "multi", "br"]
+  },
+  {
+    "id": "mercado-br-startup-vs-corporate-vs-bigtech",
+    "topic": "mercado-br",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Tipos de empresa BR 2026: startup early-stage (caos, equity alta, salario abaixo do mercado), scale-up (Nubank, iFood crescendo 30%+ ao ano, mid salario + equity), unicornio/big tech BR (Stone, Movile — alto base salario, beneficios), corporate BR tradicional (Itau, Petrobras — estabilidade, processo, salario competitivo + PLR), consultoria (Accenture, ThoughtWorks — variedade alta, viagem, salario medio-alto), agencia digital (R/GA, AKQA — criativa, ritmo intenso). Cada um atende perfil diferente — autoconhecimento define fit.",
+    "source": "Brasscom + practice mercado BR 2025-2026",
+    "tags": ["empresa", "startup", "corporate", "unicornio", "consultoria", "br"]
+  },
+  {
+    "id": "mercado-br-trabalhista-rescisao",
+    "topic": "mercado-br",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Tipos de rescisao trabalhista BR: 1) Demissao sem justa causa (empresa decide): empregado recebe TUDO (saldo, ferias proporcional + 1/3, 13º, FGTS + multa 40%, aviso previo, seguro-desemprego). 2) Pedido de demissao (empregado pede): so saldo + ferias + 13º proporcional; sem multa FGTS, sem seguro-desemprego. 3) Acordo (Lei 13.467 reforma): empregado saca 80% FGTS + multa 20%, recebe metade aviso previo, sem seguro-desemprego. 4) Justa causa: empresa demite por falta grave, empregado perde quase tudo. Acordo e middle-ground mas perde seguro-desemprego.",
+    "source": "CLT + MTE + advogados trabalhistas BR 2025",
+    "tags": ["rescisao", "demissao", "acordo", "justa-causa", "fgts", "br"]
+  },
+  {
+    "id": "mercado-br-bolsa-vs-emprego",
+    "topic": "mercado-br",
+    "audience": ["junior", "transition"],
+    "content": "Bolsa de estudo vs emprego em transicao BR: bolsa de empresa em programa formal (Nubank Tech Academy, Bradesco Inova, Movile Next) = ~R$ 1-3k/mes + curso pago, contrato 3-6 meses, depois efetivacao com 50-80% taxa. Tradeoff: salario baixo nos primeiros meses, MAS porta de entrada em empresa boa. Pra junior sem experiencia, bolsa em empresa premium >> CLT junior em empresa media. Pra senior+ em transicao, bolsa raramente vale (perda de salario muito grande); melhor freela + portfolio.",
+    "source": "Brasscom + comunidades transicao BR 2025",
+    "tags": ["bolsa", "trainee", "transicao", "junior", "nubank", "br"]
+  },
+  {
+    "id": "tech-modern-prompt-engineering",
+    "topic": "tech-modern",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Prompt engineering 2026 como skill core: nao e 'falar bonito com IA' — e systems thinking aplicado a LLM. Bases: system prompt vs user prompt (separacao de instrucao e dado), few-shot examples (mostrar formato esperado), chain-of-thought ('pense passo a passo' explicitamente), output schema (JSON estruturado, function calling, tool use). Avaliacao: dataset de eval, hallucination detection, regression testing de prompt. Senior dev em 2026 deveria saber escrever prompt robusto tao bem quanto SQL. Cursos: Anthropic Academy, DeepLearning.AI, prompt-engineering.com.",
+    "source": "Anthropic + OpenAI docs + courses 2025-2026",
+    "tags": ["prompt-engineering", "llm", "system-prompt", "ai", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-mcp-protocol",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "MCP (Model Context Protocol) — padrao aberto que conecta LLMs a tools/sistemas externos de forma padronizada. Pense como 'USB pra IA': um cliente MCP (Claude, Cursor, etc) conversa com servidores MCP que expoem ferramentas (filesystem, GitHub, Slack, banco). Pra dev em 2026, criar MCP server pra teu sistema interno e como antes criar API REST. Substitui hacks de tool-use ad-hoc. Anthropic open-source. Conhecimento de MCP diferencia senior+ em times com IA real.",
+    "source": "Anthropic MCP docs 2025-2026",
+    "tags": ["mcp", "protocol", "ai", "tools", "claude", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-rag-evaluation",
+    "topic": "tech-modern",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Avaliacao de RAG em producao: nao basta 'parece funcionar'. Metricas-chave: 1) retrieval precision/recall (top-k chunks relevantes pra query), 2) faithfulness (resposta esta no contexto recuperado? — combate hallucination), 3) answer relevance (resposta endereca a pergunta?), 4) groundedness (citacao de fonte). Tools: RAGAS (lib python), TruLens, Anthropic eval datasets. Sem eval, voce nao sabe se mudanca melhorou ou piorou — RAG vira sistema de superficie sem qualidade real. Eval e o diferencial entre 'demo' e 'producao'.",
+    "source": "RAGAS + Anthropic eval + Vercel AI SDK docs 2025-2026",
+    "tags": ["rag", "avaliacao", "eval", "ragas", "qualidade", "tech-moderno"]
+  },
+  {
+    "id": "tech-modern-ai-pair-coding",
+    "topic": "tech-modern",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "AI pair coding (Cursor, Claude Code, Copilot, Cody) — usar bem virou skill diferenciada. Praticas: 1) contexto explicito (anexe arquivos relevantes, nao deixe IA adivinhar), 2) instrucao especifica ('refatore funcao X pra usar Y; preserve testes Z') > pedidos vagos, 3) revise critico — IA inventa bibliotecas, erra import, ignora edge cases, 4) use IA pra rascunho/exploracao, voce pro 'finishing'. Dev que so aceita sugestao da IA cega em PR perde respeito. Dev que IA acelera 3x sem perder qualidade vira referencia.",
+    "source": "Cursor + Claude Code + GitHub Copilot research 2025-2026",
+    "tags": ["ai", "pair-coding", "cursor", "claude-code", "copilot", "tech-moderno"]
+  },
+  {
+    "id": "identidade-burnout-vs-bore-out",
+    "topic": "identidade",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Burnout vs bore-out: burnout e exaustao por excesso/intensidade. Bore-out e exaustao por TEDIO/falta de desafio — menos discutido, igualmente real. Sinais bore-out: voce termina tarefa em metade do tempo e fica disfarcando ocupado, voce nao aprende ha 12+ meses, voce procrastina mesmo em trabalho 'leve' porque nao engaja. Solucao: mudar projeto/escopo, NAO 'tentar relaxar mais'. Bore-out em senior+ e sinal pra estourar bolha — pegue projeto novo, mude empresa, ou mude area.",
+    "source": "Bore-out research + psicologia ocupacional 2025",
+    "tags": ["bore-out", "tedio", "burnout", "estagnacao", "identidade"]
+  },
+  {
+    "id": "identidade-failure-resilience",
+    "topic": "identidade",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Resiliencia a fracasso: nao e 'nao sentir' — e voltar mais rapido. Praticas: 1) dia de luto de 24h apos rejeicao/fracasso (sente, conversa, escreve), 2) extraia 1 aprendizado concreto ('o que faria diferente?'), 3) age em 48h em algo pequeno relacionado (mande outra aplicacao, agende coffee chat, ajuste CV). Quem fica > 1 semana 'parado' apos fracasso entra em ciclo de procrastinacao. Carreira longa tem dezenas de fracassos pequenos e 2-3 grandes. Quem aprende a se recuperar em horas/dias passa quem demora semanas.",
+    "source": "Resilience research + Designing Your Life + Tim Ferriss",
+    "tags": ["resiliencia", "fracasso", "rejeicao", "recuperacao", "identidade"]
+  },
+  {
+    "id": "network-ghost-network",
+    "topic": "network",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Ghost network (rede latente): pessoas que voce conheceu uma vez e nao manteve contato. Comum ter 200-500 pessoas assim em LinkedIn. Estrategia: 1x/trimestre, escolha 5-10 pessoas pra 'reativar' — comente em post delas, mande mensagem curta ('vi que voce mudou pra empresa X, que legal'), peca update sem agenda. ~30% respondem, e dos que respondem 20% viram conversa real. Reativar ghost network e barato e regenera oportunidades sem precisar conhecer gente nova. Em 1 ano, voce reativa 40-80 conexoes.",
+    "source": "Adam Grant (Give and Take) + network research",
+    "tags": ["network", "ghost", "reativar", "latente", "linkedin"]
+  },
+  {
+    "id": "network-glass-ceiling-comm",
+    "topic": "network",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Comunidades especificas pra grupos sub-representados em tech BR 2026: Mulheres em Tech — Reprograma, Pretalab, PrograMaria, WoMakersCode, AfroPython, Codamos. LGBTQIA+ em tech — TransEmpregos, Plurais. PCD em tech — Vagas Inclusao, Pcd Tech BR. Eventos: Mind The Gap (anual), Latina Engineers, Black in Tech BR. Aplicar via comunidades especificas tem taxa de resposta 5-10x maior em empresas com vagas afirmativas (Nubank, iFood, Stone, Mercado Livre, Itau). Network qualificado bate aplicacao fria.",
+    "source": "Pretalab + Reprograma + comunidades BR 2025-2026",
+    "tags": ["diversidade", "comunidades", "reprograma", "pretalab", "network", "br"]
+  },
+  {
+    "id": "interview-1on1-recruiter",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Primeira call com recrutador interno (30min): 1) screening de fit + nivel + salario + disponibilidade. Recrutador nao decide te contratar — decide se voce avanca pra hiring manager. Estrategia: 1) seja claro sobre experiencia em 1-2min ('elevator pitch' que voce ja tem pronto), 2) demonstre interesse na empresa especifica (nome do produto, ultimo lancamento), 3) pergunte sobre etapas restantes do processo + timing, 4) deixe espaco pra recrutador falar (50/50 da conversa). Recrutador eh aliado — trate como tal, nao como gate keeper hostil.",
+    "source": "best practice mercado BR + recrutadores 2025",
+    "tags": ["entrevista", "recrutador", "primeira-call", "screening", "fit"]
+  },
+  {
+    "id": "transition-bootcamp-roi",
+    "topic": "transition",
+    "audience": ["transition", "junior"],
+    "content": "Bootcamp ROI em transicao BR 2026: bootcamps top (Tera, Trybe, Le Wagon, Ironhack) custam R$ 8-30k em 4-9 meses. Empregabilidade ~50-70% dos formados em 6 meses pos-curso (varia por modulo). Vale: 1) se voce esta zerado na area nova, 2) se voce nao consegue se auto-disciplinar pra estudar sozinho, 3) se a rede do bootcamp e relevante (alumni em empresas tech). Nao vale: 1) se voce ja tem skills primarias e so falta projeto, 2) se voce nao tem reserva pra cobrir 9-12 meses pos-bootcamp ate fechar oferta.",
+    "source": "Tera + Trybe + Le Wagon outcomes 2024-2025",
+    "tags": ["bootcamp", "transicao", "roi", "tera", "trybe", "investimento"]
+  },
+  {
+    "id": "salary-double-job-risk",
+    "topic": "salary",
+    "audience": ["pleno", "senior"],
+    "content": "Trabalho duplo (over-employed, 2 CLT simultaneo): tecnicamente legal no BR (CLT nao tem exclusividade default), mas ARRISCADO. Riscos: 1) clausula de exclusividade no contrato (leia!), 2) conflito de interesse se for area similar, 3) deteccao via LinkedIn/Slack/email, 4) horarios sobrepostos = entrega de qualidade cai em ambos, 5) FGTS + INSS calculados sobre ambos. Se quer ganhar mais, freela como PJ no horario livre e mais seguro que segundo CLT. Senior considerando over-employment: peso de risco vs ganho, geralmente nao compensa.",
+    "source": "advogados trabalhistas BR + practice 2025",
+    "tags": ["salario", "over-employed", "duplo-trabalho", "risco", "clt"]
+  },
+  {
+    "id": "tech-modern-staff-engineer-role",
+    "topic": "tech-modern",
+    "audience": ["senior", "lead"],
+    "content": "Staff engineer (nivel acima de senior em IC track): nao e 'senior+1'. Diferente: voce nao mede produtividade pessoal — voce mede impacto no escopo (time, area, empresa). Trabalho tipico: RFCs cross-time, mentor de senior, decisao tecnica de longo prazo (3-12 meses pra frente), navegacao politica entre times. Em BR, staff existe em unicornios e gringas (Nubank, iFood, Stone, Mercado Livre, gringas via BR). Salario tipico: R$ 30-50k CLT, USD 10-18k em gringa. Promocao senior -> staff demora 2-5 anos.",
+    "source": "Staff Engineer's Path, Tanya Reilly + Levels.fyi BR",
+    "tags": ["staff", "senior", "ic", "tech-modern", "carreira", "br"]
+  },
+  {
+    "id": "identidade-money-vs-meaning",
+    "topic": "identidade",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Dinheiro vs sentido — falsa dicotomia, mas tradeoff real. Decisao: defina seu 'enough number' — qual salario te da liberdade financeira (sem ansiedade) sem precisar otimizar mais? Acima desse numero, marginal de R$ 5-10k mensais NAO compra felicidade — pode ate aumentar stress por carga associada. Abaixo desse numero, dinheiro tem peso real. Em BR senior+ saudavel financeiramente (R$ 15-25k+/mes), trade de R$ 5k pra ter trabalho com sentido + tempo familiar costuma valer. Calcule o seu numero, nao copie de outras pessoas.",
+    "source": "Your Money or Your Life + Mr Money Mustache + FIRE BR 2025",
+    "tags": ["dinheiro", "sentido", "enough", "fire", "identidade"]
+  },
+  {
+    "id": "network-conference-speaking",
+    "topic": "network",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Palestrar em meetup/conferencia: ROI grande pra network e visibilidade. Estrategia comecando: 1) palestre primeiro em meetup pequeno (10-30 pessoas), 2) grave e revise, 3) ofereca o mesmo talk pra 2-3 meetups antes de evoluir conteudo, 4) submeta call-for-papers pra conferencia media (TDC, QCon — proposta com 'lessons learned em projeto real' > tutorial). Apos a talk: post no LinkedIn com slides, video se gravar — 1 hora de talk gera 6+ meses de network. Speaker que entrega valor real (nao auto-promocao) constroi marca rapidamente.",
+    "source": "best practice tech speakers BR 2025",
+    "tags": ["palestra", "meetup", "conferencia", "speaker", "tdc", "network"]
+  },
+  {
+    "id": "soft-context-switching-cost",
+    "topic": "soft-skills",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Context switching tem custo cognitivo subestimado: cada mudanca de contexto custa 15-25min de recovery pra atingir mesma profundidade. Senior+ com 6+ projetos paralelos quase nunca atinge deep work. Praticas: 1) agrupe tarefas similares em blocos (todos os PR reviews juntos, todas as 1:1s juntas), 2) batch comunicacao (Slack 3x/dia, nao streaming continuo), 3) defina 2-3 projetos prioridade e diga nao explicitamente aos outros, 4) calendar block de 90min de foco profundo, sem reuniao. Multitasking percebido = produtividade real menor.",
+    "source": "Deep Work, Cal Newport + neuroscience research",
+    "tags": ["context-switching", "foco", "multitasking", "deep-work", "soft"]
+  },
+  {
+    "id": "cv-bullet-verb-examples",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Verbos de acao por categoria pra bullets de CV. Lideranca: liderei, coordenei, gerenciei, dirigi, supervisionei, mentorei. Construcao: implementei, desenvolvi, arquitetei, projetei, construi, criei. Melhoria: otimizei, refatorei, reduzi, melhorei, acelerei, simplifiquei. Analise: investiguei, analisei, identifiquei, diagnostiquei, avaliei. Comunicacao: apresentei, negociei, articulei, facilitei, alinhei. Cada bullet comeca com verbo no passado simples (perfeito), nao gerundio ('liderando'). Verbos genericos a evitar: ajudei, participei, fui responsavel.",
+    "source": "Lou Adler + best practice CV BR 2025",
+    "tags": ["verbos", "bullets", "acao", "vocabulario", "curriculo"]
+  },
+  {
+    "id": "mercado-br-startup-equity-real-value",
+    "topic": "mercado-br",
+    "audience": ["senior", "lead", "transition"],
+    "content": "Equity em startup BR: como avaliar valor real. Pergunte: 1) ultimo round + valuation + lead investor, 2) total de acoes outstanding (sua %), 3) preference stack (investidores recebem antes em saida), 4) cap table publico ou opaco. Multiplique sua % x valuation realista de exit (3-5 anos): 'se a empresa for vendida por R$ 100M, voce recebe ~X (descontando preference)'. Maioria das startups BR nao tem exit em 5 anos. Trate equity como bonus opcional, nunca como compensacao garantida. Equity em pre-Series A: alto risco, alto potencial mas geralmente zero.",
+    "source": "compensation consultants BR + venture capital practice 2025",
+    "tags": ["equity", "startup", "valuation", "exit", "preference", "br"]
+  }
+]
