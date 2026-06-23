@@ -34,6 +34,8 @@ export default function RadarClient({ initial }) {
         seniority: seniority || undefined,
         model: model || undefined,
         minMatch,
+        // Radar nao usa plano — economiza 1 chamada LLM (~15s).
+        withPlan: false,
       }),
     })
       .then((r) => r.json().then((data) => ({ ok: r.ok, data })))

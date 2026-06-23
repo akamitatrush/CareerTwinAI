@@ -10,6 +10,9 @@ import { guardLLM, tooMany } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Vercel default e 10s (Hobby) / 60s (Pro). 2 chamadas LLM podem somar
+// 30-60s; com paralelizacao fica ~15-25s. 60s da folga em cold-start.
+export const maxDuration = 60;
 
 const SOURCE_LABEL = {
   adzuna: "Adzuna",
@@ -49,7 +52,10 @@ export async function POST(req) {
     seniority: senIn,
     model: modIn,
     minMatch: minMatchIn,
+    withPlan: withPlanIn,
   } = parsed.data;
+  // Default true pra back-compat; radar manda false e ganha resposta mais rapida.
+  const withPlan = withPlanIn !== false;
 
   // Filtros vem do body (UI nova) ou da querystring (legado/GET-like). Body manda.
   const url = new URL(req.url);
@@ -163,96 +169,97 @@ export async function POST(req) {
   // Se todas as vagas exibidas sao fixtures, marcamos a resposta como ilustrativa.
   const allIllustrative = top.length > 0 && top.every((j) => j.source === "fixtures");
 
-  // LLM justifica cada vaga (sem mexer em numero) — so para vagas REAIS.
-  // Para fixtures (ja somos os autores), caimos no fluxo antigo (promptOpp).
-  //
-  // CUSTO: o LLM so processa as top 5 (topForLLM). As demais 19 (se houver)
-  // saem com porque determinitistico baseado nas skills comuns. Isso evita
-  // estourar prompt budget — antes processavamos 3, agora 5 (custo ~+66%).
-  let vagasOut;
-  if (top.length > 0 && !allIllustrative) {
-    // Helper: porque determinitistico — usado pras vagas fora do top 5 e como
-    // fallback quando o LLM falha.
-    const porqueFallback = (j) =>
-      `Voce cobre ${(j.comuns || []).length} requisitos chave (${
-        (j.comuns || []).slice(0, 3).join(", ") || "—"
-      }). [Base de Vagas]`;
+  // Helpers compartilhados entre os 2 branches (real vs ilustrativo).
+  const porqueFallback = (j) =>
+    `Voce cobre ${(j.comuns || []).length} requisitos chave (${
+      (j.comuns || []).slice(0, 3).join(", ") || "—"
+    }). [Base de Vagas]`;
 
-    const formatJob = (j, porque) => ({
-      titulo: j.titulo,
-      empresa: j.empresa,
-      local: j.local || "",
-      match: j.match,
-      porque,
-      comuns: j.comuns || [],
-      falta: j.falta || [],
-      source: j.source,
-      sourceLabel: SOURCE_LABEL[j.source] || j.source,
-      url: j.url || null,
-      salario: j.salario || null,
-    });
+  const formatJob = (j, porque) => ({
+    titulo: j.titulo,
+    empresa: j.empresa,
+    local: j.local || "",
+    match: j.match,
+    porque,
+    comuns: j.comuns || [],
+    falta: j.falta || [],
+    source: j.source,
+    sourceLabel: SOURCE_LABEL[j.source] || j.source,
+    url: j.url || null,
+    salario: j.salario || null,
+  });
 
+  // Paraleliza porques + plano — antes serializadas, somando 30-60s. Agora
+  // max(porques, plano) ≈ 15-25s. Quando withPlan=false (radar), so dispara
+  // porques. promptOppReal pra vagas reais, promptOpp pra fixtures.
+  const usePromptReal = top.length > 0 && !allIllustrative;
+  const porquesPromise = (async () => {
+    if (top.length === 0) return null;
     try {
-      // LLM so ve as top 5 — economiza tokens.
-      const raw = await completeJSON(promptOppReal(role, perfil, topForLLM, gaps), {
-        route: "opp.real",
-        userId,
-      });
-      const valid = PorquesShape.safeParse(raw);
-      if (!valid.success) throw new Error("LLM shape porques invalido");
-      const byId = new Map(valid.data.porques.map((p) => [p.id, p.porque]));
-      vagasOut = top.map((j, idx) => {
-        const porque =
-          idx < topForLLM.length
-            ? byId.get(j.id) ||
-              `Skills compartilhadas: ${(j.comuns || []).slice(0, 3).join(", ")}. [Base de Vagas]`
-            : porqueFallback(j);
-        return formatJob(j, porque);
-      });
+      if (usePromptReal) {
+        const raw = await completeJSON(promptOppReal(role, perfil, topForLLM, gaps), {
+          route: "opp.real",
+          userId,
+        });
+        const valid = PorquesShape.safeParse(raw);
+        if (!valid.success) throw new Error("LLM shape porques invalido");
+        return { kind: "real", porques: valid.data.porques };
+      } else {
+        const raw = await completeJSON(promptOpp(role, perfil, gaps), {
+          route: "opp.illustrative",
+          userId,
+        });
+        const valid = OppShape.safeParse(raw);
+        if (!valid.success) throw new Error("LLM shape opp invalido");
+        return { kind: "illustrative", vagas: valid.data.vagas };
+      }
     } catch (e) {
       console.error("opp: porques falharam, usando fallback determinico:", e?.message);
-      vagasOut = top.map((j) => formatJob(j, porqueFallback(j)));
+      return null;
     }
-  } else {
-    // Fallback: nenhuma vaga real disponivel → usa o LLM antigo (ilustrativas)
-    try {
-      const raw = await completeJSON(promptOpp(role, perfil, gaps), { route: "opp.illustrative", userId });
-      const valid = OppShape.safeParse(raw);
-      if (!valid.success) throw new Error("LLM shape opp invalido");
-      vagasOut = valid.data.vagas.map((v) => ({
-        ...v,
-        source: "fixtures",
-        sourceLabel: "Ilustrativo",
-        url: null,
-        salario: null,
-      }));
-    } catch (e) {
-      console.error("opp: LLM ilustrativo falhou:", e?.message);
-      vagasOut = top.map((j) => ({
-        titulo: j.titulo,
-        empresa: j.empresa,
-        local: j.local || "",
-        match: j.match,
-        porque: "Vaga ilustrativa baseada no seu cargo-alvo. [Base de Vagas]",
-        falta: j.falta || [],
-        source: "fixtures",
-        sourceLabel: "Ilustrativo",
-        url: null,
-        salario: null,
-      }));
-    }
-  }
+  })();
 
-  // Plano (independente das vagas) — sempre via LLM, validado por shape.
-  let plano = [];
-  try {
-    const raw = await completeJSON(promptPlano(role, perfil, gaps), { route: "opp.plano", userId });
-    const valid = PlanoShape.safeParse(raw);
-    if (!valid.success) throw new Error("LLM shape plano invalido");
-    plano = valid.data.plano;
-  } catch (e) {
-    console.error("opp: plano falhou:", e?.message);
-    plano = [];
+  const planoPromise = withPlan
+    ? (async () => {
+        try {
+          const raw = await completeJSON(promptPlano(role, perfil, gaps), {
+            route: "opp.plano",
+            userId,
+          });
+          const valid = PlanoShape.safeParse(raw);
+          if (!valid.success) throw new Error("LLM shape plano invalido");
+          return valid.data.plano;
+        } catch (e) {
+          console.error("opp: plano falhou:", e?.message);
+          return [];
+        }
+      })()
+    : Promise.resolve([]);
+
+  const [porquesResult, plano] = await Promise.all([porquesPromise, planoPromise]);
+
+  let vagasOut;
+  if (porquesResult?.kind === "real") {
+    const byId = new Map(porquesResult.porques.map((p) => [p.id, p.porque]));
+    vagasOut = top.map((j, idx) => {
+      const porque =
+        idx < topForLLM.length
+          ? byId.get(j.id) ||
+            `Skills compartilhadas: ${(j.comuns || []).slice(0, 3).join(", ")}. [Base de Vagas]`
+          : porqueFallback(j);
+      return formatJob(j, porque);
+    });
+  } else if (porquesResult?.kind === "illustrative") {
+    vagasOut = porquesResult.vagas.map((v) => ({
+      ...v,
+      source: "fixtures",
+      sourceLabel: "Ilustrativo",
+      url: null,
+      salario: null,
+    }));
+  } else {
+    // Fallback determinitistico: porques sem LLM, garantidamente rapido.
+    vagasOut = top.map((j) => formatJob(j, porqueFallback(j)));
   }
 
   // Persiste plano se ha snapshot.
