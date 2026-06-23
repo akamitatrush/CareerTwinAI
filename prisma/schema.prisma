@@ -48,6 +48,7 @@ model User {
   auditLogs     AuditLog[]
   outcomes      Outcome[]
   achievements  Achievement[]
+  dailyQuests   DailyQuest[]
 }
 
 model Account {
@@ -631,4 +632,44 @@ enum AchievementKind {
   FIRST_REFRESH
   FIRST_EVIDENCE
   COURSE_COMPLETED
+}
+
+// ============ Daily Quest (habit loop — feature #10 do STRATEGY_ROADMAP) ============
+
+// DailyQuest: 1 acao curta sugerida AO DIA com base no estado do user. Razao
+// concreta pra voltar. Lazy creation no GET (cria so quando o user pede) —
+// sem cron, sem job em background. Unique (userId, questDate) garante 1 por
+// dia (questDate e DATE sem hora). Cascade no userId pra "apagar minha conta"
+// limpar junto. Indice (userId, completedAt) atende a listagem de historico
+// e a heuristica de "kinds ja feitas nos ultimos 7 dias" (evita repeticao).
+//
+// NAO acoplado ao Achievement system — Wave 15 cobre conquistas automaticas.
+// Aqui mantemos simples: marcar como feito so registra completedAt + rewardPoints
+// (UI mostra confirmacao; nao explode em notificacao).
+model DailyQuest {
+  id               String    @id @default(cuid())
+  userId           String
+  questDate        DateTime  @db.Date // dia (sem hora) — unique por user/dia
+  kind             QuestKind
+  title            String
+  description      String    @db.Text
+  estimatedMinutes Int       @default(5)
+  rewardPoints     Int       @default(5)
+  completedAt      DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questDate])
+  @@index([userId, completedAt])
+}
+
+enum QuestKind {
+  CV_BULLET_REWRITE
+  LINKEDIN_HEADLINE
+  EVIDENCE_ADD
+  SKILL_RESEARCH
+  INTERVIEW_PREP
+  NETWORK_OUTREACH
+  MARKET_RESEARCH
+  REFLECTION
 }

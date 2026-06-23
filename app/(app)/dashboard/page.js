@@ -9,6 +9,7 @@ import { getRealMedian } from "@/lib/metrics/median-real";
 import ActionCardClient from "./ActionCardClient";
 import RefreshDiagnosisButton from "./RefreshDiagnosisButton";
 import DashboardTracker from "./DashboardTracker";
+import DailyQuestCard from "./DailyQuestCard";
 import SkillGraph from "@/components/SkillGraph";
 import { skillsForRole } from "@/lib/skills-taxonomy";
 
@@ -168,6 +169,11 @@ export default async function DashboardPage() {
           <SubScoresCol latest={latest} projectedByDimension={projectedByDimension} />
         </div>
       )}
+
+      {/* Daily quest — feature #10 do roadmap (habit loop). Renderiza so depois
+          do hero pra dar destaque sem competir com o score. Componente faz
+          fetch lazy, retorna null em erro/loading (degrada silenciosamente). */}
+      {latest && <DailyQuestCard />}
 
       {/* Skill graph — feature #7 do roadmap. Renderiza so quando o user tem
           snapshot E perfil estruturado com skills (sem isso o grafo fica vazio

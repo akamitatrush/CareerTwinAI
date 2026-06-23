@@ -11,6 +11,7 @@ import {
   ACHIEVEMENT_KINDS,
   MAX_POINTS,
 } from "@/lib/achievements";
+import CvAnalyzer from "./CvAnalyzer";
 
 // Forca render dinamico — depende de auth() (cookies) e Prisma.
 export const dynamic = "force-dynamic";
@@ -195,7 +196,12 @@ export default async function ContaPage({ searchParams }) {
     }),
     prisma.profile.findUnique({
       where: { userId },
-      select: { targetRole: true, nome: true },
+      // rawCv lido aqui pra alimentar CvAnalyzer (analise IA inline). LGPD:
+      // rawCv ja escopado por userId (sem IDOR), e o cron de redaction apaga
+      // apos 90d (rawCvExpiresAt). Render server-side; CvAnalyzer recebe como
+      // prop e nunca refaz fetch — Profile.rawCv nunca vai pro browser
+      // exceto pro proprio dono.
+      select: { targetRole: true, nome: true, rawCv: true },
     }),
     prisma.scoreSnapshot.count({ where: { userId } }),
     prisma.application.count({ where: { userId } }),
@@ -361,6 +367,26 @@ export default async function ContaPage({ searchParams }) {
             </div>
           </form>
         </section>
+
+        {/* ============================================================
+            2.5. Analise IA inline do CV (feature #4 STRATEGY_ROADMAP)
+            ============================================================ */}
+        {profile?.rawCv && profile.rawCv.length > 100 && (
+          <section className="ct-conta-card" aria-labelledby="conta-cv-ai">
+            <div className="ct-conta-card-head">
+              <div>
+                <h2 id="conta-cv-ai" className="ct-conta-card-title">
+                  Seu CV sob a lente da IA
+                </h2>
+                <p className="ct-conta-card-sub">
+                  A IA marca os bullets fracos do seu curriculo e propoe
+                  reescrita. Voce decide aceitar (copiar) ou descartar cada uma.
+                </p>
+              </div>
+            </div>
+            <CvAnalyzer cv={profile.rawCv} role={profile?.targetRole || ""} />
+          </section>
+        )}
 
         {/* ============================================================
             3. Stats em mosaico

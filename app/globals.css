@@ -5127,3 +5127,215 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   filter: drop-shadow(0 0 0 3px var(--primary-soft));
 }
 
+/* ===========================================================
+   Daily Quest (feature #10 — habit loop)
+   Card destacado no /dashboard mostrando a "missao do dia".
+   Estado .done muda paleta pra positive (verde) — feedback claro
+   de "ja feito hoje".
+   =========================================================== */
+.ct-daily-quest {
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface) 100%);
+  border: 1px solid var(--primary-tint);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+.ct-daily-quest.done {
+  background: var(--positive-soft);
+  border-color: var(--positive-tint);
+}
+.ct-daily-quest-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.ct-daily-quest-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ct-daily-quest-time {
+  font-size: 11px;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+.ct-daily-quest-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.ct-daily-quest-desc {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+.ct-daily-quest-done {
+  font-weight: 700;
+  color: var(--positive-deep);
+  font-size: 13px;
+}
+
+/* ===========================================================
+   CV Analyzer (feature #4 — AI rewriter inline em /conta)
+   Highlight de bullets fracos + sugestao de reescrita. Cores
+   reaproveitam paleta semantica do sistema (positive/primary/attention).
+   =========================================================== */
+.ct-cv-analyzer { margin: 4px 0; }
+.ct-cv-analyzer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.ct-cv-analyzer-title {
+  font-family: var(--font-display, inherit);
+  margin: 0 0 4px;
+  font-size: 17px;
+  color: var(--text);
+}
+.ct-cv-analyzer-sub {
+  color: var(--text-soft);
+  font-size: 13px;
+  margin: 0;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.ct-cv-analyzer-summary {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.ct-summary-chip {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ct-summary-chip.good {
+  background: var(--positive-soft);
+  color: var(--positive-deep);
+}
+.ct-summary-chip.medium {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.ct-summary-chip.weak {
+  background: var(--attention-soft);
+  color: var(--attention-deep);
+}
+
+.ct-cv-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.ct-cv-line {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 3px solid transparent;
+  background: transparent;
+}
+.ct-cv-line.neutral {
+  color: var(--text-soft);
+}
+.ct-cv-line.good {
+  border-left-color: var(--positive);
+}
+.ct-cv-line.medium {
+  border-left-color: var(--primary);
+  background: var(--primary-soft);
+}
+.ct-cv-line.weak {
+  border-left-color: var(--attention);
+  background: var(--attention-soft);
+}
+.ct-cv-line-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ct-cv-line-text {
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.ct-cv-line-issues {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.ct-cv-issue-tag {
+  font-size: 10px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--text-soft);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.ct-cv-suggestion-toggle {
+  margin-top: 6px;
+  background: transparent;
+  border: 0;
+  color: var(--primary);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ct-cv-suggestion-toggle:hover {
+  color: var(--primary-deep, var(--primary));
+}
+.ct-cv-suggestion-box {
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid var(--primary-tint, var(--primary-soft));
+  border-radius: 8px;
+  padding: 12px;
+}
+.ct-cv-suggestion-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 6px;
+}
+.ct-cv-suggestion-text {
+  font-family: var(--font-body, inherit);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+.ct-cv-suggestion-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
