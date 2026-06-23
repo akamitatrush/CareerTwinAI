@@ -41,7 +41,7 @@ export async function POST(req) {
 
   // Limite generoso: lookup local barato, mas mesmo assim tem teto pra evitar
   // abuso. Usuario autenticado: 60/min e mais que suficiente pra UI.
-  const limit = guardLLM(req, {
+  const limit = await guardLLM(req, {
     name: "gaps-courses",
     userId: session.user.id,
     perMinuteUser: 60,

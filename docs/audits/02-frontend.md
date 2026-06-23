@@ -117,3 +117,24 @@ Frontend solido em base — Auth.js cobre PROTECTED, `(app)/layout.js` redirecio
 - Deps diretas: 13 (1 ausente: stripe)
 - Maior CSS: 158KB (`app/globals.css`)
 - Maior client component: `app/page.js` (430 linhas)
+
+---
+
+## Status de remediação
+
+- [x] **P0: XSS via Zod URL validator** — RESOLVIDO (2026-06-23)
+  - Helper `safeExternalUrl` em `lib/validators.js` valida scheme http/https
+  - Helper `safeHref` em `lib/url-safe.js` aplicado em 5 sinks
+  - Testes em `tests/unit/url-safe.test.js`
+
+- [x] **P0: Middleware PROTECTED desync com auth.config** — RESOLVIDO (2026-06-23)
+  - Single source of truth: `lib/auth-protected-paths.js` com `PROTECTED_PREFIXES` + helper `isProtected(pathname)`
+  - `middleware.js` e `auth.config.js` ambos importam — sem drift
+  - 25 prefixos cobrindo pages (`/dashboard`, `/gaps`, `/oportunidades`, etc.) e APIs (`/api/me/`, `/api/billing/checkout|portal|plan`, LLM routes, etc.)
+  - Semantica correta: `startsWith(p + "/")` ou igualdade — nao confunde `/conta` com `/contato` ou `/contas-publicas`
+  - Testes em `tests/unit/chat-ownership.test.js` (secao "auth-protected-paths")
+
+- [x] **P1: ChatModal envia perfil/gaps no body (social engineering)** — RESOLVIDO (2026-06-23)
+  - Cliente `components/ChatModal.js` atualizado pra so enviar `{ role, history, message }`
+  - Schema `ChatBody` em `lib/validators.js` agora rejeita perfil/gaps via `.strict()`
+  - Servidor busca dados do DB (ver audit 01-backend.md)

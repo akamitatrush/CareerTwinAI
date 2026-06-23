@@ -28,10 +28,12 @@ export default function ChatModal({ role, perfil, gaps, onClose }) {
     setMessages(next);
     setLoading(true);
     try {
+      // perfil/gaps NAO sao mais enviados — rota busca do DB pela session do
+      // usuario logado (ownership check; antes era social-engineering vector).
       const r = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ role, perfil, gaps, history, message: content }),
+        body: JSON.stringify({ role, history, message: content }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Falha no chat.");

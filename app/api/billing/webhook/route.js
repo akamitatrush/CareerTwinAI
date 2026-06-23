@@ -15,6 +15,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { stripe, isStripeConfigured } from "@/lib/billing/stripe";
 import { PLANS } from "@/lib/billing/plans";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,8 +63,14 @@ export async function POST(req) {
   try {
     event = stripe().webhooks.constructEvent(rawBody, sig, secret);
   } catch (e) {
-    // Nao logar payload (PII potencial) — so o motivo.
+    // Nao logar payload (PII potencial) — so o motivo. Audit do tentativa
+    // de webhook forjado e critico (forense/alerting).
     console.error("webhook: signature invalida:", e?.message);
+    await audit({
+      action: "SECURITY_INVALID_WEBHOOK",
+      req,
+      meta: { reason: "stripe_signature_invalid", error: e?.message },
+    });
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
@@ -90,23 +97,56 @@ export async function POST(req) {
   }
 
   // Handlers por tipo. Stripe retry em 500 (atualiza estado eventualmente).
+  // Apos cada handler bem-sucedido, registramos AuditLog com action mapeada.
+  // Meta sanitizado: so id da subscription/invoice (sem dados de cartao etc).
   try {
     switch (event.type) {
       case "checkout.session.completed":
         await handleCheckoutCompleted(event.data.object);
+        await audit({
+          userId: userIdFromMeta,
+          action: "BILLING_SUBSCRIPTION_CREATED",
+          target: `Subscription:${event.data.object?.subscription || "?"}`,
+          req,
+          meta: { stripeEventId: event.id, type: event.type },
+        });
         break;
       case "customer.subscription.created":
       case "customer.subscription.updated":
         await handleSubscriptionUpserted(event.data.object);
+        // Em created/updated tipamos como CREATED. CANCELED tem evento dedicado.
+        if (event.type === "customer.subscription.created") {
+          await audit({
+            userId: userIdFromMeta,
+            action: "BILLING_SUBSCRIPTION_CREATED",
+            target: `Subscription:${event.data.object?.id || "?"}`,
+            req,
+            meta: { stripeEventId: event.id, type: event.type },
+          });
+        }
         break;
       case "customer.subscription.deleted":
         await handleSubscriptionDeleted(event.data.object);
+        await audit({
+          userId: userIdFromMeta,
+          action: "BILLING_SUBSCRIPTION_CANCELED",
+          target: `Subscription:${event.data.object?.id || "?"}`,
+          req,
+          meta: { stripeEventId: event.id, type: event.type },
+        });
         break;
       case "invoice.payment_succeeded":
         await handlePaymentSucceeded(event.data.object);
         break;
       case "invoice.payment_failed":
         await handlePaymentFailed(event.data.object);
+        await audit({
+          userId: userIdFromMeta,
+          action: "BILLING_PAYMENT_FAILED",
+          target: `Invoice:${event.data.object?.id || "?"}`,
+          req,
+          meta: { stripeEventId: event.id, type: event.type },
+        });
         break;
       default:
         // Nao processado, mas ja logado em BillingEvent.

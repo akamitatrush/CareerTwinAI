@@ -9,10 +9,15 @@ import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { searchJobs } from "@/lib/jobs";
 import { computeAllSubScores } from "@/lib/scoring/subscores";
 import { notify, NotificationTemplates } from "@/lib/notifications";
-import { enforceUsage, trackUsage } from "@/lib/billing/enforce";
+import { enforceUsage } from "@/lib/billing/enforce";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// TTL de 90 dias pro rawCv. LGPD principle of storage limitation. Cron diario
+// (/api/cron/redact-cv) apaga rawCv/linkedinRaw quando expira.
+const RAW_CV_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 // Fallbacks textuais quando a LLM nao devolve a explicacao (ou devolve vazia).
 // Sao genericos de proposito — UI ainda renderiza o numero (que e o cabeca).
@@ -38,11 +43,12 @@ export async function POST(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const limit = guardLLM(req, { name: "analyze", userId, perMinuteAnon: 3, perMinuteUser: 10 });
+  const limit = await guardLLM(req, { name: "analyze", userId, perMinuteAnon: 3, perMinuteUser: 10 });
   if (!limit.ok) return tooMany(limit);
 
   // Enforcement de plano (apenas pra logados; anonimos rodam efemero e ja
   // sao rate-limited mais agressivamente acima). 402 Payment Required.
+  // enforceUsage AGORA INCREMENTA ATOMICAMENTE — nao chamar trackUsage depois.
   if (userId) {
     const lim = await enforceUsage(userId, "analyze");
     if (!lim.ok) {
@@ -210,6 +216,9 @@ export async function POST(req) {
   // Persistência: profile vigente sobrescrito; snapshot imutável.
   // Tudo escopado por userId vindo da sessão (sem IDOR).
   try {
+    // LGPD: rawCv tem TTL de 90 dias. Cron diario apaga depois disso.
+    // rawCvRedactedAt resetado pra que o "ciclo" recomece a cada upsert.
+    const rawCvExpiresAt = new Date(Date.now() + RAW_CV_TTL_MS);
     await prisma.profile.upsert({
       where: { userId },
       create: {
@@ -220,6 +229,8 @@ export async function POST(req) {
         targetRole: role,
         skills: diag.perfil.skills || [],
         rawCv: cv,
+        rawCvExpiresAt,
+        rawCvRedactedAt: null,
         perfilJson: diag.perfil,
       },
       update: {
@@ -229,6 +240,8 @@ export async function POST(req) {
         targetRole: role,
         skills: diag.perfil.skills || [],
         rawCv: cv,
+        rawCvExpiresAt,
+        rawCvRedactedAt: null,
         perfilJson: diag.perfil,
       },
     });
@@ -311,8 +324,9 @@ export async function POST(req) {
       }
     }
 
-    // Contabiliza uso APOS persistencia bem-sucedida. Idempotente em race.
-    await trackUsage(userId, "analyze");
+    // Uso ja foi contabilizado atomicamente em enforceUsage no inicio do POST
+    // (fix TOCTOU — antes era check + trackUsage com race window). NAO chamar
+    // trackUsage aqui senao duplica o count.
 
     // Rastro LGPD: registra fonte + consentimento (payloadHash prova consent
     // sem reter o bruto se o usuario revogar/apagar).
@@ -331,6 +345,15 @@ export async function POST(req) {
         data: { userId, source: "CV_PASTE", payloadHash },
       }),
     ]);
+
+    // Audit upload (paste counts as upload). Meta sanitizado: so metadados.
+    await audit({
+      userId,
+      action: "CV_UPLOADED",
+      target: `Profile:${userId}`,
+      req,
+      meta: { kind: "CV_PASTE", sizeBytes: Buffer.byteLength(cv, "utf8"), snapshotId: snapshot.id },
+    });
 
     return NextResponse.json({
       snapshotId: snapshot.id,

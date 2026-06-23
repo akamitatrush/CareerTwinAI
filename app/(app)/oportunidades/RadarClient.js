@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { safeHref } from "@/lib/url-safe";
 
 // Labels casam exatamente com os aliases que a rota /api/opportunities
 // normaliza (junior/jr/trainee, pleno/mid, senior/sr...). Strings vazias =
@@ -330,9 +331,11 @@ function JobCard({ job, index }) {
           </p>
         )}
         <div className="ct-job-actions">
-          {job.url && (
+          {/* safeHref: vagas vem de fontes externas (Lever/Greenhouse/etc),
+              defesa-em-profundidade contra URLs com schemes perigosos. */}
+          {safeHref(job.url) && (
             <a
-              href={job.url}
+              href={safeHref(job.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="ct-job-link"

@@ -9,6 +9,9 @@ describe("lib/jobs — fallback ilustrativo", () => {
     delete process.env.ADZUNA_APP_KEY;
     delete process.env.JOOBLE_API_KEY;
     delete process.env.GREENHOUSE_BOARDS;
+    // Sem UPSTASH_*, cache cai pra Map em-memoria — comportamento esperado em CI.
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
   });
 
   it("sem nenhuma chave, cai em fixtures rotulado", async () => {
@@ -31,7 +34,7 @@ describe("lib/jobs — fallback ilustrativo", () => {
   it("respeita o cache: 2a chamada nao re-gera", async () => {
     const a = await searchJobs({ role: "QA", limit: 3 });
     const b = await searchJobs({ role: "QA", limit: 3 });
-    expect(a).toBe(b); // mesma referencia (cacheado)
+    expect(a).toBe(b); // mesma referencia (cacheado em memoria, mem-store guarda objeto)
   });
 
   it("role vazio nao quebra", async () => {

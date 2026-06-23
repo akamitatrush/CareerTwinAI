@@ -6,6 +6,7 @@ import InterviewModal from "@/components/InterviewModal";
 import TailorModal from "@/components/TailorModal";
 import ChatModal from "@/components/ChatModal";
 import { track } from "@/components/PostHogProvider";
+import { safeHref } from "@/lib/url-safe";
 
 const CIRC = 2 * Math.PI * 52;
 const SS_KEYS = ["aderencia_vagas", "relevancia_habilidades", "otimizacao_perfil", "experiencia_mercado"];
@@ -252,8 +253,10 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
                     <div className="vagac-falta"><span className="falta-lbl">falta:</span>{v.falta.map((f, j) => <span className="falta-chip" key={j}>{f}</span>)}</div>
                   )}
                   <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    {v.url && (
-                      <a className="vagac-tailor" href={v.url} target="_blank" rel="noopener noreferrer">
+                    {/* safeHref: vagas vem de LLM ou fontes externas — defesa-em-
+                        profundidade contra schemes perigosos. */}
+                    {safeHref(v.url) && (
+                      <a className="vagac-tailor" href={safeHref(v.url)} target="_blank" rel="noopener noreferrer">
                         Ver vaga original ↗
                       </a>
                     )}

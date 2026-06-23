@@ -95,3 +95,24 @@ Backend acima da media de MVP: Zod, IDOR-safe, rate-limit em LLM, error handling
 - Sem Zod: **20** — quase todos GETs sem body
 - Try/catch coverage: **~95%** das areas com I/O
 - `runtime="nodejs"`: **30/32**
+
+## Remediacao 2026-06-23 — Rate-limit/cache serverless + custo
+
+Status: **resolvido** os 2 criticos de memoria em serverless + custo amplification.
+
+- **lib/rate-limit.js**: reescrito com fallback `@upstash/redis` (HTTP REST, funciona em edge). Sem `UPSTASH_REDIS_REST_URL` setado cai pra Map local (dev/CI). `guardLLM`/`checkLimit` agora **async** — todas as 8 rotas LLM atualizadas (`await guardLLM(...)`).
+- **lib/jobs/cache.js**: mesma estrategia. `cacheGet`/`cacheSet` async, callers em `lib/jobs/index.js` atualizados.
+- **lib/billing/enforce.js**: `enforceUsage` AGORA INCREMENTA ATOMICAMENTE dentro de `$transaction({ isolationLevel: "Serializable" })`. Fix TOCTOU: routes que chamavam `enforceUsage` + `trackUsage` (4 rotas) tiveram o segundo removido. `trackUsage` mantido como legacy pra back-compat. Novas helpers: `trackTokenUsage(userId, feature, {tokensIn, tokensOut, costUsd})` e `checkDailyBudget(userId, planId)` com hard-cap por plano (`free=$0.10/dia`, `pro=$5/dia`, `team=$20/dia`) — defende contra runaway cost.
+- **Migration `20260626100000_usage_meter_tokens`**: adiciona `tokensIn` (Int), `tokensOut` (Int), `costUsd` (Decimal(10,6)) em `UsageMeter`.
+- **Testes**: `tests/unit/rate-limit.test.js` (novo, 10 testes — fallback in-memory + isolamento por bucket). `billing-enforce.test.js` cobre TOCTOU (10 reqs paralelas com used=0, limit=3 → exatamente 3 passam) + `trackTokenUsage` + `checkDailyBudget`.
+- **Setup prod**: `.env.example` documenta como criar Upstash Redis free tier + setar vars em Vercel.
+
+Itens restantes (sem mudanca): cron digest batching, opportunities transacao gigante, /me/export rate-limit, helpers duplicados em providers.
+
+## Remediacao 2026-06-23 — Cron batching + SSRF TOCTOU + chat ownership + auth rate-limit
+
+- [x] **Cron digest serial -> batching paralelo + role dedup** — `app/api/cron/digest/route.js` reescrito. `BATCH_SIZE=10` com `Promise.allSettled` por lote, pre-fetch de `searchJobs` por role unico (de 200 chamadas pra N roles unicos). Tempo pior caso: ~500s -> ~60s, dentro do timeout Vercel Cron. `safeCompare` agora usa `crypto.timingSafeEqual` nativo (antes branch `a.length !== b.length` vazava length).
+- [x] **SSRF TOCTOU em portfolio/import** — Novo helper `lib/safe-fetch.js` com `safeFetchExternal()` que faz DNS lookup, valida IP, e FIXA o IP no socket via `lookup` custom em `node:http`/`node:https`. Fecha gap entre `safeLookup` antigo e o novo lookup do socket fetch. Route atualizada pra usar `safeFetchExternal` em `fetchSiteText`. Tabela ampliada de IPs reservados (CGNAT, multicast, IPv4-mapped). Testes: `tests/unit/safe-fetch.test.js` (16 casos).
+- [x] **/api/chat sem ownership check** — Removidos `perfil` e `gaps` do `ChatBody` schema (`lib/validators.js`). Rota agora busca `Profile.perfilJson` + `ScoreSnapshot.gaps` do DB via `session.user.id` (IDOR-safe). Cliente `components/ChatModal.js` atualizado pra nao enviar mais esses campos. Adicionado early return 401 se sem session. Testes: `tests/unit/chat-ownership.test.js` (8 casos `.strict()` rejeitando campos extras).
+- [x] **/api/auth/* sem rate-limit** — `lib/auth.js` agora envolve `sendVerificationRequest` em ambos providers (Resend + Nodemailer) com `enforceAuthRate(identifier)`. Limite 3 magic-links/email/hora, Upstash em prod / Map em dev. Log censurado (`abc***@dominio`). Erro lancado (`rate_limited`) - Auth.js mantem resposta opaca pro cliente (anti-enumeration). Testes: `tests/unit/auth-rate-limit.test.js` (7 casos).
+- [x] **Middleware PROTECTED desync com auth.config** — Novo `lib/auth-protected-paths.js` (single source of truth) consumido tanto por `middleware.js` quanto por `auth.config.js`. Antes: middleware tinha 2 regex, auth.config tinha 10 prefixos — drift garantido. Agora: lista unica de 25 prefixos, helper `isProtected(pathname)` com semantica `startsWith` correta (sem confundir `/conta` com `/contas-publicas`). Testes em `chat-ownership.test.js` cobrem o helper.

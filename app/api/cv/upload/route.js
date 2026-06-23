@@ -4,6 +4,11 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { extractPdfText, MAX_PDF_BYTES, PdfError } from "@/lib/pdf";
 import { extractDocxText, isDocx, isLegacyDoc, MAX_DOCX_BYTES, DocxError } from "@/lib/docx";
+import { audit } from "@/lib/audit";
+
+// TTL de 90 dias pro rawCv. LGPD principle of storage limitation. Cron diario
+// (/api/cron/redact-cv) apaga rawCv/linkedinRaw quando expira.
+const RAW_CV_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -145,15 +150,18 @@ export async function POST(req) {
     );
   }
 
-  // Salva no Profile do dono (sobrescreve, nao acumula).
+  // Salva no Profile do dono (sobrescreve, nao acumula). rawCvExpiresAt define
+  // TTL de 90 dias — cron redacta automaticamente. rawCvRedactedAt resetado
+  // (null) pra que um upload novo "reinicie" o ciclo.
   const payloadHash = createHash("sha256").update(text).digest("hex");
   const label = `CV em ${labelType} (${(file.size / 1024).toFixed(1)} KB)`;
+  const expiresAt = new Date(Date.now() + RAW_CV_TTL_MS);
   try {
     await prisma.$transaction([
       prisma.profile.upsert({
         where: { userId },
-        create: { userId, rawCv: text },
-        update: { rawCv: text },
+        create: { userId, rawCv: text, rawCvExpiresAt: expiresAt, rawCvRedactedAt: null },
+        update: { rawCv: text, rawCvExpiresAt: expiresAt, rawCvRedactedAt: null },
       }),
       prisma.dataSource.create({
         data: { userId, kind, label, sizeBytes: file.size },
@@ -172,6 +180,15 @@ export async function POST(req) {
       { status: 500 }
     );
   }
+
+  // Audit upload de CV — meta sanitizado (sem texto, so metadados de arquivo).
+  await audit({
+    userId,
+    action: "CV_UPLOADED",
+    target: `Profile:${userId}`,
+    req,
+    meta: { size: file.size, format: labelType, kind, textLength: text.length },
+  });
 
   // Devolve o TEXTO (nao o binario) — o front segue para o fluxo de analyze.
   return NextResponse.json({ ok: true, text, length: text.length, format: labelType });

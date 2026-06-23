@@ -77,3 +77,18 @@ Schema bem modelado (19 models, cascade LGPD-correto, índices compostos nas que
 - **Raw SQL**: 3 sites (2 seguros, 1 `Unsafe` com literal).
 - **Env vars em código**: 29. **Em `.env.example`**: ~27.
 - **CI workflows**: 2. Sem Dependabot, sem typecheck/lint, sem security scan.
+
+---
+
+## Remediação 2026-06-23
+
+- [x] **CI gate de deploy + security scan + Dependabot**
+  - `.github/workflows/ci.yml` reescrito: roda em `push`/`pull_request` pra `main` e `redesign/claude-design`. Etapas: `npm ci` → `prisma format --check` (cosmetico, `continue-on-error`) → `prisma validate` → `npm test` → `npm run lint` (warning, `continue-on-error` enquanto baseline) → `npm audit --audit-level=high --omit=dev` (**bloqueia** se CVE alto em prod deps).
+  - Job `build` separado dependente de `test` rodando `next build` com env placeholder (`DATABASE_URL`/`AUTH_SECRET`/`AUTH_DEV_CREDENTIALS=`). Garante que prod build nao quebra antes do Vercel.
+  - Node 22 (era 20).
+  - `.github/dependabot.yml` criado: agrupa minor/patch num PR/semana, major em PRs separados (revisao manual), labels `deps`/`ci`, commit prefix por escopo.
+  - **Próximo passo manual**: configurar GitHub branch protection em `main` exigindo CI green antes de merge (Vercel deploya em push pra main; gate via "Require status checks").
+
+- [x] **Cron digest batching** — ver audit 01-backend.md (mesma data).
+
+- [x] **SSRF DNS rebinding TOCTOU** — `lib/safe-fetch.js` com IP pinning. Ver audit 01-backend.md.

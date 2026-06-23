@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/usage-cleanup",
       "schedule": "0 3 1 * *"
+    },
+    {
+      "path": "/api/cron/redact-cv",
+      "schedule": "0 6 * * *"
     }
   ]
 }

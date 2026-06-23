@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Modal from "./Modal";
+import { safeHref } from "@/lib/url-safe";
 
 export default function PortfolioImportButton({ onImport, disabled }) {
   const [open, setOpen] = useState(false);
@@ -120,8 +121,10 @@ function PortfolioPreview({ portfolio, onClose }) {
             {portfolio.projetos.map((p, i) => (
               <li key={i} style={{ padding: 10, border: "1px solid var(--border)", borderRadius: 6 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
-                  {p.url ? (
-                    <a href={p.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>
+                  {/* safeHref: defesa-em-profundidade contra schemes perigosos
+                      em URLs vindas da LLM (portfolio.projetos[].url). */}
+                  {safeHref(p.url) ? (
+                    <a href={safeHref(p.url)} target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>
                       {p.nome} ↗
                     </a>
                   ) : (

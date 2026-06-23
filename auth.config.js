@@ -1,20 +1,11 @@
 // Config edge-safe: sem Prisma, sem Node-only. Usada no middleware.
 // A config completa (adapter + providers reais) vive em lib/auth.js.
+//
+// PROTECTED_PREFIXES vem de lib/auth-protected-paths.js — single source of
+// truth compartilhada com middleware.js pra evitar drift (page nova adicionada
+// num arquivo e esquecida no outro = bypass de session).
 
-const PROTECTED_PREFIXES = [
-  "/meu-gemeo",
-  "/meus-dados",
-  "/conta",
-  "/api/analyze",
-  "/api/opportunities",
-  "/api/interview",
-  "/api/tailor",
-  "/api/chat",
-  "/api/billing/checkout",
-  "/api/billing/portal",
-  "/api/billing/plan",
-  // /api/billing/webhook NAO entra aqui — autentica via HMAC, sem session.
-];
+import { isProtected } from "@/lib/auth-protected-paths";
 
 export const authConfig = {
   pages: { signIn: "/entrar" },
@@ -23,8 +14,7 @@ export const authConfig = {
     authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
       const { pathname } = request.nextUrl;
-      const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
-      if (!isProtected) return true;
+      if (!isProtected(pathname)) return true;
       return isLoggedIn;
     },
     async jwt({ token, user }) {

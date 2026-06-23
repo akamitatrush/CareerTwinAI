@@ -118,3 +118,28 @@ Superficie LLM razoavelmente fortalecida pra MVP: system prompts isolados, sanit
 - Audit log com prompt-hash + response-hash + userId (sem PII).
 - Feedback UI "esta resposta esta errada" persiste em `LlmFeedback`.
 - Validar ownership de `perfil`/`gaps` no `/api/chat` (atualmente vem do body sem cross-check com DB do user logado).
+
+---
+
+## Remediação 2026-06-23
+
+P0 da lista acima endereçados nesta data:
+
+- [x] **LLM02 — `/api/portfolio/import` e `/api/opportunities` fora do Sentry redact**
+  - `sentry.server.config.js`: ambas rotas adicionadas a `PII_SENSITIVE_ROUTES`. Header `x-cron-secret` tambem deletado.
+  - Lista renomeada de `sensitiveRoutes` pra `PII_SENSITIVE_ROUTES` (escopo claro).
+
+- [x] **Adversarial test case #9 — PII cross-user via chat (ownership)**
+  - `/api/chat` agora rejeita `perfil` e `gaps` no body via `ChatBody.strict()` (`lib/validators.js`).
+  - Rota carrega `Profile.perfilJson` + `ScoreSnapshot.gaps` mais recente do DB via `session.user.id`. Social engineering vector fechado: usuario nao consegue mais induzir LLM a personificar perfil falso (CTO Google etc.).
+  - 401 explicito se sem session (defense-in-depth — middleware ja barra, mas a rota tambem).
+  - Testes: `tests/unit/chat-ownership.test.js`.
+
+- [x] **A04 — SSRF TOCTOU em portfolio/import** (mencionado nos test cases #7 como "Bom" — corrigido o gap residual)
+  - Antes: `safeLookup` validava IP, mas `fetch` interno fazia novo DNS lookup (TOCTOU exploravel com TTL=0 + segundo IP privado).
+  - Agora: `lib/safe-fetch.js` faz DNS UMA vez, FIXA o IP no socket via `lookup` custom em `node:http`/`node:https`. Socket nao re-resolve. Mantemos SNI/Host original.
+  - Testes: `tests/unit/safe-fetch.test.js` (16 casos: RFC1918, CGNAT, IPv6 ULA, IPv4-mapped, scheme bloqueio).
+
+- [x] **Rate-limit em magic-link (LLM10 adjacente)**
+  - Antes: `/api/auth/*` sem cap dedicado — atacante podia flood `signIn("nodemailer", { email: alvo })` 1000x/min queimando Resend quota + spam de inbox.
+  - Agora: `enforceAuthRate(email)` em `sendVerificationRequest` de ambos providers (`lib/auth.js`). 3/email/hora. Upstash em prod / Map em dev. Erro `rate_limited` opaco pro cliente (anti-enumeration). Testes: `tests/unit/auth-rate-limit.test.js`.

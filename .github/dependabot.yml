@@ -1,0 +1,36 @@
+version: 2
+
+# Dependabot — atualizacoes automaticas de seguranca + manutencao.
+# Audit 04-appsec-owasp.md A06 apontou ausencia. Sem isso, deps vulneraveis
+# (next-auth beta, pdf-parse, mammoth) acumulam sem PR de upgrade.
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      # Agrupa minor+patch num PR so — evita ruido de 15 PRs/semana.
+      # Major fica em PR separado pra revisao manual (breaking changes).
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "deps"
+      - "automated"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels:
+      - "ci"
+      - "automated"
+    commit-message:
+      prefix: "ci"

@@ -143,3 +143,131 @@ Demais fetches do servidor (`lib/llm.js`, `lib/email.js`, `lib/embeddings.js`, `
 - Token-level encryption em `Account.access_token`/`refresh_token`
 - Threat model formal em `docs/THREAT_MODEL.md`
 - MFA opcional (TOTP via Auth.js v5)
+
+## Remediacao 2026-06-23 — TOCTOU UsageMeter + custo amplification
+
+Status: **resolvido**. Achados originais nas linhas 48 (A04 — TOCTOU) e tabela P0/P1.
+
+### A04 Insecure Design / Race condition UsageMeter
+
+Fix em `lib/billing/enforce.js`:
+
+- `enforceUsage` agora envolve check + increment dentro de `prisma.$transaction({ isolationLevel: "Serializable" })`. Em race entre N requests paralelas com `(userId, feature, periodKey)` identicos, Postgres serializa via UNIQUE composto — perdedora vira serialization failure (40001) capturada e devolvida como `{ ok: false, reason: "internal_error" }`. Fail closed.
+- Routes migradas (`/api/analyze`, `/api/opportunities`, `/api/tailor`, `/api/interview`) NAO chamam mais `trackUsage` depois do enforce — count e incrementado dentro da transacao. `trackUsage` antigo mantido legacy (back-compat).
+- Teste de regressao: `tests/unit/billing-enforce.test.js` simula 10 reqs paralelas com `used=0, limit=3` — exatamente 3 passam, dbCount fica em 3.
+
+### Custo amplification (LLM in loop)
+
+Novo: `UsageMeter` ganhou colunas `tokensIn`, `tokensOut`, `costUsd` (Decimal 10,6) — migration `20260626100000_usage_meter_tokens`. Helpers:
+
+- `trackTokenUsage(userId, feature, { tokensIn, tokensOut, costUsd })`: upsert atomico, sanitiza inputs invalidos (NaN/negativo → 0).
+- `checkDailyBudget(userId, planId)`: aggregate de costUsd no dia OR mes atual, compara com `DAILY_COST_CAP_USD` por plano (free=$0.10, pro=$5, team=$20). Hard-cap acima dos limites de uso.
+
+Falta integrar a chamada de `trackTokenUsage` nas rotas (e expor `costUsd` no `lib/llm.js`) — proximo passo do mesmo PR ou em sequencia.
+
+### Bypass de rate-limit em serverless
+
+Bonus (acoplado): `lib/rate-limit.js` reescrito com Redis (Upstash, HTTP REST). Antes o Map em escopo de modulo era zerado por cada lambda Vercel — defesa anti-abuso LLM nao funcionava em prod. Agora bucket compartilhado entre todos os lambdas. `guardLLM` async — 8 rotas LLM atualizadas. Mesma fix em `lib/jobs/cache.js`. Sem `UPSTASH_REDIS_REST_URL` setado, cai pra Map (apenas dev/CI). `.env.example` documenta setup.
+
+### Bugs resolvidos
+
+| Bug | Severidade original | Status |
+|---|---|---|
+| Rate-limit Map serverless bypass | P0 (Critico) | Resolvido (Redis fallback) |
+| Cache jobs Map serverless | P0 (Critico) | Resolvido (Redis fallback) |
+| TOCTOU UsageMeter | P1 (Media) | Resolvido (Serializable transaction) |
+| Cost amplification sem budget | P1 (Media) | Esquema + helpers prontos; integracao pendente |
+
+## Remediacao 2026-06-26 — AuditLog + Profile.rawCv TTL + deploy fixes
+
+Status: **resolvido**. Endereca o gap A09 vermelho do audit + outros 3 P0/P1.
+
+### A09 Security Logging & Monitoring Failures — RESOLVIDO
+
+Implementado modelo `AuditLog` (schema.prisma) com enum `AuditAction` (17
+valores) cobrindo: LOGIN/LOGOUT, ACCOUNT_CREATED/DELETED, DATA_EXPORTED,
+CONSENT_GRANTED/REVOKED, PROFILE_UPDATED, BILLING_*, CV_UPLOADED/DELETED, e
+eventos de SECURITY_* (rate-limit, budget, webhook invalido).
+
+- `actorIp` armazenado como hash sha256+salt (`AUDIT_IP_SALT`) — LGPD: nao
+  retemos IP raw. Trunco em 32 hex chars (128 bits, suficiente pra unicidade).
+- `userId` FK com `ON DELETE SET NULL`: preserva auditoria depois que user
+  e apagado (LGPD: retencao de rastros minimos legitimos pra defesa de
+  direitos e investigacao ANPD).
+- Migration: `20260626200000_audit_log/migration.sql`.
+- Helper: `lib/audit.js` — falha silenciosa (log no console mas nao quebra
+  request principal). Sanitize meta antes de chamar (sem PII raw).
+- Wire em 8+ pontos:
+  - `eraseUserData` (`lib/data-export.js`) — `ACCOUNT_DELETED` antes do delete.
+  - `/api/me/export` — `DATA_EXPORTED` com bytes do payload.
+  - `/api/billing/webhook` — `BILLING_SUBSCRIPTION_CREATED/CANCELED/PAYMENT_FAILED` +
+    `SECURITY_INVALID_WEBHOOK` em signature invalida.
+  - `/api/cv/upload` — `CV_UPLOADED` com size+format+kind sanitizado.
+  - `/api/analyze` — `CV_UPLOADED` em paste de CV.
+  - `lib/auth.js` events — `LOGIN`/`LOGOUT`/`ACCOUNT_CREATED`.
+  - `/api/cron/redact-cv` — `CV_DELETED` com `reason: ttl_expired`.
+
+### Profile.rawCv TTL (LGPD storage limitation)
+
+Antes: `rawCv`/`linkedinRaw` em `@db.Text` sem TTL. Vazamento de banco =
+expoe CV completo (nome/email/telefone/CPF/endereco) de TODOS os users
+historicos. Agora:
+
+- Novas colunas `rawCvExpiresAt` + `rawCvRedactedAt` (migration
+  `20260626300000_rawcv_ttl/migration.sql`). Profiles ja existentes recebem
+  TTL inicial de NOW()+90d.
+- `analyze` e `cv/upload` setam `rawCvExpiresAt = now + 90 dias` no upsert.
+  Cada upload novo "reinicia" o ciclo (resetando `rawCvRedactedAt`).
+- Cron `/api/cron/redact-cv` (vercel.json: diario 06:00 UTC) limpa `rawCv` e
+  `linkedinRaw` quando expira. `perfilJson` estruturado fica — esse e o
+  "gemeo" sem PII raw. Limite de 500 perfis por run (anti-lock).
+- Defensavel sob LGPD Art. 16: 90 dias e tempo suficiente pra UX (re-analisar,
+  consultar) e respeita finalidade (depois disso, conclusoes ja foram
+  estruturadas).
+
+### Bug build pipeline (prisma migrate deploy no build)
+
+Antes: `build = "prisma generate && prisma migrate deploy && next build"`.
+Vercel rebuilda Preview+Prod em todo push; migrations divergentes em PRs
+paralelos geravam race no `_prisma_migrations`. Agora:
+
+- `build` so faz `prisma generate && next build`.
+- Adicionado script `db:migrate` (alias pra `prisma migrate deploy`).
+- `docs/DEPLOY.md` documenta opcoes: manual, Vercel Install Command, ou
+  Build Hook.
+
+### Bug transacao gigante em /opportunities
+
+Antes: `prisma.$transaction([deleteMany, ...30+ creates])`. Em pgbouncer
+transaction-mode (Supabase, Neon, RDS Proxy), uma conexao do pool ficava
+travada durante toda a duracao. Agora:
+
+- `deleteMany` + 1 `createMany` batch (1 INSERT).
+- Sem tx envolvendo as duas: se o delete passar e o create falhar, snapshot
+  fica sem plano — user dispara de novo. Trade-off aceitavel vs travar pool.
+
+### Bugs resolvidos
+
+| Bug | Severidade original | Status |
+|---|---|---|
+| AuditLog inexistente (A09 vermelho) | P0 (LGPD) | Resolvido (model + helper + 8 wires) |
+| Profile.rawCv sem TTL | P0 (LGPD) | Resolvido (90d TTL + cron) |
+| `migrate deploy` no build | P0 (CI) | Resolvido (script `db:migrate`) |
+| Transacao gigante /opportunities | P1 (perf) | Resolvido (createMany) |
+
+### Pendencias (proximo PR)
+
+- Wire de `CONSENT_GRANTED/REVOKED` quando user revogar consentimentos via UI.
+- Wire de `PROFILE_UPDATED` em mudancas sensiveis (nome, targetRole, etc).
+- Alerting Sentry em pico de `SECURITY_*` actions (ex: >5 invalid webhooks/min).
+
+## Remediacao 2026-06-23 — Bundle P1 (auth rate-limit + chat ownership + SSRF + Sentry + CI)
+
+Endereca P1 do quadro original.
+
+- [x] **A07 — /api/auth/* sem rate-limit dedicado (spam de magic link)**: `lib/auth.js` envolve `sendVerificationRequest` em ambos providers (Resend + Nodemailer) com `enforceAuthRate(identifier)`. Limite 3/email/hora, Upstash em prod / Map em dev. Erro generico (`rate_limited`) — Auth.js mantem resposta opaca pro cliente (anti-enumeration). Log censurado (`abc***@dominio`). Testes: `tests/unit/auth-rate-limit.test.js`.
+- [x] **A01 — /api/chat ownership check**: Removidos `perfil`/`gaps` do `ChatBody`. Rota agora busca `Profile.perfilJson` + `ScoreSnapshot.gaps` do DB via `session.user.id`. Cliente `ChatModal.js` atualizado. Testes: `tests/unit/chat-ownership.test.js`.
+- [x] **A10 — SSRF TOCTOU em portfolio/import**: Novo `lib/safe-fetch.js` faz DNS lookup + valida IP + FIXA o IP no socket via `lookup` custom em `node:https`/`node:http`. Antes, gap entre `safeLookup` e `fetch` permitia DNS rebinding. Testes: `tests/unit/safe-fetch.test.js` (16 casos).
+- [x] **A05 — Middleware PROTECTED desync com auth.config**: Single source of truth em `lib/auth-protected-paths.js` (25 prefixos). Ambos middleware e auth.config importam — sem drift.
+- [x] **A09 — Sentry whitelist incompleta**: Adicionados `/api/portfolio/import` e `/api/opportunities` ao `PII_SENSITIVE_ROUTES`. Header `x-cron-secret` tambem deletado.
+- [x] **A09 / A06 — CI sem gate de deploy nem security scan**: `.github/workflows/ci.yml` reescrito (Node 22, prisma validate, npm test, npm audit gate, build job separado). `.github/dependabot.yml` criado (weekly npm + monthly actions, grouping minor+patch). Next step manual: GitHub branch protection require status checks no main pra bloquear Vercel.

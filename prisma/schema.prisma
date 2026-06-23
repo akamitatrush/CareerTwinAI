@@ -40,6 +40,7 @@ model User {
   subscription  Subscription?
   usageMeters   UsageMeter[]
   billingEvents BillingEvent[]
+  auditLogs     AuditLog[]
 }
 
 model Account {
@@ -90,6 +91,13 @@ model Profile {
   skills      String[] @default([])
   rawCv       String?  @db.Text
   perfilJson  Json?
+
+  // LGPD — storage limitation: rawCv/linkedinRaw tem TTL de 90 dias.
+  // rawCvExpiresAt e setado no upsert (analyze/upload). Cron diario apaga
+  // rawCv/linkedinRaw quando expiresAt < now e marca rawCvRedactedAt.
+  // perfilJson/linkedinJson (estruturados, anonimizaveis) ficam — sao o "gemeo".
+  rawCvExpiresAt  DateTime?
+  rawCvRedactedAt DateTime?
 
   // LinkedIn (texto colado, parseado pra estrutura).
   linkedinRaw  String? @db.Text
@@ -407,6 +415,13 @@ model UsageMeter {
   userId    String
   feature   String
   count     Int      @default(0)
+  // Telemetria de custo LLM: incrementada em trackTokenUsage apos chamada de
+  // LLM. costUsd e Decimal(10,6) pra suportar fracoes < $0.000001 (Voyage AI
+  // embeddings sao $0.06/1M tokens => ~$0.00000006 por token). Hard-cap diario
+  // por plano em checkDailyBudget defende contra runaway cost de attacker.
+  tokensIn  Int      @default(0)
+  tokensOut Int      @default(0)
+  costUsd   Decimal  @default(0) @db.Decimal(10, 6)
   periodKey String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -457,4 +472,47 @@ model TailoredCv {
   application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
+}
+
+// ============ Audit Log (LGPD/OWASP A09) ============
+
+// AuditLog: trace de eventos sensiveis. Resolve gap A09 (Security Logging &
+// Monitoring) do audit OWASP. Cada evento carrega userId (nullable pra acoes
+// de sistema/anonimas), IP hasheado (LGPD: nao raw — sha256+salt), action
+// (enum tipado), target (recurso afetado) e meta sanitizado (sem PII raw).
+// onDelete:SetNull preserva auditoria quando user e apagado — LGPD permite
+// reter rastros minimos legitimos pra defesa de direitos (ANPD investigation).
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String? // null = acao de sistema/anonimo
+  actorIp   String? // hash sha256 do IP (LGPD: nao raw)
+  action    AuditAction
+  target    String? // ex: "User:cuid123" pra qual recurso foi afetado
+  meta      Json? // payload sanitizado
+  createdAt DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  PASSWORD_RESET
+  ACCOUNT_CREATED
+  ACCOUNT_DELETED
+  DATA_EXPORTED
+  CONSENT_GRANTED
+  CONSENT_REVOKED
+  PROFILE_UPDATED
+  BILLING_SUBSCRIPTION_CREATED
+  BILLING_SUBSCRIPTION_CANCELED
+  BILLING_PAYMENT_FAILED
+  CV_UPLOADED
+  CV_DELETED
+  SECURITY_RATE_LIMIT_HIT
+  SECURITY_BUDGET_EXCEEDED
+  SECURITY_INVALID_WEBHOOK
 }

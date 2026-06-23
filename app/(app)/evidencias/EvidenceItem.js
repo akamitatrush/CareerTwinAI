@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { safeHref } from "@/lib/url-safe";
 
 // Card de evidencia + delete. Client component so pelo botao "Apagar" (precisa
 // de fetch). O card em si poderia ser server, mas misturar ficaria pior. Custo
@@ -59,11 +60,14 @@ export default function EvidenceItem({ evidence, kindLabel }) {
       )}
 
       <div className="ct-evidence-foot">
-        {evidence.url && (
+        {/* safeHref: defesa-em-profundidade contra javascript:/data:/vbscript:/file:
+            URLs que o validator deveria ter bloqueado mas que poderiam existir em
+            dados antigos do DB. Retorna null se URL nao for http/https. */}
+        {safeHref(evidence.url) && (
           // noopener+noreferrer: protege contra tabnabbing + nao envia referer
           // pra URL externa (privacidade — o destino nao sabe que veio do app).
           <a
-            href={evidence.url}
+            href={safeHref(evidence.url)}
             target="_blank"
             rel="noopener noreferrer"
             className="ct-evidence-link"

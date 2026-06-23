@@ -7,7 +7,7 @@ import { OppBody, OppShape, PorquesShape, PlanoShape } from "@/lib/validators";
 import { searchJobs } from "@/lib/jobs";
 import { extractSkills, matchScore } from "@/lib/skills-taxonomy";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
-import { enforceUsage, trackUsage } from "@/lib/billing/enforce";
+import { enforceUsage } from "@/lib/billing/enforce";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,10 +26,11 @@ export async function POST(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
-  const limit = guardLLM(req, { name: "opp", userId, perMinuteAnon: 3, perMinuteUser: 10 });
+  const limit = await guardLLM(req, { name: "opp", userId, perMinuteAnon: 3, perMinuteUser: 10 });
   if (!limit.ok) return tooMany(limit);
 
   // Enforcement de plano (5 buscas/dia no Free). Diario => dayKey() interno.
+  // enforceUsage AGORA INCREMENTA ATOMICAMENTE — nao chamar trackUsage depois.
   if (userId) {
     const lim = await enforceUsage(userId, "opportunities");
     if (!lim.ok) {
@@ -281,35 +282,35 @@ export async function POST(req) {
     vagasOut = top.map((j) => formatJob(j, porqueFallback(j)));
   }
 
-  // Persiste plano se ha snapshot.
+  // Persiste plano se ha snapshot. Antes era $transaction com deleteMany +
+  // N creates (30+ INSERTs num unico tx) — em pgbouncer transaction-mode trava
+  // uma conexao do pool durante toda a duracao. Trocamos por delete + 1
+  // createMany batch (1 INSERT). Sem tx envolvendo as duas operacoes: se o
+  // delete passar e o createMany falhar, ficamos com snapshot sem plano — user
+  // dispara de novo. Trade-off aceitavel vs travar pool em prod.
   if (snapshot && plano.length > 0) {
     try {
-      await prisma.$transaction([
-        prisma.planItem.deleteMany({ where: { snapshotId: snapshot.id } }),
-        ...plano.flatMap((semana) =>
-          (semana.acoes || []).map((acao) =>
-            prisma.planItem.create({
-              data: {
-                snapshotId: snapshot.id,
-                semana: semana.semana,
-                foco: semana.foco || null,
-                titulo: acao.titulo,
-                impacto: acao.impacto || null,
-                esforco: acao.esforco || null,
-              },
-            })
-          )
-        ),
-      ]);
+      await prisma.planItem.deleteMany({ where: { snapshotId: snapshot.id } });
+      const planItemsData = plano.flatMap((semana) =>
+        (semana.acoes || []).map((acao) => ({
+          snapshotId: snapshot.id,
+          semana: semana.semana,
+          foco: semana.foco || null,
+          titulo: acao.titulo,
+          impacto: acao.impacto || null,
+          esforco: acao.esforco || null,
+        }))
+      );
+      if (planItemsData.length > 0) {
+        await prisma.planItem.createMany({ data: planItemsData });
+      }
     } catch (e) {
       console.error("opp: persistencia plano falhou", e?.message);
     }
   }
 
-  // Contabiliza uso diario apos resposta completa (idempotente).
-  if (userId) {
-    await trackUsage(userId, "opportunities");
-  }
+  // Uso ja foi contabilizado atomicamente em enforceUsage no inicio do POST
+  // (fix TOCTOU). NAO chamar trackUsage aqui senao duplica o count diario.
 
   return NextResponse.json({
     vagas: vagasOut,

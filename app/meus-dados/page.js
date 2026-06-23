@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -27,7 +28,11 @@ async function eraseAction(formData) {
     // Confirmacao errada: nao faz nada. Mensagem generica via query string.
     redirect("/meus-dados?erro=confirme");
   }
-  await eraseUserData(session.user.id);
+  // Extrai IP do request via next/headers pra registrar no AuditLog (hasheado).
+  const h = headers();
+  const actorIp =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
+  await eraseUserData(session.user.id, { actorIp });
   await signOut({ redirectTo: "/?apagado=1" });
 }
 

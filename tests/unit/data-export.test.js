@@ -14,11 +14,18 @@ vi.mock("@/lib/db", () => {
     subscription: { findUnique: vi.fn() },
     usageMeter: { findMany: vi.fn() },
     billingEvent: { findMany: vi.fn() },
+    auditLog: { create: vi.fn() },
   };
   return { prisma: mock };
 });
 
+// Mock do audit pra nao depender de import circular nem hit no DB.
+vi.mock("@/lib/audit", () => ({
+  audit: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { prisma } from "@/lib/db";
+import { audit } from "@/lib/audit";
 import { exportUserData, eraseUserData } from "@/lib/data-export";
 
 describe("exportUserData", () => {
@@ -116,12 +123,32 @@ describe("exportUserData", () => {
 });
 
 describe("eraseUserData", () => {
-  beforeEach(() => prisma.user.delete.mockReset());
+  beforeEach(() => {
+    prisma.user.delete.mockReset();
+    audit.mockClear();
+  });
 
   it("delega para prisma.user.delete escopado pelo id", async () => {
     prisma.user.delete.mockResolvedValue({ id: "u1" });
     await eraseUserData("u1");
     expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: "u1" } });
+  });
+
+  it("registra audit ACCOUNT_DELETED antes do delete", async () => {
+    prisma.user.delete.mockResolvedValue({ id: "u1" });
+    await eraseUserData("u1");
+    expect(audit).toHaveBeenCalledTimes(1);
+    const call = audit.mock.calls[0][0];
+    expect(call.userId).toBe("u1");
+    expect(call.action).toBe("ACCOUNT_DELETED");
+    expect(call.target).toBe("User:u1");
+  });
+
+  it("propaga actorIp para audit quando passado", async () => {
+    prisma.user.delete.mockResolvedValue({ id: "u1" });
+    await eraseUserData("u1", { actorIp: "1.2.3.4" });
+    const call = audit.mock.calls[0][0];
+    expect(call.actorIp).toBe("1.2.3.4");
   });
 
   it("recusa userId vazio", async () => {

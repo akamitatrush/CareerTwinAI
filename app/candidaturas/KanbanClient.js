@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { track } from "@/components/PostHogProvider";
+import { safeHref } from "@/lib/url-safe";
 
 const STATUS_NEXT = {
   SAVED: ["APPLIED", "WITHDRAWN"],
@@ -202,8 +203,10 @@ export default function KanbanClient({ initialItems, columns }) {
                       {it.local && ` · ${it.local}`}
                     </div>
                     {it.source && <div className="kanban-card-src">{it.source}</div>}
-                    {it.url && (
-                      <a href={it.url} target="_blank" rel="noopener noreferrer" className="kanban-card-link">
+                    {/* safeHref bloqueia javascript:/data: que poderia ter entrado
+                        no DB antes do safeExternalUrl validator. */}
+                    {safeHref(it.url) && (
+                      <a href={safeHref(it.url)} target="_blank" rel="noopener noreferrer" className="kanban-card-link">
                         ver vaga ↗
                       </a>
                     )}
