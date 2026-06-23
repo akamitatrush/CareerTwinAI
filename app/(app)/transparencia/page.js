@@ -46,7 +46,7 @@ export default async function TransparenciaPage() {
   const overall = latest?.overall ?? null;
 
   return (
-    <div className="app-container">
+    <main id="main-content" className="app-container">
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div
@@ -128,7 +128,7 @@ export default async function TransparenciaPage() {
       <DataSourcesGrid />
 
       <LGPDBanner />
-    </div>
+    </main>
   );
 }
 

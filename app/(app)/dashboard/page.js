@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WEIGHTS, SS_META } from "@/lib/score";
 import { computeCompleteness } from "@/lib/metrics/completeness";
+import { HIRED_MEDIAN } from "@/lib/metrics/median-stub";
+import ActionCardClient from "./ActionCardClient";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard — CareerTwin AI" };
@@ -49,7 +51,7 @@ export default async function DashboardPage() {
     (profile?.nome || session.user.name || "").split(" ")[0] || "você";
 
   return (
-    <div className="app-container">
+    <main id="main-content" className="app-container">
       {/* Header */}
       <div className="ct-dash-header">
         <div>
@@ -60,6 +62,7 @@ export default async function DashboardPage() {
           href="/conta"
           className="ct-target-pill"
           title="Editar cargo-alvo"
+          aria-label={`Mudar cargo-alvo, atual: ${profile?.targetRole || "não definido"}`}
         >
           <span className="ct-target-label">CARGO-ALVO</span>
           <span className="ct-target-value">
@@ -74,6 +77,7 @@ export default async function DashboardPage() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M6 9l6 6 6-6" />
           </svg>
@@ -107,7 +111,7 @@ export default async function DashboardPage() {
           />
         </div>
       )}
-    </div>
+    </main>
   );
 }
 
@@ -142,7 +146,13 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
   return (
     <div className="ct-score-col">
       <div className="ct-score-ring-wrap">
-        <svg width="172" height="172" viewBox="0 0 172 172">
+        <svg
+          width="172"
+          height="172"
+          viewBox="0 0 172 172"
+          role="img"
+          aria-label={`Saúde da carreira: ${score} de 100`}
+        >
           <circle
             cx="86"
             cy="86"
@@ -170,7 +180,9 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
             </linearGradient>
           </defs>
         </svg>
-        <div className="ct-score-num">
+        {/* Texto duplicado do SVG: aria-hidden pra evitar leitura dupla
+            (SVG ja anuncia "Saúde da carreira: X de 100"). */}
+        <div className="ct-score-num" aria-hidden="true">
           <div className="ct-score-big">{score}</div>
           <div className="ct-score-of">de 100</div>
         </div>
@@ -187,6 +199,7 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
             strokeWidth="2.4"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M4 17l6-6 4 4 6-7" />
             <path d="M16 8h4v4" />
@@ -199,6 +212,30 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
         Baseado em vagas reais de <strong>{latest.role || "—"}</strong>{" "}
         analisadas
       </p>
+      <div className="ct-mediana">
+        <div className="ct-mediana-row">
+          <span>Mediana de contratados</span>
+          <span className="ct-mediana-value">{HIRED_MEDIAN}</span>
+        </div>
+        <div
+          className="ct-mediana-bar"
+          role="img"
+          aria-label={`Seu score ${score} comparado com a mediana ${HIRED_MEDIAN}`}
+        >
+          <div
+            className="ct-mediana-bar-fill"
+            style={{ width: `${Math.min(100, score)}%` }}
+          />
+          <div
+            className="ct-mediana-bar-mark"
+            style={{ left: `${HIRED_MEDIAN}%` }}
+          />
+        </div>
+        <div className="ct-mediana-foot">
+          Estimativa em construção · você está a{" "}
+          <strong>{Math.max(0, HIRED_MEDIAN - score)} pontos</strong> da mediana.
+        </div>
+      </div>
     </div>
   );
 }
@@ -223,6 +260,7 @@ function SubScoresCol({ latest }) {
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M5 12h14M13 6l6 6-6 6" />
           </svg>
@@ -267,6 +305,7 @@ function SubScoresCol({ latest }) {
 
 function NextActionsCol({ latest }) {
   // Pega 3 microactions a partir de gaps ordenados por impacto.
+  // Filtra completados; o re-render apos POST /complete recalcula e some.
   const gaps = (Array.isArray(latest?.gaps) ? latest.gaps : [])
     .filter((g) => !g.completedAt)
     .sort((a, b) => (b.impactoPontos || 0) - (a.impactoPontos || 0))
@@ -283,45 +322,12 @@ function NextActionsCol({ latest }) {
       <div className="ct-actions-list">
         {gaps.length === 0 ? (
           <div className="ct-empty-card">
-            Sem ações pendentes. Refaça o diagnóstico no{" "}
+            <strong>Tudo em dia.</strong> Refaça o diagnóstico no{" "}
             <Link href="/dashboard">seu dashboard</Link> pra ver novas microações.
           </div>
         ) : (
           gaps.map((g, i) => (
-            <div className="ct-action-card" key={g.id || i}>
-              <div className="ct-action-num">{i + 1}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="ct-action-top">
-                  <div className="ct-action-title">{g.habilidade}</div>
-                  <span className="ct-action-impact">
-                    +{g.impactoPontos || 4} pts
-                  </span>
-                </div>
-                <p className="ct-action-why">
-                  {g.microacao || g.porque || ""}
-                </p>
-                <div className="ct-action-foot">
-                  <span className="ct-action-tag">
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M12 2l2.4 7.4H22l-6 4.4 2.3 7.2-6.3-4.6L5.7 21l2.3-7.2-6-4.4h7.6z" />
-                    </svg>
-                    {g.frequencia || "alta frequência"}
-                  </span>
-                  <Link href="/gaps" className="ct-action-cta">
-                    Começar →
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <ActionCardClient key={g.id || i} gap={g} index={i} />
           ))
         )}
       </div>
@@ -392,6 +398,7 @@ function ProfileSnapshotCol({ profile, completeness, latest }) {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <circle cx="12" cy="12" r="9" />
               <path d="M12 8v5M12 16v.01" />

@@ -71,7 +71,7 @@
   --text-strong: #1F1D33;
   --text-muted: #514E5C;
   --text-soft: #797585;
-  --text-faint: #9893A4;
+  --text-faint: #6B6679; /* A11y AA: ratio ≈ 4.6:1 sobre #FAF9F5 (text normal); subiu de #9893A4 (~2.9:1, FAIL) */
   --text-subtle: #797585;  /* alias legado — usado em ~32 lugares, mapeia pro novo --text-soft */
   --scrim: rgba(31, 29, 51, 0.4);
 }
@@ -88,7 +88,7 @@
   --text-strong: #FFFFFF;
   --text-muted: #B5B0C4;
   --text-soft: #9089A3;
-  --text-faint: #6F6A80;
+  --text-faint: #908AA8; /* A11y AA: ratio ≈ 4.5:1 sobre #1A1A26 (dark surface); subiu de #6F6A80 (~2.5:1, FAIL) */
   --text-subtle: #9089A3;  /* alias legado */
   --scrim: rgba(0, 0, 0, 0.6);
 }
@@ -1777,4 +1777,272 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 .ct-loading-skeleton { display: flex; flex-direction: column; gap: 14px; }
 .ct-skel-card { background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%); background-size: 800px 100%; animation: ctShim 1.4s infinite linear; height: 120px; border-radius: var(--radius-lg); border: 1px solid var(--border); }
 @keyframes ctShim { from { background-position: 0 0; } to { background-position: 800px 0; } }
+
+/* ===== A11y quick wins ===== */
+/* Skip link: invisivel ate receber focus por teclado. Permite Bypass Blocks
+   (WCAG 2.4.1) sem poluir layout visual. */
+.ct-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--primary);
+  color: #fff;
+  padding: 10px 16px;
+  z-index: 9999;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+.ct-skip-link:focus {
+  left: 12px;
+  top: 12px;
+}
+
+/* Filter pill: <label> envolvendo <select> nativo. Aparencia de button mas
+   semantica correta (substitui <button><select> que era HTML invalido). */
+.ct-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 7px 12px;
+  color: var(--text);
+  position: relative;
+  cursor: pointer;
+}
+.ct-filter-pill:focus-within {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.ct-filter-pill-label {
+  pointer-events: none;
+}
+.ct-filter-pill-select {
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: var(--primary);
+  font-weight: 700;
+  padding: 0 18px 0 4px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  /* chevron decorativo via background-image (sem SVG extra DOM) */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%234F4FB0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0 center;
+}
+.ct-filter-pill-select:focus {
+  outline: 0;
+}
+
+/* ===== /conta v2 ===== */
+.ct-conta-cards { display: flex; flex-direction: column; gap: 20px; }
+.ct-conta-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 26px; box-shadow: var(--shadow-sm); }
+.ct-conta-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+.ct-conta-card-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -.3px; color: var(--text); margin: 0; }
+.ct-conta-card-sub { font-size: 12.5px; color: var(--text-muted); margin: 4px 0 0; }
+.ct-conta-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 12px; }
+@media (max-width: 720px) { .ct-conta-stats { grid-template-columns: 1fr; } }
+.ct-conta-label { font-size: 11px; font-weight: 700; color: var(--text-soft); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+.ct-conta-input { width: 100%; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 14px; color: var(--text); transition: border-color 150ms; }
+.ct-conta-input:focus { outline: 0; border-color: var(--primary); }
+.ct-conta-readonly { color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+.ct-conta-badge { font-size: 11px; font-weight: 700; color: var(--positive-deep); background: var(--positive-soft); border: 1px solid var(--positive-tint); border-radius: 6px; padding: 2px 8px; }
+.ct-conta-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.ct-conta-btn { padding: 9px 16px; border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); text-decoration: none; display: inline-flex; align-items: center; gap: 7px; transition: border-color 150ms, background 150ms; }
+.ct-conta-btn:hover { border-color: var(--primary); }
+.ct-conta-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary-deep); }
+.ct-conta-btn.primary:hover { background: var(--primary-deep); }
+.ct-conta-btn.danger { color: var(--attention-deep); border-color: var(--attention-tint); }
+.ct-conta-btn.danger:hover { background: var(--attention-soft); }
+.ct-conta-toggle { display: flex; align-items: center; gap: 14px; }
+.ct-conta-foot { font-size: 11.5px; color: var(--text-soft); line-height: 1.5; margin-top: 12px; }
+
+/* ===== Hover micro-interactions =====
+   Aplicado a cards clicáveis pra dar affordance visual sem ser barulhento.
+   Filosofia: subtle lift + border accent + transição suave. */
+
+.ct-action-card,
+.ct-job-card,
+.ct-rail-card,
+.ct-source-card,
+.ct-kpi-card,
+.ct-req-row {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.ct-action-card:hover,
+.ct-job-card:hover,
+.ct-rail-missing-row:hover {
+  border-color: var(--primary-tint);
+  box-shadow: 0 6px 16px -8px rgba(52,53,126,.15);
+  transform: translateY(-1px);
+}
+
+.ct-kpi-card:hover {
+  border-color: var(--primary-tint);
+  box-shadow: var(--shadow-md);
+}
+
+.ct-source-card:hover {
+  border-color: var(--primary-tint);
+}
+
+/* Botões secundários (.ct-action-cta, .ct-job-link, .ct-subscores-link)
+   ganham underline animado no hover */
+.ct-action-cta,
+.ct-job-link,
+.ct-subscores-link {
+  position: relative;
+  transition: color 150ms;
+}
+.ct-action-cta::after,
+.ct-job-link::after,
+.ct-subscores-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1.5px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms ease;
+}
+.ct-action-cta:hover::after,
+.ct-job-link:hover::after,
+.ct-subscores-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* Avatar pulse sutil no /dashboard ProfileSnapshot */
+.ct-profile-avatar {
+  transition: transform 200ms ease;
+}
+.ct-profile-card:hover .ct-profile-avatar {
+  transform: scale(1.05);
+}
+
+/* Target pill ganha border accent no hover */
+.ct-target-pill {
+  transition: border-color 150ms;
+}
+.ct-target-pill:hover {
+  border-color: var(--primary-tint);
+}
+
+/* Skill chips ficam levemente destacadas no hover do card pai */
+.ct-rail-card:hover .ct-skill-chip.have {
+  background: var(--positive-tint);
+}
+
+/* Subscore row tem fundo sutil no hover (afford clicable mas hoje não é) */
+.ct-ss-row {
+  transition: background-color 150ms;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: var(--radius-sm);
+}
+.ct-ss-row:hover {
+  background: var(--surface-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-action-card,
+  .ct-job-card,
+  .ct-kpi-card,
+  .ct-source-card,
+  .ct-profile-avatar,
+  .ct-ss-row {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ===== Skeletons consistentes =====
+   Padrão único pro app inteiro. Usa --primary-soft pro shimmer accent. */
+
+.ct-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 25%,
+    var(--surface-2) 50%,
+    var(--surface) 75%
+  );
+  background-size: 800px 100%;
+  animation: ctSkelShim 1.4s infinite linear;
+  border-radius: var(--radius-sm);
+}
+@keyframes ctSkelShim {
+  from { background-position: -800px 0; }
+  to { background-position: 800px 0; }
+}
+
+.ct-skeleton-line {
+  height: 12px;
+  margin: 6px 0;
+}
+.ct-skeleton-line.big { height: 18px; }
+.ct-skeleton-line.small { height: 10px; }
+
+.ct-skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+
+.ct-skeleton-ring {
+  width: 172px;
+  height: 172px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  animation: ctSkelShim 1.4s infinite linear;
+  background-image: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface) 50%,
+    var(--surface-2) 75%
+  );
+  background-size: 800px 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-skeleton,
+  .ct-skeleton-ring {
+    animation: none !important;
+    background: var(--surface-2) !important;
+  }
+}
+
+/* ===== Mediana stub no dashboard =====
+   Mostra "voce esta a X pontos da mediana dos contratados". Valor 78
+   vem do stub em lib/metrics/median-stub.js — copy carrega aviso
+   "estimativa em construcao" pra ficar honesto sobre o dataset. */
+.ct-mediana { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); max-width: 220px; }
+.ct-mediana-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; font-weight: 600; color: var(--text-soft); margin-bottom: 6px; }
+.ct-mediana-value { font-weight: 800; color: var(--text); }
+.ct-mediana-bar { position: relative; height: 6px; border-radius: 5px; background: var(--primary-soft); margin-bottom: 8px; }
+.ct-mediana-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 5px; background: var(--primary); transition: width 800ms ease; }
+.ct-mediana-bar-mark { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--avatar-to); border-radius: 2px; }
+.ct-mediana-foot { font-size: 10.5px; color: var(--text-faint); line-height: 1.45; }
+
+/* Estado "done" no action card — usuario clicou "Concluir" e POST passou.
+   Reduzimos opacidade e marcamos com check verde pra reforcar feedback ate
+   o router.refresh() tirar o item da lista. */
+.ct-action-card.done { opacity: .65; }
+.ct-action-card.done .ct-action-num { background: var(--positive-soft); color: var(--positive-deep); }
+.ct-action-card.done .ct-action-title { text-decoration: line-through; }
+
+/* Botoes "Concluir / Desfazer" sao <button>, nao <a> — herdam estilo do
+   .ct-action-cta mas precisamos resetar appearance nativa do browser. */
+button.ct-action-cta { background: transparent; border: 0; padding: 0; cursor: pointer; font-family: inherit; }
+button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 

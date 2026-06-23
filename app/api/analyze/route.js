@@ -4,12 +4,31 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { completeJSON } from "@/lib/llm";
 import { promptDiag } from "@/lib/prompts";
-import { computeOverall } from "@/lib/score";
 import { AnalyzeBody, DiagShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { searchJobs } from "@/lib/jobs";
+import { computeAllSubScores } from "@/lib/scoring/subscores";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Fallbacks textuais quando a LLM nao devolve a explicacao (ou devolve vazia).
+// Sao genericos de proposito — UI ainda renderiza o numero (que e o cabeca).
+const FALLBACK_EXPL = {
+  aderencia_vagas:
+    "Aderencia calculada pelo cruzamento entre as skills do seu perfil e as skills mais pedidas nas vagas pesquisadas. [Mercado]",
+  relevancia_habilidades:
+    "Reflete quantas skills voce declarou, se sao reconhecidas pela taxonomia e quao diversas sao. [Curriculo]",
+  otimizacao_perfil:
+    "Mede quantos campos do seu perfil estao preenchidos (CV, cargo-alvo, skills, LinkedIn, GitHub etc). [Curriculo]",
+  experiencia_mercado:
+    "Estima anos de experiencia a partir das datas do CV e compara senioridade declarada com o cargo-alvo. [Curriculo]",
+};
+
+function pickExplicacao(llmText, key) {
+  const s = String(llmText || "").trim();
+  return s.length > 0 ? s : FALLBACK_EXPL[key];
+}
 
 export async function POST(req) {
   // Sessao opcional: logado → persiste com escopo de dono; anonimo → efemero.
@@ -65,6 +84,7 @@ export async function POST(req) {
   }
   const { cv, role } = parsed.data;
 
+  // 1) LLM: extrai perfil + escreve explicacoes + lista lacunas. Nao gera numeros.
   let diag;
   try {
     const raw = await completeJSON(promptDiag(role.trim(), cv.trim()), { route: "analyze", userId });
@@ -92,15 +112,74 @@ export async function POST(req) {
     );
   }
 
-  // Score determinístico — calculado aqui, não na IA.
-  const overall = computeOverall(diag.sub_scores);
+  // 2) Busca vagas reais (Adzuna/Jooble/Greenhouse/Lever) ou cai em fixtures.
+  //    Limit 50 e suficiente pra agregacao estatistica do TF-like de aderencia
+  //    sem inflar custo. Falha de provider degrada sem quebrar o diagnostico.
+  let jobsPayload = { jobs: [], sources: [] };
+  try {
+    jobsPayload = await searchJobs({ role: role.trim(), location: "Brasil", limit: 50 });
+  } catch (e) {
+    console.error("analyze: searchJobs falhou", e?.message);
+  }
+
+  // 3) Monta o "profile sintetico" pra alimentar o calculo deterministico.
+  //    Mistura o que veio da LLM (skills extraidas do CV) + insumos crus
+  //    (rawCv, targetRole). Quem ja tinha profile no DB e logado vai sobrescrever
+  //    no step 5 — esse objeto e so pra computar score do snapshot atual.
+  const syntheticProfile = {
+    nome: diag.perfil.nome || null,
+    cargoAtual: diag.perfil.cargo_atual || null,
+    senioridade: diag.perfil.senioridade || null,
+    targetRole: role,
+    skills: diag.perfil.skills || [],
+    rawCv: cv,
+  };
+
+  // 4) Calculo deterministico dos 4 sub-scores + overall ponderado.
+  const computed = computeAllSubScores(syntheticProfile, role, jobsPayload.jobs);
+
+  // 5) Merge: numeros do codigo + explicacoes da LLM. Shape mantido compativel
+  //    com ScoreSnapshot.subScores antigo ({ valor, explicacao }) — UI/Report
+  //    le os dois campos sem saber quem gerou.
+  const sub_scores = {
+    aderencia_vagas: {
+      valor: computed.sub_scores.aderencia_vagas.valor,
+      explicacao: pickExplicacao(diag.sub_scores_explicacoes?.aderencia_vagas, "aderencia_vagas"),
+      _meta: computed.sub_scores.aderencia_vagas._meta,
+    },
+    relevancia_habilidades: {
+      valor: computed.sub_scores.relevancia_habilidades.valor,
+      explicacao: pickExplicacao(
+        diag.sub_scores_explicacoes?.relevancia_habilidades,
+        "relevancia_habilidades"
+      ),
+      _meta: computed.sub_scores.relevancia_habilidades._meta,
+    },
+    otimizacao_perfil: {
+      valor: computed.sub_scores.otimizacao_perfil.valor,
+      explicacao: pickExplicacao(
+        diag.sub_scores_explicacoes?.otimizacao_perfil,
+        "otimizacao_perfil"
+      ),
+      _meta: computed.sub_scores.otimizacao_perfil._meta,
+    },
+    experiencia_mercado: {
+      valor: computed.sub_scores.experiencia_mercado.valor,
+      explicacao: pickExplicacao(
+        diag.sub_scores_explicacoes?.experiencia_mercado,
+        "experiencia_mercado"
+      ),
+      _meta: computed.sub_scores.experiencia_mercado._meta,
+    },
+  };
+  const overall = computed.overall;
 
   // Modo efemero (anonimo): nao persiste, retorna direto.
   if (!userId) {
     return NextResponse.json({
       snapshotId: null,
       perfil: diag.perfil,
-      sub_scores: diag.sub_scores,
+      sub_scores,
       gaps: diag.gaps,
       overall,
       efemero: true,
@@ -138,7 +217,7 @@ export async function POST(req) {
         userId,
         role,
         overall,
-        subScores: diag.sub_scores,
+        subScores: sub_scores,
         perfilJson: diag.perfil,
         gaps: {
           create: (diag.gaps || []).map((g) => ({
@@ -175,7 +254,7 @@ export async function POST(req) {
     return NextResponse.json({
       snapshotId: snapshot.id,
       perfil: diag.perfil,
-      sub_scores: diag.sub_scores,
+      sub_scores,
       gaps: diag.gaps,
       overall,
     });

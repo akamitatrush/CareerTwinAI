@@ -55,7 +55,7 @@ export default function EntrarPage({ searchParams }) {
           </p>
 
           {enviado && (
-            <div className="note-line" style={{ marginBottom: 16 }}>
+            <div className="note-line" style={{ marginBottom: 16 }} role="status">
               Se houver uma conta com esse e-mail, enviamos um link de acesso. Confira sua caixa de entrada (e o spam).
             </div>
           )}

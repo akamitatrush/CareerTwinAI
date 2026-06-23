@@ -138,6 +138,12 @@ export default function AppShell({ children, user }) {
 
   return (
     <div className="appshell">
+      {/* Skip link: invisivel ate receber focus por teclado (Tab).
+          Permite pular sidebar/header nav (WCAG 2.4.1 Bypass Blocks).
+          Aponta pra #main-content que cada <main> de tela define. */}
+      <a href="#main-content" className="ct-skip-link">
+        Pular para o conteúdo principal
+      </a>
       {!showMobile && (
         <aside className="appshell-sidebar" aria-label="Navegação principal">
           <div

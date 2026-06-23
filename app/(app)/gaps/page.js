@@ -108,7 +108,7 @@ export default async function GapsPage() {
   const data = await getGapsData(session.user.id);
 
   return (
-    <div className="app-container">
+    <main id="main-content" className="app-container">
       <div className="ct-gaps-header">
         <div>
           <h1 className="ct-gaps-title">Análise de gaps</h1>
@@ -121,6 +121,7 @@ export default async function GapsPage() {
             href="/conta"
             className="ct-target-pill"
             title="Mudar cargo-alvo"
+            aria-label={`Mudar cargo-alvo, atual: ${data.profile.targetRole}`}
           >
             <span className="ct-target-label">CARGO-ALVO</span>
             <span className="ct-target-value">{data.profile.targetRole}</span>
@@ -133,6 +134,7 @@ export default async function GapsPage() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="M6 9l6 6 6-6" />
             </svg>
@@ -159,7 +161,7 @@ export default async function GapsPage() {
           </div>
         </>
       )}
-    </div>
+    </main>
   );
 }
 

@@ -95,6 +95,43 @@ sequenceDiagram
 
 ---
 
+## Algoritmos & Modelos
+
+CareerTwin AI combina **cálculo determinístico** com **LLM (Claude Sonnet 4.6)** restrita à geração de texto explicativo. Resumo dos algoritmos principais:
+
+| Camada | Algoritmo | Onde |
+|---|---|---|
+| Career Health Score | Média ponderada determinística (4 sub-scores · pesos `.40/.30/.20/.10`) | `lib/score.js`, `lib/scoring/subscores.js` |
+| Aderência a vagas | TF-IDF simplificado (frequency-weighted matching) | `lib/scoring/subscores.js`, `app/api/gaps/summary/route.js` |
+| Skill extraction | Token-level matching contra taxonomy curada + normalização NFD | `lib/skills-taxonomy.js#extractSkills` |
+| Job match | Set intersection normalizada (`\|comuns\| / \|J\| × 100`) | `lib/skills-taxonomy.js#matchScore` |
+| Completude do perfil | Weighted field-presence (9 campos · soma 100) | `lib/metrics/completeness.js` |
+| Job aggregation | `Promise.allSettled` paralelo, fail-soft, 4 providers BR-aware, dedupe + cache TTL 10min | `lib/jobs/index.js` |
+| Score history | `ScoreSnapshot` imutável + `deltaFromPrev` + `deltaFromFirst` | `app/api/score/latest-with-history/route.js` |
+| LLM I/O | Zod `.strict()` + `.strip()`, prompt isolation (`{system, user}`), sanitize `"""` + null bytes | `lib/prompts.js`, `lib/llm.js`, `lib/validators.js` |
+| LLM transport | Anthropic/OpenAI agnóstico, retry+backoff exponencial, AbortController 45s, cost logging JSON-line | `lib/llm.js` |
+| Rate limit | Janela fixa 60s em memória, separa anônimo (IP) vs logado (userId) | `lib/rate-limit.js` |
+| LGPD cascade | Prisma `onDelete: Cascade` em todas relações de `User` + `Consent.payloadHash` SHA-256 | `prisma/schema.prisma` |
+| Auth IDOR-safe | 2-step query pattern (`snapshotIds` → `filter IN`); 404 não 403 pra evitar enumeration | `app/api/history/actions/route.js`, `app/api/gaps/[id]/complete/route.js` |
+| Magic bytes | PDF (`%PDF-`), DOCX (`PK\x03\x04`), DOC legacy (`\xD0\xCF`) — antes do parse | `lib/pdf.js`, `lib/docx.js` |
+| Cron auth | `safeCompare` constant-time + header-only (não query) | `app/api/cron/digest/route.js` |
+
+Pipeline de diagnóstico em uma vista:
+
+```mermaid
+flowchart LR
+    CV[CV / PDF / DOCX / LinkedIn] --> LLM[Claude Sonnet 4.6:<br/>perfil + gaps + explicações]
+    Cargo[Cargo-alvo] --> Jobs[searchJobs<br/>4 providers paralelo]
+    LLM --> Code[Cálculo determinístico<br/>4 sub-scores]
+    Jobs --> Code
+    Code --> Score[Overall = Σ subscore × peso]
+    Score --> Snapshot[(ScoreSnapshot imutável<br/>+ Gap + PlanItem<br/>+ Consent payloadHash)]
+```
+
+Detalhes completos (fórmulas matemáticas, exemplos numéricos, tabelas de alinhamento de senioridade, limitações conhecidas, glossário) em **[docs/ALGORITHMS.md](docs/ALGORITHMS.md)**.
+
+---
+
 ## 📐 Arquitetura
 
 ```

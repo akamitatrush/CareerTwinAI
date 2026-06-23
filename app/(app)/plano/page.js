@@ -110,7 +110,7 @@ export default async function PlanoPage() {
     .slice(0, 30);
 
   return (
-    <div className="app-container">
+    <main id="main-content" className="app-container">
       <div className="ct-gaps-header">
         <div>
           <h1 className="ct-gaps-title">Plano de evolução</h1>
@@ -194,7 +194,7 @@ export default async function PlanoPage() {
           ))
         )}
       </div>
-    </div>
+    </main>
   );
 }
 
@@ -245,12 +245,19 @@ function ScoreChart({ points }) {
   // poluir o eixo X. O ultimo ponto sempre aparece (ancora visual de "hoje").
   const labelStride = n > 12 ? Math.ceil(n / 8) : 1;
 
+  // a11y: resumo verbal do chart pra SR. Inclui ponto inicial, ultimo,
+  // delta e contagem de snapshots — info que o grafico mostra visualmente.
+  const firstP = points[0];
+  const lastP = points[points.length - 1];
+  const delta = lastP.overall - firstP.overall;
+  const chartLabel = `Evolução do score: ${points.length} snapshots, de ${firstP.overall} até ${lastP.overall} (${delta >= 0 ? "+" : ""}${delta} pontos)`;
+
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
       style={{ width: "100%", height: "auto", display: "block" }}
       role="img"
-      aria-label="Evolução do score ao longo do tempo"
+      aria-label={chartLabel}
     >
       <defs>
         <linearGradient id="ct-plano-areag" x1="0" y1="0" x2="0" y2="1">
@@ -396,11 +403,12 @@ function TimelineRow({ item, isLast }) {
             strokeWidth="2.6"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d={icon.path} />
           </svg>
         </div>
-        {!isLast && <div className="ct-timeline-line" />}
+        {!isLast && <div className="ct-timeline-line" aria-hidden="true" />}
       </div>
       <div className="ct-timeline-content">
         <div className="ct-timeline-head">

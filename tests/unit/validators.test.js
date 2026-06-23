@@ -9,11 +9,14 @@ import {
   ChatBody,
 } from "@/lib/validators";
 
-const okSubScores = {
-  aderencia_vagas: { valor: 50, explicacao: "ok [Currículo]" },
-  relevancia_habilidades: { valor: 60, explicacao: "ok [Mercado]" },
-  otimizacao_perfil: { valor: 70, explicacao: "ok [Currículo]" },
-  experiencia_mercado: { valor: 40, explicacao: "ok [Mercado]" },
+// Novo contrato: a LLM nao gera mais "valor". Ela so devolve uma string
+// curta de explicacao por sub-score. Os valores numericos saem de
+// lib/scoring/subscores.js (deterministico).
+const okExplicacoes = {
+  aderencia_vagas: "Cobre boa parte do que o mercado pede [Mercado]",
+  relevancia_habilidades: "Skills relevantes e atualizadas [Currículo]",
+  otimizacao_perfil: "Perfil quase completo [Currículo]",
+  experiencia_mercado: "Senioridade casa com o cargo-alvo [Mercado]",
 };
 
 describe("AnalyzeBody — limites e .strict()", () => {
@@ -46,7 +49,7 @@ describe("DiagShape — saida do LLM nao confiavel", () => {
   it("aceita um payload bem-formado", () => {
     const r = DiagShape.safeParse({
       perfil: { nome: "M", cargo_atual: "X", senioridade: "P", skills: ["a", "b"] },
-      sub_scores: okSubScores,
+      sub_scores_explicacoes: okExplicacoes,
       gaps: [
         {
           habilidade: "SQL",
@@ -63,7 +66,7 @@ describe("DiagShape — saida do LLM nao confiavel", () => {
   it("rejeita 'dimensao' fora do enum (LLM inventando campo)", () => {
     const r = DiagShape.safeParse({
       perfil: { skills: [] },
-      sub_scores: okSubScores,
+      sub_scores_explicacoes: okExplicacoes,
       gaps: [
         {
           habilidade: "SQL",
@@ -74,12 +77,26 @@ describe("DiagShape — saida do LLM nao confiavel", () => {
     expect(r.success).toBe(false);
   });
 
-  it("rejeita valor de sub_score fora de 0-100", () => {
+  it("aceita explicacoes vazias (default ''') — fallback no backend", () => {
     const r = DiagShape.safeParse({
       perfil: { skills: [] },
-      sub_scores: {
-        ...okSubScores,
-        aderencia_vagas: { valor: 999, explicacao: "" },
+      sub_scores_explicacoes: {
+        aderencia_vagas: "",
+        relevancia_habilidades: "",
+        otimizacao_perfil: "",
+        experiencia_mercado: "",
+      },
+      gaps: [],
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it("rejeita explicacao gigante (DoS/custo)", () => {
+    const r = DiagShape.safeParse({
+      perfil: { skills: [] },
+      sub_scores_explicacoes: {
+        ...okExplicacoes,
+        aderencia_vagas: "x".repeat(501),
       },
       gaps: [],
     });

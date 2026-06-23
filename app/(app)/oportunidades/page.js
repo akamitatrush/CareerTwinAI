@@ -27,7 +27,7 @@ export default async function OportunidadesPage() {
   // pro /dashboard em vez de chamar a API que retornaria PROFILE_REQUIRED.
   if (!profile?.targetRole || !latestSnapshot) {
     return (
-      <div className="app-container">
+      <main id="main-content" className="app-container">
         <div className="ct-gaps-header">
           <div>
             <h1 className="ct-gaps-title">Radar de vagas</h1>
@@ -43,7 +43,7 @@ export default async function OportunidadesPage() {
             eu poder buscar vagas ranqueadas pelo seu perfil.
           </p>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -57,7 +57,7 @@ export default async function OportunidadesPage() {
   };
 
   return (
-    <div className="app-container">
+    <main id="main-content" className="app-container">
       <div className="ct-gaps-header">
         <div>
           <h1 className="ct-gaps-title">Radar de vagas</h1>
@@ -67,6 +67,6 @@ export default async function OportunidadesPage() {
         </div>
       </div>
       <RadarClient initial={initialData} />
-    </div>
+    </main>
   );
 }

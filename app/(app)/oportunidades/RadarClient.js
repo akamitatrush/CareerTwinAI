@@ -58,14 +58,16 @@ export default function RadarClient({ initial }) {
   return (
     <>
       <div className="ct-filters-bar">
-        <span className="ct-filters-count">
+        {/* aria-live: anuncia mudanca de contagem quando filtros disparam re-fetch.
+            polite = espera SR terminar leitura corrente; atomic=false = so le delta. */}
+        <span className="ct-filters-count" aria-live="polite" aria-atomic="true">
           {loading
             ? "Buscando…"
             : `${vagas.length} ${
                 vagas.length === 1 ? "vaga compatível" : "vagas compatíveis"
               }`}
         </span>
-        <div className="ct-filters-sep" />
+        <div className="ct-filters-sep" aria-hidden="true" />
         <FilterSelect
           label="Senioridade"
           value={seniority}
@@ -101,7 +103,7 @@ export default function RadarClient({ initial }) {
       )}
 
       {error && (
-        <div className="ct-dash-empty">
+        <div className="ct-dash-empty" role="alert">
           <h2>Falhou a busca</h2>
           <p>{error}. Tente recarregar.</p>
         </div>
@@ -133,14 +135,20 @@ export default function RadarClient({ initial }) {
   );
 }
 
+// FilterSelect / FilterNumber:
+// Antes: <button><select> — HTML invalido (button nao pode conter select),
+// teclado quebrado em alguns browsers. Agora: <label> + <select> nativo
+// estilizado como pill. Chevron decorativo via background-image no CSS
+// (.ct-filter-pill-select). Acessivel: label visivel + aria-label redundante
+// pra reforco, select recebe focus, Enter/Espaco abre menu nativo.
 function FilterSelect({ label, value, onChange, options }) {
   return (
-    <button className="ct-filter-btn">
-      <span>{label}:</span>
+    <label className="ct-filter-pill">
+      <span className="ct-filter-pill-label">{label}:</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="ct-filter-select"
+        className="ct-filter-pill-select"
         aria-label={label}
       >
         {options.map((opt) => (
@@ -149,30 +157,18 @@ function FilterSelect({ label, value, onChange, options }) {
           </option>
         ))}
       </select>
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </button>
+    </label>
   );
 }
 
 function FilterNumber({ label, value, onChange, options, suffix }) {
   return (
-    <button className="ct-filter-btn">
-      <span>{label}:</span>
+    <label className="ct-filter-pill">
+      <span className="ct-filter-pill-label">{label}:</span>
       <select
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="ct-filter-select"
+        className="ct-filter-pill-select"
         aria-label={label}
       >
         {options.map((opt) => (
@@ -181,19 +177,7 @@ function FilterNumber({ label, value, onChange, options, suffix }) {
           </option>
         ))}
       </select>
-      <svg
-        width="13"
-        height="13"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </button>
+    </label>
   );
 }
 
@@ -234,6 +218,7 @@ function JobCard({ job }) {
                 strokeWidth="2.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="M5 12.5l4.5 4.5L19 7" />
               </svg>
@@ -251,6 +236,7 @@ function JobCard({ job }) {
                 strokeWidth="2.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <path d="M12 5v14M5 12h14" />
               </svg>
@@ -278,7 +264,13 @@ function JobCard({ job }) {
       </div>
       <div className="ct-job-fit">
         <div className="ct-fit-ring">
-          <svg width="62" height="62" viewBox="0 0 62 62">
+          <svg
+            width="62"
+            height="62"
+            viewBox="0 0 62 62"
+            role="img"
+            aria-label={`Aderência: ${fit}%`}
+          >
             <circle
               cx="31"
               cy="31"
@@ -300,7 +292,8 @@ function JobCard({ job }) {
               transform="rotate(-90 31 31)"
             />
           </svg>
-          <div className="ct-fit-num">{fit}</div>
+          {/* Texto duplicado do SVG: aria-hidden pra evitar leitura dupla. */}
+          <div className="ct-fit-num" aria-hidden="true">{fit}</div>
         </div>
         <span className="ct-fit-label">ADERÊNCIA</span>
       </div>
