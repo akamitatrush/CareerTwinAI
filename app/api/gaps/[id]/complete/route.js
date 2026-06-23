@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { notify, NotificationTemplates } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,6 +62,16 @@ export async function POST(_req, ctx) {
         habilidade: true,
         impactoPontos: true,
       },
+    });
+    // Notificacao in-app. Falha silenciosa dentro do helper — nao impacta a
+    // resposta da microacao (idempotente do ponto de vista do cliente).
+    await notify({
+      userId: session.user.id,
+      ...NotificationTemplates.gapCompleted({
+        habilidade: updated.habilidade,
+        pts: updated.impactoPontos,
+        gapId: updated.id,
+      }),
     });
     return NextResponse.json({ ok: true, ...updated });
   } catch {

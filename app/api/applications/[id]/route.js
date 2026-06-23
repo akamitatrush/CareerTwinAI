@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ApplicationPatchBody } from "@/lib/validators";
+import { notify, NotificationTemplates } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -89,6 +90,22 @@ export async function PATCH(req, { params }) {
     where: { id },
     data: { ...updates, ...(events ? { events } : {}) },
   });
+
+  // Notificacao in-app: so quando o status muda (events presente). Mudanca
+  // de anotacao sozinha nao gera notificacao. Failure-silencioso pra nao
+  // quebrar a resposta caso o INSERT de notificacao falhe.
+  if (events) {
+    await notify({
+      userId: session.user.id,
+      ...NotificationTemplates.applicationStatus({
+        titulo: item.titulo,
+        empresa: item.empresa,
+        fromStatus: current.status,
+        toStatus: parsed.data.status,
+      }),
+    });
+  }
+
   return NextResponse.json({ item });
 }
 

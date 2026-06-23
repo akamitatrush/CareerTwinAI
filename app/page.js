@@ -19,19 +19,6 @@ export default function Home() {
   const [opp, setOpp] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
   const [snapshotId, setSnapshotId] = useState(null);
-  const [showWizard, setShowWizard] = useState(false);
-
-  useEffect(() => {
-    try {
-      if (typeof window === "undefined") return;
-      if (!window.localStorage.getItem("ct_seen_wizard_v1")) setShowWizard(true);
-    } catch {}
-  }, []);
-
-  function dismissWizard() {
-    setShowWizard(false);
-    try { window.localStorage.setItem("ct_seen_wizard_v1", "1"); } catch {}
-  }
 
   // Detecta sessao no client. Endpoint publico do NextAuth, sem expor PII alem
   // do que o proprio user ja sabe (email/nome).
@@ -168,7 +155,7 @@ export default function Home() {
         <div className="wrap topbar-inner">
           <div className="brand">
             <div className="brand-mark">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#B9D90C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="9" cy="8" r="3.2" />
                 <path d="M3.5 19c.6-3 2.9-4.6 5.5-4.6" />
                 <path d="M14.5 13.5l2 2 4-4.5" />
@@ -206,128 +193,142 @@ export default function Home() {
 
       <main className="wrap">
         {stage === "input" && (
-          <section className="stage">
-            <div className="intro">
-              <p className="eyebrow">Beta · MVP funcional</p>
-              <h1 className="hero">Construa o <em>gêmeo</em> da sua carreira em 30 segundos.</h1>
-              <p className="hero-lede">Cole seu currículo e diga o cargo que você quer. A IA estrutura quem você é hoje, compara com o que o mercado pede e te mostra a distância — com o porquê e a fonte de cada número.</p>
-            </div>
+          <section className="ct-onb-stage">
+            <div className="ct-onb-grid">
+              {/* Brand panel (esquerda) */}
+              <div className="ct-onb-brand">
+                <div className="ct-onb-brand-mark">
+                  <div className="ct-onb-brand-mark-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="9" cy="8" r="3.2" />
+                      <path d="M3.5 19c.6-3 2.9-4.6 5.5-4.6" />
+                      <path d="M14.5 13.5l2 2 4-4.5" />
+                    </svg>
+                  </div>
+                  <span className="ct-onb-brand-name">CareerTwin AI</span>
+                </div>
 
-            {showWizard && (
-              <div className="wizard" role="note" aria-label="Como o CareerTwin funciona">
-                <button className="wizard-x" onClick={dismissWizard} aria-label="Fechar">✕</button>
-                <p className="wizard-eyebrow">Primeira vez aqui? Em 3 passos:</p>
-                <ol className="wizard-steps">
-                  <li>
-                    <span className="wizard-n">1</span>
-                    <div>
-                      <b>Você cola seu CV</b> (texto, PDF ou perfil do LinkedIn) <b>e diz o cargo-alvo</b>.
-                      Aceita também portfólio do GitHub se você for de tech.
-                    </div>
+                <div className="ct-onb-brand-content">
+                  <div className="ct-onb-brand-eyebrow">CONSTRUA SEU GÊMEO</div>
+                  <h1 className="ct-onb-brand-title">Um retrato vivo da sua carreira — que evolui com você.</h1>
+                  <p className="ct-onb-brand-sub">
+                    Conectamos seu perfil real ao que o mercado realmente pede e mostramos a próxima ação concreta. Sem achismo, com a fonte de cada recomendação.
+                  </p>
+                </div>
+
+                <div className="ct-onb-lgpd">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#B9B9EC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6z" />
+                  </svg>
+                  <p>
+                    Seus dados são processados com criptografia, nunca vendidos e nunca enviados a recrutadores sem você aprovar. Você pode apagar tudo a qualquer momento. <strong>Conforme a LGPD.</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Right panel — inputs */}
+              <div className="ct-onb-input">
+                <div className="ct-onb-input-head">
+                  <span className="ct-onb-step">ETAPA 1 DE 2 · CONECTAR SUAS FONTES</span>
+                  {/* Future: counter X/3 se tracar fontes connectadas */}
+                </div>
+                <h2 className="ct-onb-input-title">Vamos construir teu gêmeo digital</h2>
+                <p className="ct-onb-input-sub">
+                  O mínimo é colar seu currículo e dizer o cargo-alvo. Quanto mais fontes você conectar (LinkedIn, GitHub), mais preciso fica.
+                </p>
+
+                {/* Stepper visual mantido em estilo limpo */}
+                <ol className="ct-onb-steps" aria-label="Etapas">
+                  <li className={"ct-onb-step-item" + (homeStep >= 1 ? " active" : "") + (homeStep > 1 ? " done" : "")}>
+                    <span className="ct-onb-step-n">1</span>
+                    <span className="ct-onb-step-l">Currículo</span>
                   </li>
-                  <li>
-                    <span className="wizard-n">2</span>
-                    <div>
-                      <b>A IA estrutura seu perfil</b> e busca vagas reais para esse cargo (Adzuna BR · Jooble · Greenhouse).
-                      O cálculo do score é <b>determinístico em código</b> — a IA só explica.
-                    </div>
+                  <li className={"ct-onb-step-item" + (homeStep >= 2 ? " active" : "") + (homeStep > 2 ? " done" : "")}>
+                    <span className="ct-onb-step-n">2</span>
+                    <span className="ct-onb-step-l">Cargo</span>
                   </li>
-                  <li>
-                    <span className="wizard-n">3</span>
-                    <div>
-                      <b>Você recebe um dossiê:</b> Career Health Score, 4 sub-scores ponderados,
-                      lacunas com microação concreta, vagas com match calculado e plano de 3 semanas.
-                    </div>
+                  <li className={"ct-onb-step-item" + (homeStep >= 3 ? " active" : "")}>
+                    <span className="ct-onb-step-n">3</span>
+                    <span className="ct-onb-step-l">Diagnóstico</span>
                   </li>
                 </ol>
-                <p className="wizard-foot">
-                  Sem cadastro pra começar — modo experimentar é efêmero. <a href="/entrar">Entre</a> pra salvar
-                  e ver evolução no tempo. <b>LGPD por construção:</b> apagar tudo em 1 clique.
-                </p>
-              </div>
-            )}
 
-            {/* Stepper visual discreto — só estado, não interativo */}
-            <ol className="home-steps" aria-label="Etapas do diagnóstico">
-              <li className={"home-step" + (homeStep >= 1 ? " active" : "") + (homeStep > 1 ? " done" : "")}>
-                <span className="home-step-n">1</span>
-                <span className="home-step-l">Currículo</span>
-              </li>
-              <li className={"home-step" + (homeStep >= 2 ? " active" : "") + (homeStep > 2 ? " done" : "")}>
-                <span className="home-step-n">2</span>
-                <span className="home-step-l">Cargo</span>
-              </li>
-              <li className={"home-step" + (homeStep >= 3 ? " active" : "")}>
-                <span className="home-step-n">3</span>
-                <span className="home-step-l">Diagnóstico</span>
-              </li>
-            </ol>
+                {/* Builder — mantém estrutura mas com tokens novos */}
+                <div className="ct-onb-builder">
+                  <div className="field">
+                    <label htmlFor="cvText">Seu currículo</label>
+                    <textarea id="cvText" value={cv} onChange={(e) => setCv(e.target.value)} placeholder="Cole o texto do CV ou conteúdo do LinkedIn (experiências, habilidades, formação)..." />
+                    <p className="field-hint">Quanto mais detalhado, melhor o diagnóstico — não tem certo nem errado.</p>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="roleText">Cargo-alvo</label>
+                    <input id="roleText" type="text" value={role} onChange={(e) => setRole(e.target.value)} placeholder="Ex.: Product Manager de IA · Pessoa Engenheira de Dados Sênior" />
+                  </div>
 
-            <div className="builder">
-              <div className="field">
-                <label htmlFor="cvText">Seu currículo — cole o texto</label>
-                <textarea id="cvText" value={cv} onChange={(e) => setCv(e.target.value)} placeholder="Cole aqui o conteúdo do seu currículo ou do seu LinkedIn (experiências, habilidades, formação)…" />
-                <p className="field-hint">Quanto mais detalhado, melhor o diagnóstico — não tem certo nem errado, é só matéria-prima pra IA.</p>
-              </div>
-              <div className="field">
-                <label htmlFor="roleText">Cargo-alvo</label>
-                <input id="roleText" type="text" value={role} onChange={(e) => setRole(e.target.value)} placeholder="Ex.: Product Manager de IA · Pessoa Engenheira de Dados Sênior · Coordenação de Marketing" />
-              </div>
-              <div className="builder-actions">
-                <button className="btn btn-primary" onClick={build} disabled={busy}>
-                  {isLogged ? "Gerar e salvar diagnóstico" : "Gerar diagnóstico (efêmero)"}
-                  <span className="arw">→</span>
-                </button>
-                <button className="btn btn-ghost" onClick={loadSample} disabled={busy}>Carregar exemplo</button>
-                <label className="btn btn-ghost" style={{ cursor: "pointer" }}>
-                  Enviar CV (PDF ou DOCX)
-                  <input
-                    type="file"
-                    accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
-                    style={{ display: "none" }}
-                    onChange={async (e) => {
-                      const f = e.target.files?.[0];
-                      e.target.value = "";
-                      if (!f) return;
-                      setError("");
-                      setBusy(true);
-                      try {
-                        const fd = new FormData();
-                        fd.append("file", f);
-                        const r = await fetch("/api/cv/upload", { method: "POST", body: fd });
-                        const data = await r.json();
-                        if (!r.ok) {
-                          if (r.status === 401) {
-                            setError("Pra enviar arquivo você precisa estar logado. Cole o texto direto aqui, ou entre em /entrar pra salvar.");
-                          } else {
-                            setError(data.error || "Não consegui ler esse arquivo. Tenta colar o texto direto.");
+                  <div className="ct-onb-actions">
+                    <button className="btn btn-primary" onClick={build} disabled={busy}>
+                      {isLogged ? "Gerar e salvar diagnóstico" : "Gerar diagnóstico (efêmero)"}
+                      <span className="arw" aria-hidden="true">→</span>
+                    </button>
+                    <button className="btn btn-ghost" onClick={loadSample} disabled={busy}>Carregar exemplo</button>
+                  </div>
+
+                  <div className="ct-onb-extras">
+                    <label className="ct-onb-extra-btn" title="PDF ou DOCX">
+                      {/* SVG paperclip */}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                      </svg>
+                      Enviar CV
+                      <input
+                        type="file"
+                        accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
+                        style={{ display: "none" }}
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          e.target.value = "";
+                          if (!f) return;
+                          setError("");
+                          setBusy(true);
+                          try {
+                            const fd = new FormData();
+                            fd.append("file", f);
+                            const r = await fetch("/api/cv/upload", { method: "POST", body: fd });
+                            const data = await r.json();
+                            if (!r.ok) {
+                              if (r.status === 401) {
+                                setError("Pra enviar arquivo você precisa estar logado. Cole o texto direto aqui, ou entre em /entrar pra salvar.");
+                              } else {
+                                setError(data.error || "Não consegui ler esse arquivo. Tenta colar o texto direto.");
+                              }
+                              return;
+                            }
+                            setCv(data.text);
+                          } catch (err) {
+                            setError("Falhou o upload: " + (err.message || "tenta de novo daqui a pouco."));
+                          } finally {
+                            setBusy(false);
                           }
-                          return;
-                        }
-                        setCv(data.text);
-                      } catch (err) {
-                        setError("Falhou o upload: " + (err.message || "tenta de novo daqui a pouco."));
-                      } finally {
-                        setBusy(false);
-                      }
-                    }}
-                  />
-                </label>
-                <LinkedinImportButton
-                  disabled={busy}
-                  onImport={({ cv: parsedCv, perfil }) => {
-                    if (parsedCv) setCv(parsedCv);
-                    if (!role && perfil?.cargo_atual) setRole(perfil.cargo_atual);
-                  }}
-                />
-                <PortfolioImportButton disabled={busy} />
+                        }}
+                      />
+                    </label>
+                    <LinkedinImportButton
+                      disabled={busy}
+                      onImport={({ cv: parsedCv, perfil }) => {
+                        if (parsedCv) setCv(parsedCv);
+                        if (!role && perfil?.cargo_atual) setRole(perfil.cargo_atual);
+                      }}
+                    />
+                    <PortfolioImportButton disabled={busy} />
+                  </div>
+
+                  {error && <div className="err" role="alert">{error}</div>}
+
+                  <p className="ct-onb-foot">
+                    <b>Modo experimentar (efêmero):</b> a IA roda de verdade, mas nada é salvo. Quer histórico? <a href="/entrar">Crie conta grátis</a> — sem cartão, com LGPD por construção.
+                  </p>
+                </div>
               </div>
-              <p className="note-line">
-                <b>Modo experimentar (efêmero):</b> a IA roda de verdade, mas nada é salvo — quando você fecha a aba, evapora.
-                Quer manter o gêmeo, ver evolução no tempo e organizar candidaturas? <a href="/entrar">Crie sua conta</a> —
-                é grátis, com consentimento separado por fonte e botão de “apagar tudo” sempre à mão.
-              </p>
-              {error && <div className="err">{error}</div>}
             </div>
           </section>
         )}
@@ -377,23 +378,6 @@ export default function Home() {
       </main>
 
       <style jsx global>{`
-        .home-steps { list-style: none; padding: 0; margin: 0 0 18px; display: flex; gap: 8px; flex-wrap: wrap; }
-        .home-step { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); opacity: .55; transition: opacity .2s; }
-        .home-step.active { opacity: 1; border-color: var(--accent); }
-        .home-step.done { opacity: .85; }
-        .home-step-n { font-family: "JetBrains Mono", monospace; font-size: 10px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border-strong); display: inline-flex; align-items: center; justify-content: center; }
-        .home-step.active .home-step-n { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
-        .home-step-l { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); }
-        .field-hint { font-size: 12px; color: var(--text-muted); margin: 6px 0 0; line-height: 1.4; }
-        .wizard { position: relative; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 14px; padding: 22px 24px 20px; margin: 4px 0 26px; max-width: 760px; }
-        .wizard-x { position: absolute; top: 10px; right: 12px; background: none; border: 0; color: var(--text-subtle); font-size: 18px; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 4px; }
-        .wizard-x:hover { color: var(--text); background: rgba(0,0,0,.04); }
-        .wizard-eyebrow { margin: 0 0 14px; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
-        .wizard-steps { list-style: none; padding: 0; margin: 0 0 14px; display: flex; flex-direction: column; gap: 12px; }
-        .wizard-steps li { display: flex; gap: 14px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: var(--text); }
-        .wizard-n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-weight: 800; font-family: var(--font-body); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
-        .wizard-foot { margin: 0; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
-        .wizard-foot a { color: var(--text); font-weight: 600; }
         .proc-headline { margin: 18px 0 22px; max-width: 560px; }
         .proc-title { font-size: 22px; font-weight: 700; line-height: 1.25; margin: 0 0 6px; font-family: var(--font-display); }
         .proc-sub { font-size: 14px; color: var(--text-muted); margin: 0 0 8px; line-height: 1.45; }

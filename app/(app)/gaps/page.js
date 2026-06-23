@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { searchJobs } from "@/lib/jobs";
 import { extractSkills } from "@/lib/skills-taxonomy";
+import MicroactionCard from "./MicroactionCard";
 
 // Render dinâmico: auth() (cookies) + Prisma + chamada a provedores externos
 // de vagas. Nada disso pode ser cacheado estaticamente.
@@ -14,10 +15,22 @@ export const metadata = { title: "Análise de gaps — CareerTwin AI" };
 // pra evitar chamada HTTP interna num server component (URL absoluta chata
 // em dev/preview/prod). Mesma fórmula, mesmo top-18, mesma definição de
 // "high priority" e aderência ponderada.
+//
+// Tambem traz o snapshot mais recente do usuario com seus Gap reais (vindos
+// do /api/analyze). Esses gaps tem microacao concreta + impactoPontos e sao
+// o que o usuario realmente vai marcar como concluido. As "requirements" sao
+// analise estatistica do mercado, abstratas, sem microacao.
 async function getGapsData(userId) {
-  const profile = await prisma.profile.findUnique({ where: { userId } });
+  const [profile, latestSnapshot] = await Promise.all([
+    prisma.profile.findUnique({ where: { userId } }),
+    prisma.scoreSnapshot.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: { gaps: true },
+    }),
+  ]);
   if (!profile?.targetRole) {
-    return { profile, noTarget: true };
+    return { profile, latestSnapshot, noTarget: true };
   }
 
   const userSkills = new Set(
@@ -86,6 +99,7 @@ async function getGapsData(userId) {
 
   return {
     profile,
+    latestSnapshot,
     noTarget: false,
     summary: {
       totalJobs,
@@ -142,6 +156,8 @@ export default async function GapsPage() {
         )}
       </div>
 
+      <MicroactionsSection snapshot={data.latestSnapshot} />
+
       {data.noTarget ? (
         <NoTargetState />
       ) : data.summary.totalJobs === 0 ? (
@@ -162,6 +178,34 @@ export default async function GapsPage() {
         </>
       )}
     </main>
+  );
+}
+
+// Mostra os Gap REAIS do snapshot mais recente do usuario (vindos do /analyze),
+// ordenados por impactoPontos desc. Mostra completados tambem (com estilo
+// .done) — o usuario pode desfazer caso tenha clicado por engano. Diferente do
+// dashboard, que filtra completados pra deixar as 3 "proximas acoes" limpas;
+// aqui o /gaps eh a visao completa entao mantemos o historico.
+function MicroactionsSection({ snapshot }) {
+  if (!snapshot || !Array.isArray(snapshot.gaps) || snapshot.gaps.length === 0) {
+    return null;
+  }
+  const sorted = [...snapshot.gaps].sort(
+    (a, b) => (b.impactoPontos || 0) - (a.impactoPontos || 0),
+  );
+  return (
+    <div style={{ marginBottom: 26 }}>
+      <h2 className="ct-section-title">Suas microações priorizadas</h2>
+      <p className="ct-section-sub">
+        Lacunas identificadas no teu último diagnóstico, ordenadas por impacto
+        no score.
+      </p>
+      <div className="ct-microactions-list">
+        {sorted.map((gap) => (
+          <MicroactionCard key={gap.id} gap={gap} />
+        ))}
+      </div>
+    </div>
   );
 }
 

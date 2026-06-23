@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import NotificationsBell from "@/components/NotificationsBell";
 
 const NAV = [
   {
@@ -231,6 +232,7 @@ export default function AppShell({ children, user }) {
                 {targetRole}
               </div>
             </div>
+            <NotificationsBell />
           </div>
         </aside>
       )}
@@ -252,13 +254,16 @@ export default function AppShell({ children, user }) {
                   CareerTwin
                 </span>
               </div>
-              <div
-                className="appshell-avatar"
-                style={{ width: 30, height: 30, fontSize: 12 }}
-                aria-hidden="true"
-                title={userName}
-              >
-                {initial}
+              <div className="appshell-mobile-actions">
+                <NotificationsBell compact />
+                <div
+                  className="appshell-avatar"
+                  style={{ width: 30, height: 30, fontSize: 12 }}
+                  aria-hidden="true"
+                  title={userName}
+                >
+                  {initial}
+                </div>
               </div>
             </div>
             <nav className="appshell-mobile-nav">

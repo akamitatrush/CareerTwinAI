@@ -8,6 +8,7 @@ vi.mock("@/lib/db", () => {
     scoreSnapshot: { findMany: vi.fn() },
     consent: { findMany: vi.fn() },
     dataSource: { findMany: vi.fn() },
+    tailoredCv: { findMany: vi.fn() },
   };
   return { prisma: mock };
 });
@@ -28,6 +29,7 @@ describe("exportUserData", () => {
     prisma.scoreSnapshot.findMany.mockResolvedValue([]);
     prisma.consent.findMany.mockResolvedValue([]);
     prisma.dataSource.findMany.mockResolvedValue([]);
+    prisma.tailoredCv.findMany.mockResolvedValue([]);
 
     const data = await exportUserData("u1");
 
@@ -42,6 +44,9 @@ describe("exportUserData", () => {
       expect.objectContaining({ where: { userId: "u1" } })
     );
     expect(prisma.dataSource.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "u1" } })
+    );
+    expect(prisma.tailoredCv.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: "u1" } })
     );
 

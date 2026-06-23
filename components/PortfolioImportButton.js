@@ -106,7 +106,7 @@ function PortfolioPreview({ portfolio, onClose }) {
           <div style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 6 }}>Stack</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {portfolio.stack.map((s) => (
-              <span key={s} style={{ fontSize: 11, padding: "3px 8px", background: "var(--surface-2)", borderRadius: 12, fontFamily: "JetBrains Mono, monospace" }}>
+              <span key={s} style={{ fontSize: 11, padding: "3px 8px", background: "var(--surface-2)", borderRadius: 12, fontFamily: "var(--font-mono)" }}>
                 {s}
               </span>
             ))}
@@ -129,7 +129,7 @@ function PortfolioPreview({ portfolio, onClose }) {
                   )}
                 </div>
                 {p.descricao && <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>{p.descricao}</div>}
-                {p.destaque && <div style={{ fontSize: 12, color: "var(--alert)", marginTop: 4, fontStyle: "italic" }}>{p.destaque}</div>}
+                {p.destaque && <div style={{ fontSize: 12, color: "var(--attention)", marginTop: 4, fontStyle: "italic" }}>{p.destaque}</div>}
               </li>
             ))}
           </ul>

@@ -8,6 +8,7 @@ import { AnalyzeBody, DiagShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { searchJobs } from "@/lib/jobs";
 import { computeAllSubScores } from "@/lib/scoring/subscores";
+import { notify, NotificationTemplates } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -232,6 +233,27 @@ export async function POST(req) {
       },
       include: { gaps: true },
     });
+
+    // Notificacao in-app de novo diagnostico. Calcula delta vs snapshot
+    // anterior pro corpo da mensagem. Falha silenciosa (helper) — diagnostico
+    // ja foi persistido, badge so atualiza no proximo fetch caso falhe.
+    try {
+      const prev = await prisma.scoreSnapshot.findFirst({
+        where: { userId, id: { not: snapshot.id } },
+        orderBy: { createdAt: "desc" },
+        select: { overall: true },
+      });
+      const delta = prev ? snapshot.overall - prev.overall : null;
+      await notify({
+        userId,
+        ...NotificationTemplates.scoreUpdated({
+          overall: snapshot.overall,
+          delta,
+        }),
+      });
+    } catch (e) {
+      console.error("analyze: notify falhou", e?.message);
+    }
 
     // Rastro LGPD: registra fonte + consentimento (payloadHash prova consent
     // sem reter o bruto se o usuario revogar/apagar).

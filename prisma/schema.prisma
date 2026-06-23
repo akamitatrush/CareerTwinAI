@@ -33,6 +33,8 @@ model User {
   consents      Consent[]
   dataSources   DataSource[]
   applications  Application[]
+  tailoredCvs   TailoredCv[]
+  notifications Notification[]
 }
 
 model Account {
@@ -188,8 +190,9 @@ model Application {
   offerAt     DateTime?
   updatedAt   DateTime          @updatedAt
 
-  user   User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events ApplicationEvent[]
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events      ApplicationEvent[]
+  tailoredCvs TailoredCv[]
 
   @@index([userId, status])
   @@index([userId, updatedAt])
@@ -232,4 +235,56 @@ model DataSource {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, ingestedAt])
+}
+
+// Notificacoes in-app. Geradas pontualmente quando eventos importantes
+// acontecem (microacao concluida, novo snapshot salvo, status de candidatura
+// alterado, digest enviado). readAt=null => unread. Cascade no userId pra
+// que "apagar tudo" leve junto. Indices duplos: timeline (userId,createdAt)
+// e contador de unread (userId,readAt).
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  kind      NotificationKind
+  title     String
+  body      String?          @db.Text
+  link      String?
+  meta      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}
+
+enum NotificationKind {
+  GAP_COMPLETED
+  PLAN_ITEM_COMPLETED
+  SCORE_UPDATED
+  DIGEST_SENT
+  APPLICATION_STATUS
+  WELCOME
+}
+
+// Historico de CVs adaptados pra vagas especificas. Cada chamada a /api/tailor
+// que vier de um user logado gera um registro aqui. applicationId opcional
+// permite tailor ad-hoc (sem vincular a Application do funil). onDelete:SetNull
+// no applicationId garante que apagar uma Application nao apaga o historico.
+model TailoredCv {
+  id            String   @id @default(cuid())
+  userId        String
+  applicationId String?
+  vagaTitulo    String
+  vagaEmpresa   String?
+  beforeText    String   @db.Text
+  afterText     String   @db.Text
+  bullets       Json?
+  createdAt     DateTime @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Application? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
 }

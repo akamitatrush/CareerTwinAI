@@ -197,7 +197,7 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
           <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.7, color: "var(--text-muted)" }}>
             <li>Refazer o diagnóstico com um cargo-alvo mais comum (ex.: "engenheiro de software" em vez de "engenheiro de plataforma sênior em fintech")</li>
             <li>Voltar daqui a algumas horas — a base atualiza periodicamente</li>
-            <li>Cadastrar candidaturas manualmente em <a href="/candidaturas" style={{ color: "var(--accent)" }}>/candidaturas</a> enquanto isso</li>
+            <li>Cadastrar candidaturas manualmente em <a href="/candidaturas" style={{ color: "var(--primary)" }}>/candidaturas</a> enquanto isso</li>
           </ul>
         </div>
       )}
@@ -232,9 +232,9 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
                         <span
                           className="src"
                           style={{
-                            background: isReal ? "var(--accent-soft)" : "var(--surface-2)",
-                            color: isReal ? "var(--accent)" : "var(--text-muted)",
-                            border: isReal ? "1px solid var(--accent)" : "1px dashed var(--border-strong)",
+                            background: isReal ? "var(--primary-soft)" : "var(--surface-2)",
+                            color: isReal ? "var(--primary)" : "var(--text-muted)",
+                            border: isReal ? "1px solid var(--primary)" : "1px dashed var(--border-strong)",
                             padding: "2px 8px",
                             borderRadius: 6,
                             fontSize: 11,
