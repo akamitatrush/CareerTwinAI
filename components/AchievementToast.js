@@ -15,15 +15,24 @@
 // recebe { achievement: { title, desc, icon, points } } e onDismiss.
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function AchievementToast({ achievement, onDismiss }) {
   const [visible, setVisible] = useState(true);
+  // Portal precisa de document. Sem isto, SSR renderizaria o toast inline e
+  // ele herdaria o stacking/overflow do ancestral (appshell-sidebar tem
+  // overflow-y:auto + height:100vh — em alguns engines, position:fixed eh
+  // clipado pelo overflow do pai, deixando o toast "embaixo" do dashboard).
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // 5s de exibicao + 300ms de fade out via animacao CSS.
     const t = setTimeout(() => {
       setVisible(false);
-      // Dispara onDismiss apos transicao terminar pra desmontar do DOM.
       const cleanup = setTimeout(() => {
         if (typeof onDismiss === "function") onDismiss();
       }, 300);
@@ -32,9 +41,8 @@ export default function AchievementToast({ achievement, onDismiss }) {
     return () => clearTimeout(t);
   }, [onDismiss]);
 
-  if (!achievement) return null;
+  if (!achievement || !mounted || typeof document === "undefined") return null;
 
-  // Defensiva contra payload malformado (notify clampa, mas double-check).
   const title = typeof achievement.title === "string" ? achievement.title : "Conquista";
   const desc = typeof achievement.desc === "string" ? achievement.desc : "";
   const icon = typeof achievement.icon === "string" ? achievement.icon : "🏆";
@@ -42,7 +50,7 @@ export default function AchievementToast({ achievement, onDismiss }) {
 
   const cls = "ct-achievement-toast" + (visible ? "" : " leaving");
 
-  return (
+  const node = (
     <div className={cls} role="status" aria-live="polite">
       <div className="ct-achievement-toast-confetti" aria-hidden="true">
         {Array.from({ length: 8 }).map((_, i) => (
@@ -81,4 +89,7 @@ export default function AchievementToast({ achievement, onDismiss }) {
       </div>
     </div>
   );
+
+  // Portal pro body — escapa do overflow:auto + sticky do appshell-sidebar.
+  return createPortal(node, document.body);
 }
