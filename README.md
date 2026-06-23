@@ -2,13 +2,11 @@
 
 # CareerTwin AI
 
-**Copiloto de empregabilidade com gêmeo digital de carreira.**
-
-Cola o currículo, diz o cargo que quer, recebe um diagnóstico auditável + vagas reais + plano executável.
+**Plataforma de gestão de carreira com IA, em pt-BR.** Da identidade até a contratação, com auditabilidade radical e LGPD por construção.
 
 [Como funciona](#-como-funciona) · [Stack](#-stack) · [Rodar local](#-rodar-localmente) · [Deploy](#-deploy-no-vercel) · [Segurança](#-segurança) · [Roadmap](#-roadmap)
 
-![status](https://img.shields.io/badge/status-MVP%20funcional-1f1f1f) ![license](https://img.shields.io/badge/license-MIT-1f1f1f) ![tests](https://img.shields.io/badge/tests-112%20passing-2F7D5B) ![next](https://img.shields.io/badge/Next.js-14-1f1f1f) ![lgpd](https://img.shields.io/badge/LGPD-by%20design-B9D90C)
+![status](https://img.shields.io/badge/status-MVP%20funcional-1f1f1f) ![tests](https://img.shields.io/badge/tests-200%2B%20passing-2F7D5B) ![next](https://img.shields.io/badge/Next.js-14-1f1f1f) ![lgpd](https://img.shields.io/badge/LGPD-by%20design-B9D90C)
 
 </div>
 
@@ -16,19 +14,14 @@ Cola o currículo, diz o cargo que quer, recebe um diagnóstico auditável + vag
 
 ## O que é
 
-CareerTwin AI cria um **gêmeo digital da carreira** do usuário a partir do currículo (colado, PDF ou texto do LinkedIn) e do portfólio (GitHub ou site). Compara com o que o mercado pede pro cargo-alvo e devolve:
+CareerTwin AI cria um **gêmeo digital de carreira** a partir do CV, LinkedIn e GitHub do usuário, e organiza a jornada em 4 pilares:
 
-- **Career Health Score** auditável (4 sub-scores, cálculo determinístico em código — IA só explica).
-- **Skill Gap Analysis** com prioridade, microação concreta e impacto no score em pontos.
-- **Opportunity Radar** com vagas reais (Adzuna BR + Jooble + Greenhouse) e match calculado por skills.
-- **Plano de 3 semanas** com microações ordenadas por impacto.
-- **Simulador de entrevista** STAR/CAR com alerta de autenticidade ("não invente fato seu").
-- **Adaptador de currículo** por vaga (reorganiza o que já existe, sinaliza qualquer sugestão nova).
-- **Funil de candidaturas** (kanban: salva → aplicada → triagem → entrevista → oferta) com métricas reais de conversão.
-- **Digest semanal por email** (Resend) com vagas novas que dão match.
-- **LGPD por construção**: consentimento por fonte, download em JSON, apagar tudo em 1 clique.
+1. **Autoconhecimento** — 3 mini-assessments (estilo comportamental DISC-lite, valores, Ikigai) pra entender quem você é antes de pensar em vaga.
+2. **Diagnóstico** — Career Health Score auditável (0-100) com 4 sub-scores ponderados, cálculo determinístico em código, LLM só explica.
+3. **Ação** — Skill Gap Mapper com cursos sugeridos, Evidências de competência (demonstrar > declarar), CVs adaptados com histórico.
+4. **Oportunidade** — Radar de vagas com 6 providers (Adzuna BR, Jooble, Greenhouse, Lever, Ashby, Workable), filtros e match explicado matematicamente.
 
-Princípio editorial: **número = cálculo, texto = explicação com fonte** (`[Currículo]` / `[Mercado]` / `[Base de Vagas]`).
+Princípio editorial: **número = cálculo auditável, texto = explicação com fonte**. Sem caixa-preta. Sem promessa de aprovação garantida. LGPD por construção.
 
 ---
 
@@ -36,18 +29,15 @@ Princípio editorial: **número = cálculo, texto = explicação com fonte** (`[
 
 ```mermaid
 flowchart LR
-    U[Usuário] -->|cola CV / PDF / LinkedIn / GitHub| H[Home /]
-    H -->|POST| A[/api/analyze/]
-    A -->|prompt + sanitização| LLM[Anthropic Claude<br/>Sonnet 4.6]
-    A -->|persiste se logado| DB[(Postgres<br/>Prisma)]
-    H -->|POST| O[/api/opportunities/]
-    O -->|fetch paralelo| J[Adzuna BR<br/>Jooble<br/>Greenhouse]
-    O -->|LLM justifica match| LLM
-    O --> DB
-    DB --> MG[/meu-gemeo<br/>histórico]
-    DB --> KB[/candidaturas<br/>kanban]
-    CRON[Vercel Cron<br/>seg 09h BRT] -->|/api/cron/digest| DG[Digest semanal]
-    DG -->|Resend| MAIL[📧 vagas novas]
+    A[CV / LinkedIn / GitHub] --> B[Estruturação via LLM]
+    B --> C[Profile estruturado]
+    C --> D[Diagnóstico determinístico]
+    D --> E[Career Health Score]
+    F[6 ATS Providers] --> G[Match calculado]
+    C --> G
+    E --> H[Plano de ação]
+    G --> H
+    H --> I[/dashboard]
 ```
 
 ### Fluxo de diagnóstico
@@ -62,17 +52,17 @@ sequenceDiagram
     U->>N: cola CV + cargo-alvo
     N->>N: valida Zod, rate-limit, sanitiza """
     N->>LLM: prompt diag (system + user separados)
-    LLM-->>N: JSON {perfil, sub_scores, gaps}
-    N->>N: computeOverall() determinístico
+    LLM-->>N: JSON {perfil, gaps, explicações}
+    N->>N: computeSubScores() + computeOverall() determinístico
     alt logado
         N->>DB: upsert Profile + create ScoreSnapshot + Gap[] + Consent
     end
     N-->>U: diagnóstico
     par paralelo
-        N->>J as Job providers: buscar vagas
-        N->>LLM: gerar plano
+        N->>J as Job providers: buscar vagas (6 providers)
+        N->>LLM: gerar plano + cursos sugeridos
     end
-    N-->>U: vagas + plano
+    N-->>U: vagas + plano + cursos
 ```
 
 ---
@@ -81,54 +71,76 @@ sequenceDiagram
 
 | Camada | Tecnologia |
 |---|---|
-| Frontend | Next.js 14 (App Router) · React 18 · CSS modules + jsx-css |
+| Frontend | Next.js 14 (App Router) · React 18 · Plus Jakarta Sans + Spectral (Claude Design) |
 | Backend | Next.js Route Handlers (Node runtime) |
 | Banco | Postgres 16 · Prisma 6 |
 | Auth | Auth.js v5 (Email magic link via Resend, LinkedIn OIDC, Credentials dev) |
 | LLM | Anthropic Claude Sonnet 4.6 (default) · OpenAI GPT-4o (opcional) |
-| Vagas | Adzuna BR · Jooble · Greenhouse ATS |
+| Vagas | Adzuna BR · Jooble · Greenhouse · Lever · Ashby · Workable |
 | Email | Resend (prod) · Nodemailer/Mailpit (dev) |
 | PDF | pdf-parse (com magic-bytes check) |
 | Validação | Zod estrito (.strict() em todos os bodies) |
-| Testes | Vitest (unit) · Playwright (e2e) |
+| Testes | Vitest (unit, 200+ casos) · Playwright (e2e, 5 specs) |
+| Observabilidade | Sentry (errors) · PostHog (eventos) · UptimeRobot (`/api/health`) |
 | Deploy | Vercel + Postgres externo (Neon/Supabase/Railway) |
 
 ---
 
 ## Algoritmos & Modelos
 
-CareerTwin AI combina **cálculo determinístico** com **LLM (Claude Sonnet 4.6)** restrita à geração de texto explicativo. Resumo dos algoritmos principais:
-
-| Camada | Algoritmo | Onde |
+| Camada | Algoritmo | Implementação |
 |---|---|---|
-| Career Health Score | Média ponderada determinística (4 sub-scores · pesos `.40/.30/.20/.10`) | `lib/score.js`, `lib/scoring/subscores.js` |
-| Aderência a vagas | TF-IDF simplificado (frequency-weighted matching) | `lib/scoring/subscores.js`, `app/api/gaps/summary/route.js` |
-| Skill extraction | Token-level matching contra taxonomy curada + normalização NFD | `lib/skills-taxonomy.js#extractSkills` |
-| Job match | Set intersection normalizada (`\|comuns\| / \|J\| × 100`) | `lib/skills-taxonomy.js#matchScore` |
-| Completude do perfil | Weighted field-presence (9 campos · soma 100) | `lib/metrics/completeness.js` |
-| Job aggregation | `Promise.allSettled` paralelo, fail-soft, 4 providers BR-aware, dedupe + cache TTL 10min | `lib/jobs/index.js` |
-| Score history | `ScoreSnapshot` imutável + `deltaFromPrev` + `deltaFromFirst` | `app/api/score/latest-with-history/route.js` |
-| LLM I/O | Zod `.strict()` + `.strip()`, prompt isolation (`{system, user}`), sanitize `"""` + null bytes | `lib/prompts.js`, `lib/llm.js`, `lib/validators.js` |
-| LLM transport | Anthropic/OpenAI agnóstico, retry+backoff exponencial, AbortController 45s, cost logging JSON-line | `lib/llm.js` |
-| Rate limit | Janela fixa 60s em memória, separa anônimo (IP) vs logado (userId) | `lib/rate-limit.js` |
-| LGPD cascade | Prisma `onDelete: Cascade` em todas relações de `User` + `Consent.payloadHash` SHA-256 | `prisma/schema.prisma` |
-| Auth IDOR-safe | 2-step query pattern (`snapshotIds` → `filter IN`); 404 não 403 pra evitar enumeration | `app/api/history/actions/route.js`, `app/api/gaps/[id]/complete/route.js` |
-| Magic bytes | PDF (`%PDF-`), DOCX (`PK\x03\x04`), DOC legacy (`\xD0\xCF`) — antes do parse | `lib/pdf.js`, `lib/docx.js` |
-| Cron auth | `safeCompare` constant-time + header-only (não query) | `app/api/cron/digest/route.js` |
+| Career Health Score | Média ponderada determinística (4 sub-scores) | `lib/score.js`, `lib/scoring/subscores.js` |
+| Aderência a vagas | TF-IDF simplificado | `lib/scoring/subscores.js#computeAderenciaVagas` |
+| Relevância das habilidades | Count + validity + diversity | `lib/scoring/subscores.js#computeRelevanciaHabilidades` |
+| Otimização do perfil | Weighted field-presence | `lib/metrics/completeness.js` |
+| Experiência de mercado | Year-range parsing + seniority alignment | `lib/scoring/subscores.js#computeExperienciaMercado` |
+| Skill extraction | Token-level matching + NFD normalization | `lib/skills-taxonomy.js#extractSkills` |
+| Job match | Set intersection normalizada | `lib/skills-taxonomy.js#matchScore` |
+| RAG-lite | Keyword retrieval BM25-like + JSON knowledge base | `lib/knowledge/retrieval.js` |
+| Course suggestion | Skill-keyed lookup + boost grátis | `lib/knowledge/course-retrieval.js` |
+| LLM extraction | Zod strict + .strip + prompt isolation | `lib/prompts.js`, `lib/llm.js` |
+| Auth IDOR-safe | 2-step query pattern | `app/api/history/actions/route.js` |
+| LGPD cascade | Prisma onDelete + Consent payloadHash | `prisma/schema.prisma` |
+
+Detalhes em [docs/ALGORITHMS.md](./docs/ALGORITHMS.md).
 
 Pipeline de diagnóstico em uma vista:
 
 ```mermaid
 flowchart LR
     CV[CV / PDF / DOCX / LinkedIn] --> LLM[Claude Sonnet 4.6:<br/>perfil + gaps + explicações]
-    Cargo[Cargo-alvo] --> Jobs[searchJobs<br/>4 providers paralelo]
+    Cargo[Cargo-alvo] --> Jobs[searchJobs<br/>6 providers paralelo]
     LLM --> Code[Cálculo determinístico<br/>4 sub-scores]
     Jobs --> Code
     Code --> Score[Overall = Σ subscore × peso]
     Score --> Snapshot[(ScoreSnapshot imutável<br/>+ Gap + PlanItem<br/>+ Consent payloadHash)]
 ```
 
-Detalhes completos (fórmulas matemáticas, exemplos numéricos, tabelas de alinhamento de senioridade, limitações conhecidas, glossário) em **[docs/ALGORITHMS.md](docs/ALGORITHMS.md)**.
+---
+
+## Funcionalidades
+
+### Autenticadas (após login)
+- `/dashboard` — Career Health Score + sub-scores + 3 próximas ações + perfil snapshot + mediana comparativa
+- `/autoconhecimento` — 3 assessments (DISC-lite, Valores, Ikigai)
+- `/gaps` — KPI strip + requirements list + microactions com completion + cursos sugeridos
+- `/oportunidades` — Radar de vagas com filtros + match breakdown explicado
+- `/plano` — Histórico de score + timeline de ações
+- `/cvs-adaptados` — Histórico de CVs adaptados por vaga
+- `/evidencias` — Documentação de evidências de competência (projetos, cases, métricas)
+- `/candidaturas` — Funil kanban (SAVED → APPLIED → INTERVIEW → OFFER)
+- `/transparencia` — Fórmula auditável + data sources + LGPD
+- `/conta` — Perfil + cargo-alvo + stats + LGPD
+- `/meus-dados` — Export JSON + apagar tudo
+
+### Públicas
+- `/` — Split-panel onboarding (modo experimentar sem login)
+- `/entrar` — Login (magic link + LinkedIn opcional + dev creds em preview)
+- `/auth/verify-request` — Estado pós-envio do magic link
+- `/privacidade` — Política LGPD
+- `/termos` — Termos de uso
+- `/api/health` — Health check pro UptimeRobot
 
 ---
 
@@ -137,52 +149,69 @@ Detalhes completos (fórmulas matemáticas, exemplos numéricos, tabelas de alin
 ```
 careertwin-ai/
 ├─ app/
-│  ├─ page.js                  Home — entrada e diagnóstico efêmero
+│  ├─ page.js                  Home — split-panel onboarding + modo experimentar
 │  ├─ entrar/                  Login (magic link, LinkedIn, dev)
-│  ├─ meu-gemeo/               Dashboard pós-login + histórico
+│  ├─ dashboard/               Career Health + sub-scores + próximas ações
+│  ├─ autoconhecimento/        3 assessments (DISC-lite, Valores, Ikigai)
+│  ├─ gaps/                    Skill Gap Mapper + microactions + cursos
+│  ├─ oportunidades/           Radar de vagas + match breakdown
+│  ├─ plano/                   Histórico de score + timeline
+│  ├─ cvs-adaptados/           Histórico de CVs adaptados
+│  ├─ evidencias/              Evidências de competência
 │  ├─ candidaturas/            Kanban + funil de conversão
+│  ├─ transparencia/           Fórmula auditável + sources
+│  ├─ conta/                   Perfil + cargo-alvo + stats
 │  ├─ meus-dados/              LGPD (ver, baixar JSON, apagar tudo)
-│  ├─ design-lab/              Lab visual (3 direções de design)
 │  └─ api/
 │     ├─ analyze/              POST: CV + cargo → diagnóstico
-│     ├─ opportunities/        POST: perfil → vagas reais + plano
+│     ├─ opportunities/        POST: perfil → vagas (6 providers) + plano
+│     ├─ assessments/[kind]/   GET/POST: DISC-lite, valores, Ikigai
+│     ├─ evidence/             CRUD evidências de competência
+│     ├─ tailored-cvs/         CRUD CVs adaptados (com diff)
+│     ├─ gaps/                 GET summary + microactions + completion
+│     ├─ courses/              GET cursos sugeridos por skill
 │     ├─ linkedin/parse/       POST: texto LinkedIn → estrutura
 │     ├─ portfolio/import/     POST: github/url → projetos extraídos
 │     ├─ tailor/               POST: CV + vaga → CV adaptado
 │     ├─ interview/            POST: simulador (pergunta + avaliação)
 │     ├─ chat/                 POST: conversar com o "gêmeo"
 │     ├─ applications/         CRUD do funil de candidaturas
+│     ├─ history/actions/      Timeline com IDOR-safe pattern
 │     ├─ cv/upload/            Upload PDF (magic-bytes + sanitização)
 │     ├─ me/export/            Export LGPD (JSON com tudo)
+│     ├─ health/               Health check (UptimeRobot)
 │     ├─ cron/digest/          Cron semanal (Resend digest)
 │     └─ auth/[...nextauth]/   Handler NextAuth v5
 ├─ components/
+│  ├─ AppShell.js              Sidebar 252px desktop + header mobile
+│  ├─ NotificationBell.js      Notifications in-app
 │  ├─ Report.js                Saída do diagnóstico (gauge, sub-scores, gaps)
-│  ├─ Modal.js                 Modal acessível (role=dialog + ARIA + ESC + focus trap)
+│  ├─ Modal.js                 Modal acessível (role=dialog + ARIA + ESC)
 │  ├─ InterviewModal.js        Simulador STAR/CAR
 │  ├─ ChatModal.js             Chat com o gêmeo
-│  ├─ TailorModal.js           Adaptador de currículo
-│  ├─ LinkedinImportButton.js  Import via texto colado
-│  └─ PortfolioImportButton.js Import via GitHub/URL
+│  └─ TailorModal.js           Adaptador de currículo
 ├─ lib/
 │  ├─ llm.js                   Anthropic/OpenAI agnóstico (retry + timeout + log custo)
 │  ├─ prompts.js               Prompts (system + user separados, sanitização """)
-│  ├─ validators.js            Zod strict em tudo (40+ schemas)
-│  ├─ score.js                 Career Health Score (4 sub-scores · pesos .40/.30/.20/.10)
-│  ├─ jobs/                    Providers Adzuna/Jooble/Greenhouse + fixtures fallback
+│  ├─ validators.js            Zod strict em tudo (60+ schemas)
+│  ├─ score.js                 Career Health Score (4 sub-scores · pesos)
+│  ├─ scoring/subscores.js     Sub-scores 100% determinísticos
+│  ├─ knowledge/               RAG-lite (retrieval + courses + JSON base)
+│  ├─ jobs/                    6 providers + fixtures fallback
 │  ├─ skills-taxonomy.js       Extração de skills + cálculo de match
+│  ├─ metrics/completeness.js  Weighted field-presence
 │  ├─ rate-limit.js            Janela em memória (anônimo vs logado)
 │  ├─ email.js                 Digest HTML (Resend ou Nodemailer)
 │  ├─ pdf.js                   Parser PDF defensivo
 │  ├─ data-export.js           Export LGPD
 │  └─ auth.js                  NextAuth config (Resend > Mailpit fallback)
 ├─ prisma/
-│  ├─ schema.prisma            Modelos
+│  ├─ schema.prisma            Modelos (User, Profile, Score, Gap, Assessment, Evidence, TailoredCv...)
 │  └─ migrations/              Migrations versionadas
 ├─ tests/
-│  ├─ unit/                    Vitest (112 testes)
-│  └─ e2e/                     Playwright
-├─ middleware.js               CSP-nonce dinâmica + NextAuth gate
+│  ├─ unit/                    Vitest (200+ casos)
+│  └─ e2e/                     Playwright (5 specs)
+├─ middleware.js               CSP + NextAuth gate
 ├─ next.config.mjs             Headers de segurança estáticos
 ├─ vercel.json                 Cron weekly digest
 └─ docker-compose.yml          Postgres + Mailpit pra dev
@@ -197,14 +226,19 @@ erDiagram
     User ||--o{ Application : "candidatura no funil"
     User ||--o{ Consent : "LGPD por fonte"
     User ||--o{ DataSource : "rastreio de origem"
+    User ||--o{ AssessmentResult : "autoconhecimento"
+    User ||--o{ Evidence : "evidências de competência"
+    User ||--o{ TailoredCv : "CVs adaptados"
     ScoreSnapshot ||--o{ Gap : "lacunas priorizadas"
-    ScoreSnapshot ||--o{ PlanItem : "plano de 3 semanas"
+    ScoreSnapshot ||--o{ PlanItem : "plano de ação"
     Application ||--o{ ApplicationEvent : "timeline auditável"
 
     User { string id email }
     Profile { string targetRole string[] skills json perfilJson json linkedinJson json portfolioJson }
     ScoreSnapshot { int overall json subScores datetime createdAt }
-    Application { enum status datetime savedAt appliedAt offerAt }
+    AssessmentResult { string kind json answers json result }
+    Evidence { string kind string title string description string url }
+    TailoredCv { string jobTitle string company text adaptedCv json diff }
 ```
 
 ---
@@ -245,7 +279,7 @@ Acesse **http://localhost:3000**. Em dev, `AUTH_DEV_CREDENTIALS=true` te deixa l
 npm run dev         # dev server (hot reload)
 npm run build       # build de produção
 npm run start       # serve o build
-npm test            # vitest unit (112 testes)
+npm test            # vitest unit (200+ testes)
 npm run test:watch  # vitest em watch
 npm run test:e2e    # playwright (requer dev rodando)
 npx prisma studio   # GUI do banco em :5555
@@ -273,6 +307,11 @@ npx prisma migrate dev --name <nome>  # nova migration
 | `ADZUNA_APP_ID` / `_KEY` | opcional | Vagas reais BR ([developer.adzuna.com](https://developer.adzuna.com)) |
 | `JOOBLE_API_KEY` | opcional | Vagas agregadas |
 | `GREENHOUSE_BOARDS` | opcional | Slugs separados por vírgula: `nubank,stone` |
+| `LEVER_SITES` | opcional | Slugs Lever |
+| `ASHBY_ORGS` | opcional | Slugs Ashby |
+| `WORKABLE_ACCOUNTS` | opcional | Subdomínios Workable |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | opcional | Sentry server + client |
+| `NEXT_PUBLIC_POSTHOG_KEY` | opcional | PostHog product analytics |
 | `CRON_SECRET` | prod | `openssl rand -hex 32` — header `x-cron-secret` no cron |
 
 Sem chaves de vagas → fallback de vagas ilustrativas (etiquetadas como tal na UI).
@@ -317,7 +356,7 @@ git push -u origin main
    - `EMAIL_FROM` (com domínio verificado no Resend)
    - `AUTH_RESEND_KEY`
    - `CRON_SECRET` (gere novo: `openssl rand -hex 32`)
-   - Chaves de vagas se tiver (Adzuna, Jooble)
+   - Chaves de vagas se tiver (Adzuna, Jooble, Lever, Ashby, Workable)
 4. **NÃO** defina `AUTH_DEV_CREDENTIALS` em prod (a guarda dupla aborta o boot).
 5. Deploy.
 
@@ -350,43 +389,48 @@ Implementado:
 
 - ✅ **Auth.js v5** com JWT + adapter Prisma. Guarda dupla impede `AUTH_DEV_CREDENTIALS=true` em prod (aborta boot).
 - ✅ **Zod estrito** (`.strict()`) em todos os bodies + limites de tamanho contra DoS de custo.
-- ✅ **Escopo por `session.user.id`** em toda query Prisma — zero IDOR.
-- ✅ **Rate limit** em memória nas 6 rotas LLM (anônimo 2-5/min, logado 8-30/min).
+- ✅ **Escopo por `session.user.id`** em toda query Prisma — zero IDOR (2-step query pattern).
+- ✅ **Rate limit** em memória nas rotas LLM (anônimo 2-5/min, logado 8-30/min).
 - ✅ **Prompt injection mitigado**: system prompt isolado, sanitização de `"""`, null bytes removidos.
 - ✅ **LLM com retry + backoff exponencial + AbortController** (45s timeout, 2 tentativas, jitter).
-- ✅ **CSP-nonce dinâmica** via middleware (script-src `strict-dynamic`, frame-ancestors `none`, em dev libera `unsafe-eval` para HMR).
+- ✅ **CSP** via middleware (script-src `self` + `unsafe-inline`, frame-ancestors `none`).
 - ✅ **Headers de segurança**: HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy.
 - ✅ **Upload PDF defensivo**: magic-bytes + content-length antes do parse + sandbox.
-- ✅ **Anti-SSRF** no portfolio: bloqueia IPv4 + IPv6 privados, CGNAT, link-local (metadata cloud), `.local`/`.internal`. DNS lookup antes do fetch (mitigação parcial DNS rebinding).
+- ✅ **Anti-SSRF** no portfolio: bloqueia IPv4 + IPv6 privados, CGNAT, link-local (metadata cloud), `.local`/`.internal`. DNS lookup antes do fetch.
 - ✅ **Cron protegido** por header `x-cron-secret` com comparação constante-tempo (sem query string).
 - ✅ **Email HTML escapado** + validação de protocolo no `<a href>` (bloqueia `javascript:`, `data:`).
-- ✅ **LGPD**: consent registrado por fonte, payloadHash SHA256, cascade delete em tudo que pende de User, export em JSON.
+- ✅ **LGPD**: consent registrado por fonte, payloadHash SHA256, cascade delete em tudo que pende de User, export em JSON (inclui assessments + evidence + tailoredCvs).
 - ✅ **Observabilidade de custo LLM**: log estruturado (JSON line) com tokens, custo USD, latência, route, userId.
 
 Auditoria completa com OWASP Top 10:2025 + OWASP Top 10 LLM Apps disponível no histórico de commits.
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
-**v0.4 ✅ Pitch completo** (estado atual)
-- LinkedIn import, Portfolio (GitHub), Tracking de candidaturas, Weekly digest
+**v0.9 (atual) ✅ MVP funcional completo (branch `redesign/claude-design`)**
+- 4 pilares (Autoconhecimento, Diagnóstico, Ação, Oportunidade) implementados
+- 6 ATS providers
+- LGPD by construction
+- 200+ testes unit + 5 e2e Playwright
 
-**v0.5 — Polimento** (em andamento)
-- Direção visual "Dossiê" editorial aplicada
-- Empty states, loading com narrativa, erros humanos
-- Onboarding wizard e wow moment
+**v1.0 — Validação com usuários (próximo)**
+- User testing com 5-10 candidatos
+- Entrevistas B2B com universidades + RHs
+- Decisão de ICP (B2C primário ou B2B primário)
+- Refinamento baseado em feedback real
 
-**v1.0 — Ser sério**
-- CI/CD GitHub Actions (test + e2e + deploy)
-- Sentry + PostHog
-- Backup Postgres automático
+**v1.1 — Production hardening**
+- Neon branch isolation (DB separado preview/prod)
+- Sentry + PostHog validados com tráfego real
+- Lighthouse > 90 em todas as rotas
+- Backup Postgres automatizado
 - Status page
 
-**v1.1 — Monetizar**
-- Stripe (free 3 diag/mês · paid ilimitado)
-- Landing page separada
-- Onboarding guiado
+**v1.2 — Monetização**
+- Stripe (freemium: 3 diag/mês grátis · paid ilimitado)
+- Affiliate de cursos com tracking
+- Landing dedicada
 
 **v2.0 — B2B**
 - Orgs + seats (universidades, consultorias)
@@ -395,30 +439,54 @@ Auditoria completa com OWASP Top 10:2025 + OWASP Top 10 LLM Apps disponível no 
 - API pública
 - Dataset proprietário anonimizado (defensibilidade)
 
+**Futuro (não roteado ainda)**
+- Mediana de contratados real (dataset)
+- pgvector + embeddings (RAG completo)
+- Mobile nativo
+- i18n (en/es)
+- Análise psicométrica clínica validada
+
 ---
 
 ## 🧪 Testes
 
 ```bash
-npm test                # 112 testes unit
-npm run test:e2e        # playwright (autenticação + persistência + erase)
+npm test                # 200+ testes unit (vitest)
+npm run test:e2e        # 5 specs playwright (skipped em CI por padrão)
 ```
 
 Cobertura:
-- Validators Zod (45+ casos: AnalyzeBody, OppBody, InterviewBody, TailorBody, ChatBody, LinkedinParseBody, PortfolioImportBody, ApplicationCreateBody, ApplicationPatchBody)
-- Email digest HTML (17 casos: escape XSS, singular/plural, validação de protocolo)
-- Score determinístico
+- Validators Zod (60+ schemas: Analyze, Opp, Interview, Tailor, Chat, Linkedin, Portfolio, Application, Assessment, Evidence, TailoredCv...)
+- Email digest HTML (escape XSS, singular/plural, validação de protocolo)
+- Score determinístico (sub-scores 100% em código)
+- RAG-lite (retrieval + course suggestion)
 - E2E Playwright: login → diagnóstico → persistência → "apagar tudo"
 
 ---
 
-## 📚 Documentação complementar
+## Documentação
 
-- **[docs/PRODUTO.md](docs/PRODUTO.md)** — o que o produto faz, pra quem, jornada do usuário, princípios editoriais, FAQ
-- **[docs/API.md](docs/API.md)** — referência técnica de todas as rotas API (request/response/erros)
-- [ARCHITECTURE.md](ARCHITECTURE.md) — visão técnica enxuta (stack, modelos, fluxos)
-- [CHANGELOG.md](CHANGELOG.md) — histórico de versões (v0.1 → v0.4)
-- [.env.example](.env.example) — todas as envs documentadas
+### Produto
+- [PRODUTO.md](./docs/PRODUTO.md) — visão de produto, personas, princípios
+- [ALGORITHMS.md](./docs/ALGORITHMS.md) — algoritmos, fórmulas, diagramas
+- [API.md](./docs/API.md) — referência de rotas
+
+### Arquitetura (redesign branch)
+- [Master Plan](./docs/redesign/00-MASTER_PLAN.md) — plano de migração
+- [Frontend](./docs/redesign/01-FRONTEND.md) — arquitetura frontend
+- [Backend](./docs/redesign/02-BACKEND.md) — arquitetura backend
+- [Production](./docs/redesign/03-PRODUCTION.md) — DevOps + QA + Security
+
+### Operações
+- [OBSERVABILITY.md](./docs/OBSERVABILITY.md) — Sentry + PostHog + UptimeRobot
+
+### Pesquisa
+- [UX_AUDIT.md](./docs/UX_AUDIT.md) — audit UX + referências internacionais
+- [REBRAND_CANDIDATES.md](./docs/REBRAND_CANDIDATES.md) — 22 nomes alternativos verificados
+- [A11Y_AUDIT.md](./docs/redesign/A11Y_AUDIT.md) — auditoria de acessibilidade
+
+### Time
+- [HANDOFF_TIME_TERA.md](./docs/HANDOFF_TIME_TERA.md) — documento de transparência pro time
 
 ---
 
@@ -430,7 +498,7 @@ Fernanda Alves · Bianca Matos · Cicero Janiel · Caroline Guilmo · Jonatan Ja
 
 <div align="center">
 
-**CareerTwin AI** — copiloto de empregabilidade em pt-BR ·
+**CareerTwin AI** — plataforma de gestão de carreira em pt-BR ·
 Built with `Next.js 14` + `Anthropic Claude` + `Postgres` + ☕
 
 </div>

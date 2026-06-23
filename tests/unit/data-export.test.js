@@ -9,6 +9,8 @@ vi.mock("@/lib/db", () => {
     consent: { findMany: vi.fn() },
     dataSource: { findMany: vi.fn() },
     tailoredCv: { findMany: vi.fn() },
+    assessmentResult: { findMany: vi.fn() },
+    evidence: { findMany: vi.fn() },
   };
   return { prisma: mock };
 });
@@ -30,6 +32,8 @@ describe("exportUserData", () => {
     prisma.consent.findMany.mockResolvedValue([]);
     prisma.dataSource.findMany.mockResolvedValue([]);
     prisma.tailoredCv.findMany.mockResolvedValue([]);
+    prisma.assessmentResult.findMany.mockResolvedValue([]);
+    prisma.evidence.findMany.mockResolvedValue([]);
 
     const data = await exportUserData("u1");
 
@@ -49,10 +53,18 @@ describe("exportUserData", () => {
     expect(prisma.tailoredCv.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: "u1" } })
     );
+    expect(prisma.assessmentResult.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "u1" } })
+    );
+    expect(prisma.evidence.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: "u1" } })
+    );
 
     expect(data.user.id).toBe("u1");
     expect(data.version).toBe("1");
     expect(typeof data.exportedAt).toBe("string");
+    expect(Array.isArray(data.assessments)).toBe(true);
+    expect(Array.isArray(data.evidence)).toBe(true);
   });
 
   it("recusa userId vazio", async () => {

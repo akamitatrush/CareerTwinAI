@@ -35,6 +35,8 @@ model User {
   applications  Application[]
   tailoredCvs   TailoredCv[]
   notifications Notification[]
+  assessments   AssessmentResult[]
+  evidence      Evidence[]
 }
 
 model Account {
@@ -272,6 +274,64 @@ enum NotificationKind {
   DIGEST_SENT
   APPLICATION_STATUS
   WELCOME
+}
+
+// Resultado de mini-assessments de autoconhecimento (DISC-lite, Valores, Ikigai).
+// scoresJson tem shape livre por tipo (ver lib/assessments/definitions.js).
+// USO INFORMACIONAL — nao sao diagnosticos clinicos. Cascade no userId leva tudo
+// junto em "apagar minha conta". Indice composto pra buscar o resultado mais
+// recente por kind por user (groupBy/findFirst com orderBy).
+model AssessmentResult {
+  id          String         @id @default(cuid())
+  userId      String
+  kind        AssessmentKind
+  scoresJson  Json
+  insights    String?        @db.Text
+  completedAt DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, completedAt])
+}
+
+enum AssessmentKind {
+  DISC_LITE
+  VALORES
+  IKIGAI
+}
+
+// Evidencias de competencia — usuario DEMONSTRA skills (nao so declara) com
+// cases/projetos/metricas. Cada Evidence vincula um conjunto de skills (mesma
+// sintaxe de Profile.skills) a uma narrativa concreta com URL/periodo/metrica
+// opcionais. Skills-first: recrutador acredita em evidencia especifica, nao
+// em declaracao generica. Cascade no userId pra "apagar minha conta" levar
+// junto. Indice (userId,createdAt) atende a listagem ordenada cronologicamente.
+model Evidence {
+  id          String       @id @default(cuid())
+  userId      String
+  kind        EvidenceKind
+  title       String
+  description String       @db.Text
+  skills      String[]     @default([])
+  metricLabel String?
+  metricValue String?
+  url         String?
+  whenLabel   String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+enum EvidenceKind {
+  PROJECT
+  CASE
+  PUBLICATION
+  CERTIFICATION
+  AWARD
+  CONTRIBUTION
 }
 
 // Historico de CVs adaptados pra vagas especificas. Cada chamada a /api/tailor

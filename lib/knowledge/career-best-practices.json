@@ -1,0 +1,242 @@
+[
+  {
+    "id": "cv-bullet-method-car",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Metodo CAR: Contexto, Acao, Resultado. Cada bullet do CV deve seguir: situacao enfrentada, o que voce fez especificamente, e qual resultado mensuravel saiu disso. Evite verbos genericos como 'auxiliei', 'participei'. Use 'liderei', 'reduzi', 'aumentei', 'implementei'. Sempre que possivel, numeros: '40% reducao', '3x throughput', 'R$ 200k economia'.",
+    "source": "Bianca Silva Matos, mentoria de carreira BR 2025",
+    "tags": ["metodo", "estrutura", "bullets", "resultado", "metricas", "verbos", "curriculo"]
+  },
+  {
+    "id": "cv-ats-friendly-format",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "CV ATS-friendly: use formato simples de uma coluna, fontes padrao (Arial, Calibri, Helvetica), evite tabelas, caixas de texto, headers/footers e graficos. ATS le top-to-bottom; layout criativo quebra parse. Use secoes nomeadas explicitamente: 'Experiencia Profissional', 'Formacao', 'Habilidades'. Salve em PDF text-based (nao escaneado).",
+    "source": "Jobscan + Ladders ATS Study 2024",
+    "tags": ["ats", "formato", "pdf", "scanability", "layout", "curriculo"]
+  },
+  {
+    "id": "cv-keywords-matching",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Keywords da vaga devem aparecer no CV exatamente como no anuncio (singular vs plural, sigla vs nome completo). Se a vaga pede 'SQL' e voce escreve so 'banco de dados relacional', ATS nao casa. Espalhe keywords em contexto real (bullets de experiencia), nao em lista separada de 'palavras-chave' — recrutador humano percebe stuffing. Faca match de 60-80% das keywords listadas.",
+    "source": "best practice mercado BR + Jobscan benchmark",
+    "tags": ["keywords", "ats", "match", "vaga", "tailoring", "curriculo"]
+  },
+  {
+    "id": "cv-hierarchy-recency",
+    "topic": "cv",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Ordem cronologica reversa: experiencia mais recente primeiro. Dedique mais espaco (3-5 bullets) pras ultimas 2 posicoes; experiencias com mais de 10 anos podem virar uma linha. Coloque resultados quantitativos no topo de cada cargo (primeiro bullet = maior impacto). Recrutador da scan de 6-10 segundos: o que importa precisa estar nos primeiros 30% da folha.",
+    "source": "Lou Adler, Hire With Your Head + adaptacao BR",
+    "tags": ["estrutura", "hierarquia", "ordem", "recencia", "scan", "curriculo"]
+  },
+  {
+    "id": "cv-length-optimal",
+    "topic": "cv",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Comprimento ideal do CV no Brasil: 1 pagina pra ate 5 anos de experiencia; 2 paginas pra senior/lead/diretor (max 15 anos relevantes); raramente 3+ paginas (so academico ou C-level com publicacoes). Cortar = priorizar. Se nao cabe em 2, voce nao filtrou bem. Resumo profissional no topo (3-4 linhas) substitui carta de apresentacao.",
+    "source": "best practice mercado BR 2025",
+    "tags": ["tamanho", "paginas", "resumo", "filtragem", "curriculo"]
+  },
+  {
+    "id": "linkedin-headline-formula",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Formula de headline LinkedIn: [Cargo atual] | [Especializacao/stack] | [Diferencial ou foco]. Ex: 'Engenheiro de Dados Senior | Python, Airflow, dbt | Pipelines escalaveis em fintechs'. Evite buzzwords vazios ('apaixonado por inovacao'). Headline e o que recrutador ve no resultado de busca — 220 caracteres pra ser achavel e diferenciado.",
+    "source": "LinkedIn Talent Solutions Brasil 2024",
+    "tags": ["headline", "titulo", "formula", "buscavel", "diferenciacao"]
+  },
+  {
+    "id": "linkedin-about-storytelling",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Secao 'Sobre' do LinkedIn em primeira pessoa, 3-5 paragrafos curtos. Estrutura: 1) o que voce faz hoje em uma frase, 2) tres conquistas concretas com numero, 3) o que te diferencia tecnicamente, 4) o que voce procura ou esta aberto, 5) call-to-action (email, link projeto). Primeiras 3 linhas aparecem antes do 'ver mais' — comece forte. Use keywords da area pra busca por recrutador.",
+    "source": "Reid Hoffman / LinkedIn playbook + Bianca Silva Matos",
+    "tags": ["sobre", "storytelling", "narrativa", "first-person", "cta", "perfil"]
+  },
+  {
+    "id": "linkedin-keywords-discoverability",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "LinkedIn search ranking usa keywords em: headline, titulo de cargo, descricao, skills (max 50), recomendacoes e atividade. Skills sao o sinal mais forte — pin 3 prioritarias no topo. Recrutador filtra por skill antes de abrir perfil. Use termos canonicos do mercado ('Product Manager' nao 'Lider de Inovacao'). Atualize titulos antigos com terminologia atual.",
+    "source": "LinkedIn Algorithm Notes 2024",
+    "tags": ["keywords", "skills", "busca", "discoverability", "ranking", "perfil"]
+  },
+  {
+    "id": "linkedin-recommendations-strategy",
+    "topic": "linkedin",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Pelo menos 3 recomendacoes ativas no LinkedIn (alvo: 5-10). Peca pra: 1 chefe direto recente, 1 par/colega, 1 subordinado se aplicavel. Texto da peticao deve sugerir 1-2 entregas especificas pro recomendador lembrar — generico vira recomendacao generica. Retribua: ofereca escrever uma de volta. Recomendacoes pesam mais que endorsements (clicks vazios).",
+    "source": "best practice mercado BR + linkedin coaches",
+    "tags": ["recomendacoes", "network", "social-proof", "endorsements", "perfil"]
+  },
+  {
+    "id": "linkedin-activity-engagement",
+    "topic": "linkedin",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Atividade no LinkedIn (posts, comentarios) aumenta visibilidade no algoritmo e mostra que voce esta vivo na area. 1-2 posts curtos por mes ja diferencia. Topicos que funcionam: licao aprendida em projeto, opiniao tecnica fundamentada, indicacao de conteudo com seu take. Evite repostar virais, vagas alheias sem contexto, ou auto-elogio. Comentar posts de referencias na area gera mais visibilidade que postar.",
+    "source": "LinkedIn Creator Insights BR 2024",
+    "tags": ["atividade", "post", "engajamento", "algoritmo", "visibilidade", "perfil"]
+  },
+  {
+    "id": "interview-star-framework",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Metodo STAR: Situacao, Tarefa, Acao, Resultado. Em entrevistas comportamentais, cada resposta deve mapear esses 4 elementos. Situacao: contexto factual breve. Tarefa: o que precisava ser resolvido. Acao: o que VOCE fez (nao o time). Resultado: impacto mensuravel. Evite respostas hipoteticas ou genericas — recrutador quer evidencia especifica.",
+    "source": "Amazon Leadership Principles + adaptacao BR",
+    "tags": ["entrevista", "comportamental", "star", "narrativa", "framework"]
+  },
+  {
+    "id": "interview-behavioral-prep",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Prepare 5-7 historias 'curinga' (situacoes reais com inicio, meio, fim) que cubram: lideranca, conflito, fracasso e aprendizado, decisao com dado incompleto, conquista de impacto. Cada historia precisa de 2-3 minutos de narracao confortavel. Em entrevista, recombine elementos das historias pra responder perguntas diferentes. Decore a primeira frase de cada — ela ancora o resto.",
+    "source": "Decode and Conquer, Lewis Lin + adaptacao BR",
+    "tags": ["entrevista", "comportamental", "preparacao", "historias", "narrativa"]
+  },
+  {
+    "id": "interview-technical-loud",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior"],
+    "content": "Em entrevista tecnica (code/system design), 'pense alto' — verbalize hipoteses, trade-offs, opcoes que voce descartou. Entrevistador avalia raciocinio, nao so resposta final. Comece restringindo o problema ('posso assumir que X?'). Quando travar, diga o que esta tentando, nao silencie por 3 minutos. Erro tecnico explicado bem > resposta perfeita silenciosa.",
+    "source": "Steve Yegge interview anti-patterns + adaptacao",
+    "tags": ["entrevista", "tecnica", "code", "system-design", "raciocinio", "pensar-alto"]
+  },
+  {
+    "id": "interview-salary-question",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Quando perguntado sobre pretensao salarial na primeira entrevista, prefira devolver: 'Qual a faixa orcada pra essa posicao?'. Se insistirem, de uma faixa larga (variancia 25-30%) baseada em pesquisa de mercado, ancorando NO ALTO da faixa. Nunca de um numero exato. Razao: ancoragem psicologica favorece quem joga primeiro. Se voce ancorar baixo, sera oferecido baixo. Faixa larga preserva flexibilidade.",
+    "source": "Never Split the Difference, Chris Voss + Glassdoor BR data",
+    "tags": ["salario", "negociacao", "ancoragem", "pretensao", "entrevista"]
+  },
+  {
+    "id": "interview-questions-for-recruiter",
+    "topic": "interview",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "No final da entrevista, sempre faca 2-3 perguntas. Boas perguntas: 'Como e medido sucesso nessa posicao nos primeiros 6 meses?', 'Qual o maior desafio que a area enfrenta hoje?', 'Como e o ciclo de feedback do time?'. Evite: salario, ferias, beneficio na 1a rodada — soa transacional. Boas perguntas mostram que voce avalia ajuste mutuo, nao so quer o emprego.",
+    "source": "Ask The Headhunter, Nick Corcodilos + adaptacao BR",
+    "tags": ["entrevista", "perguntas", "recrutador", "ajuste", "final"]
+  },
+  {
+    "id": "transition-narrative-bridge",
+    "topic": "transition",
+    "audience": ["transition", "pleno", "senior"],
+    "content": "Narrativa de transicao precisa de 3 ingredientes: 1) o porque (motivacao real, nao 'busco novos desafios'), 2) a ponte (skills transferiveis com exemplo concreto), 3) a evidencia (curso, projeto, freela, comunidade). Sem ponte, parece capricho; sem evidencia, parece nao-comprometido. 'Sai de TI pra Produto: ja fazia priorizacao com PM no ultimo time, fiz curso XP&Co + dois projetos como PM voluntario na ONG Y'.",
+    "source": "Carolina Manfrinato, So Coragem + transition coaches BR",
+    "tags": ["transicao", "narrativa", "ponte", "evidencia", "motivacao", "story"]
+  },
+  {
+    "id": "transition-transferable-skills",
+    "topic": "transition",
+    "audience": ["transition", "pleno", "senior"],
+    "content": "Skills transferiveis = habilidades que vao com voce entre areas. Mais valiosas em transicao: analise de dado (SQL/Excel), comunicacao escrita, gestao de stakeholder, priorizacao, didatica, ingles. Mapeie suas top 5 transferiveis ANTES de aplicar; ancore cada bullet do CV de transicao em uma delas. Recrutador olha gap obvio (falta skill X); voce contra-ataca com transferiveis aplicaveis a X.",
+    "source": "Designing Your Life, Bill Burnett + carreira BR",
+    "tags": ["transicao", "transferiveis", "skills", "gap-bridging", "ancora"]
+  },
+  {
+    "id": "transition-portfolio-evidence",
+    "topic": "transition",
+    "audience": ["transition"],
+    "content": "Em transicao de carreira, evidencia bate diploma. Construa portfolio publico de 2-3 projetos relevantes pra area nova antes de aplicar. Pra produto: case studies de produto refeito. Pra dados: kaggle + dashboards publicos. Pra dev: 1-2 apps deployados com codigo no GitHub e README de qualidade. Sem portfolio em transicao, o ATS te corta automaticamente. Recrutador precisa de algo concreto pra defender voce internamente.",
+    "source": "Cassidy Williams transition advice + adaptacao BR",
+    "tags": ["transicao", "portfolio", "evidencia", "github", "kaggle", "case-study"]
+  },
+  {
+    "id": "transition-network-warm-intro",
+    "topic": "transition",
+    "audience": ["transition", "pleno", "senior"],
+    "content": "Em transicao, 70-80% das vagas vem por indicacao. Lista 30 pessoas: gente da area nova que voce conhece. Faca 'coffee chat' (15min, sem pedir vaga) com 5 por mes pra entender o mercado e ser lembrado quando aparecer vaga. Pergunta-chave: 'O que voce gostaria de ter sabido quando entrou em [area]?'. Conversas viram indicacoes em 3-6 meses. Aplicacao fria sem network em transicao = taxa de resposta < 2%.",
+    "source": "The 2-Hour Job Search, Steve Dalton + BR network coaches",
+    "tags": ["transicao", "network", "indicacao", "coffee-chat", "warm-intro"]
+  },
+  {
+    "id": "transition-rebrand-online",
+    "topic": "transition",
+    "audience": ["transition"],
+    "content": "Em transicao, rebrand online antes de aplicar. LinkedIn headline e sobre devem refletir o cargo-alvo (nao o atual). Adicione 'open to' com palavras-chave da area nova. Mude 2-3 skills antigas por 3-5 novas relevantes. Recomendacoes que falem da aplicabilidade ao novo dominio. Se headline ainda diz 'Especialista X' mas voce quer 'Y', algoritmo nao te indexa pra busca de Y. Rebrand leva 2-4 semanas pra LinkedIn re-indexar.",
+    "source": "LinkedIn + transition consultants BR 2025",
+    "tags": ["transicao", "rebrand", "linkedin", "headline", "open-to", "perfil"]
+  },
+  {
+    "id": "salary-market-research",
+    "topic": "salary",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Faixa salarial: NUNCA chegue em entrevista sem pesquisar. Fontes BR: Glassdoor, Levels.fyi (tech), Catho, Vagas.com, levantamentos de comunidades (Tera, Alura, Reprograma). Triangule pelo menos 3 fontes pra mesmo cargo/senioridade/regiao. Cidade pesa: SP/RJ ~+15% vs interior; remoto pra fora do BR pode ser 2-3x. Inclua beneficios (PLR, ferias estendidas, stock) na conta total — salario base nao e tudo.",
+    "source": "Glassdoor + Levels.fyi + comunidades BR",
+    "tags": ["salario", "pesquisa", "mercado", "faixa", "fontes", "regiao"]
+  },
+  {
+    "id": "salary-negotiation-framework",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "lead", "transition"],
+    "content": "Negociacao: nunca aceite na hora. Peca 24-48h pra pensar mesmo se for sim. Quando negociar, ancore alto (5-15% acima do que querer) com justificativa concreta (responsabilidades extras, mercado, conta dependentes, etc). Use silencio depois da contra-oferta — desconforto trabalha a seu favor. Negocie o pacote, nao so o base: signing bonus, ferias, equipamento, treinamento, equity, data de inicio.",
+    "source": "Never Split the Difference + Chris Voss + Carlota Pereira BR",
+    "tags": ["salario", "negociacao", "ancoragem", "pacote", "silencio", "contraproposta"]
+  },
+  {
+    "id": "salary-counter-offer",
+    "topic": "salary",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Contraproposta da empresa atual quando voce pede pra sair: cuidado. ~50% dos que aceitam contraproposta saem em 12 meses (o motivo nao era so dinheiro). Use o convite externo como leverage so se voce esta REALMENTE disposto a ficar mediante mudancas estruturais (projeto, gestor, escopo) — nao so dinheiro. Se motivo e ambiente, dinheiro nao resolve. Tome a decisao racional, nao reativa.",
+    "source": "Harvard Business Review counter-offer research + carreira BR",
+    "tags": ["salario", "contraproposta", "retencao", "leverage", "decisao"]
+  },
+  {
+    "id": "soft-communication-clarity",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Comunicacao escrita > falada em ambiente remoto/hibrido. Pratica que diferencia: comece email/mensagem com a conclusao (BLUF: Bottom Line Up Front), depois contexto. 'Precisamos atrasar o lancamento pra dia 15. Razao: bug critico no checkout. Plano: hotfix ate dia 10, QA 11-14.' Ninguem tem tempo de ler 4 paragrafos pra chegar no pedido. Em call: 'Tenho 2 itens: 1) X, 2) Y' — anuncia estrutura.",
+    "source": "Amazon writing culture (BLUF) + adaptacao remoto BR",
+    "tags": ["comunicacao", "escrita", "bluf", "clareza", "remoto", "soft"]
+  },
+  {
+    "id": "soft-leadership-influence",
+    "topic": "soft-skills",
+    "audience": ["pleno", "senior", "lead"],
+    "content": "Lideranca sem autoridade formal: 'lateral leadership'. Voce ja lidera tecnicamente colegas — capitalize isso no CV. Frases que funcionam: 'mentorei 3 juniors', 'liderei design review semanal', 'levei a discussao tecnica pra arquitetura X'. Demonstre influencia, nao titulo. Recrutador pra senior/lead procura quem ja age como lider antes de ter o cargo. Documente o quanto puder.",
+    "source": "The Manager's Path, Camille Fournier + adaptacao",
+    "tags": ["lideranca", "influencia", "autoridade", "mentor", "soft"]
+  },
+  {
+    "id": "soft-self-awareness-feedback",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "Autoconhecimento de carreira vem de feedback estruturado. Faca 'after-action review' a cada trimestre: 1) o que entreguei?, 2) o que aprendi?, 3) o que preciso melhorar?, 4) o que vou fazer diferente?. Peca feedback ESPECIFICO ('como posso melhorar em apresentacao em call?') em vez de generico ('alguma dica?'). Generico vira resposta vaga. Feedback ruim = pergunta ruim, na maior parte dos casos.",
+    "source": "Radical Candor, Kim Scott + after-action reviews militar US",
+    "tags": ["autoconhecimento", "feedback", "after-action", "especifico", "soft"]
+  },
+  {
+    "id": "soft-resilience-job-search",
+    "topic": "soft-skills",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Busca de emprego e maratona — 80-100 aplicacoes pra fechar oferta em senior BR (Q1-Q2 2025). Cada 'nao' bate diferente. Estrategia: trate como funil estatistico — 100 aplicacoes -> 10 entrevistas iniciais -> 3 finais -> 1 oferta sao numeros normais. Diaria de 5-10 aplicacoes alta-qualidade > 50 spray. Pause 1 dia/semana pra evitar burnout. Conte conquistas por semana ('mandei 30 customizadas') nao por resultado ('nada saiu') — preserva moral.",
+    "source": "best practice mercado BR 2024-2025 + community insights",
+    "tags": ["resiliencia", "funil", "busca", "burnout", "moral", "soft"]
+  },
+  {
+    "id": "ats-keyword-density",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "transition"],
+    "content": "Sistemas ATS (Gupy, Kenoby, Greenhouse, Lever, etc.) fazem parse + match de keywords da vaga vs CV. Score tipico de corte: 60-75%. Pra passar, replique 60-80% dos termos exatos da JD: tools, certificacoes, metodologias, dominio. Cada vaga = um CV. Customizar 5 minutos antes de aplicar dobra taxa de resposta. CV unico generico = taxa de resposta < 5% em vagas competitivas.",
+    "source": "Jobscan ATS benchmark 2024 + Gupy BR data",
+    "tags": ["ats", "keywords", "match", "customizacao", "tailoring", "score"]
+  },
+  {
+    "id": "ats-format-parse-safety",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "lead", "transition"],
+    "content": "ATS-safe format: salve sempre como PDF text-based (Word -> Salvar Como PDF, nao 'Imprimir como PDF' escaneado). Evite: caixa de texto, headers/footers, dois colunas (alguns ATS quebram), graficos pra skills (parse falha), fonts decorativas. Teste: abra seu PDF, selecione tudo (Ctrl+A), cole no Bloco de Notas. Se virou tabuleiro embaralhado, ATS tambem nao vai entender. Versao .doc/.docx tambem aceita; nunca envie imagem (jpg/png).",
+    "source": "Gupy + Lever + Greenhouse parsing docs",
+    "tags": ["ats", "formato", "pdf", "parse", "scan", "teste"]
+  },
+  {
+    "id": "ats-scanability-recruiter-eye",
+    "topic": "ats",
+    "audience": ["junior", "pleno", "senior", "lead"],
+    "content": "Depois do ATS vem o recrutador humano — 6-10 segundos de scan inicial. Estrutura que sobrevive ao scan: nome + headline no topo, resumo de 3 linhas, depois experiencia ordenada por recencia. Bold em palavras-chave (cargo, empresas notorias, conquistas com numero). Bullets curtos (max 2 linhas), comecando com verbo de acao. Espaco em branco e amigo — CV apertado em letra 8 espanta. Recrutador escaneia em 'Z' visual: titulo, ultima posicao, formacao.",
+    "source": "Lou Adler + The Ladders eye-tracking study 2018",
+    "tags": ["ats", "scanability", "recrutador", "scan", "bold", "espacamento"]
+  }
+]

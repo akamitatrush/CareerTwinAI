@@ -412,9 +412,21 @@ Tabela de preços por 1M tokens em `PRICES` (linha 133). Sonnet 4.6: $3 in / $15
 
 ---
 
-## 9. Auth + LGPD architecture
+## 9. RAG-lite (Base de Conhecimento de Carreira)
 
-### 9.1 Auth.js v5
+Sem vector DB nem embeddings API por escolha pragmática (MVP). Knowledge base estruturada em `lib/knowledge/*.json` com ~30 chunks curados de boas práticas de carreira (CV, LinkedIn, entrevista, transição, salário, soft skills, ATS).
+
+Retrieval em `lib/knowledge/retrieval.js`: BM25-lite com keyword tokenization (NFD + lowercase), match contra `content + tags`, boost 1.5x se audience match (junior/pleno/senior/lead/transition). Top 3 chunks por relevância são injetados no prompt do LLM (`promptDiag` em `/api/analyze`, `promptInterviewQuestion` em `/api/interview`).
+
+Cada chunk traz `source` citável — quando LLM usa o contexto, a fonte é parte do output ("[Fonte: Bianca Silva Matos, mentoria BR 2025]"). Princípio: número = cálculo, texto = explicação com fonte.
+
+Quando migrar pra pgvector: substitui `retrieval.js` por query `<->` em coluna `embedding vector(1536)`. Schema do chunk continua compatível.
+
+---
+
+## 10. Auth + LGPD architecture
+
+### 10.1 Auth.js v5
 
 `lib/auth.js` registra providers dinamicamente:
 
@@ -424,7 +436,7 @@ Tabela de preços por 1M tokens em `PRICES` (linha 133). Sonnet 4.6: $3 in / $15
 
 Adapter: `PrismaAdapter(prisma)` mapeia `User`, `Account`, `Session`, `VerificationToken`.
 
-### 9.2 LGPD por construção
+### 10.2 LGPD por construção
 
 **1. Consent por fonte** (`prisma/schema.prisma` model `Consent`):
 
@@ -450,7 +462,7 @@ Hash do **texto** (não bytes binários) — permite, mesmo após o usuário apa
 
 **3. Export portável** (`/api/me/export/route.js` via `lib/data-export.js`): JSON com User + Profile + Snapshots + ApplicationEvents + Consents. Direito de portabilidade LGPD Art. 18 V.
 
-### 9.3 IDOR protection — 2-step query pattern
+### 10.3 IDOR protection — 2-step query pattern
 
 Em endpoints sensíveis com relação N-N indireta (Gaps/PlanItems pendurados em Snapshots → User), usamos **2-step explicit query** em vez de `where: { snapshot: { userId } }` nested.
 
@@ -473,7 +485,7 @@ Para gap individual (`/api/gaps/:id/complete`), o pattern é `ensureOwnership(ga
 
 ---
 
-## 10. Score de candidatura (funil)
+## 11. Score de candidatura (funil)
 
 `ApplicationStatus` enum (schema linha 164):
 
@@ -506,7 +518,7 @@ Indexes: `@@index([userId, status])` (filtro kanban) e `@@index([userId, updated
 
 ---
 
-## 11. Weekly digest cron
+## 12. Weekly digest cron
 
 `POST|GET /api/cron/digest` (`app/api/cron/digest/route.js`):
 
@@ -527,7 +539,7 @@ Cron Vercel agendado em `vercel.json` pra segunda 12:00 UTC (09:00 BRT).
 
 ---
 
-## 12. Performance budgets
+## 13. Performance budgets
 
 | Métrica | Budget |
 |---|---|
@@ -541,7 +553,7 @@ Cache de jobs 10min (em memória) absorve picos de re-render. Snapshot do dashbo
 
 ---
 
-## 13. Limitações conhecidas e roadmap
+## 14. Limitações conhecidas e roadmap
 
 - **Mediana de contratados é stub**: `lib/metrics/median-stub.js` exporta `HIRED_MEDIAN` constante. Precisa dataset BR (parcerias com bootcamps/headhunters).
 - **`experiencia_mercado` regex frágil**: falha com CVs sem datas explícitas no formato `MM/AAAA`. Fallback heurístico ruim.
@@ -591,6 +603,8 @@ Cache de jobs 10min (em memória) absorve picos de re-render. Snapshot do dashbo
 - `lib/jobs/providers/adzuna.js`, `jooble.js`, `greenhouse.js`, `lever.js`, `fixtures.js`
 - `lib/jobs/cache.js` — TTL cache
 - `lib/prompts.js` — todos os prompts LLM com sanitização
+- `lib/knowledge/career-best-practices.json` — ~30 chunks curados (CV, LinkedIn, entrevista, transição, salário, soft, ATS)
+- `lib/knowledge/retrieval.js` — `retrieveKnowledge`, `formatAsContext`, `getAllTopics` (RAG-lite)
 - `lib/llm.js` — `completeJSON`, retry, timeout, cost logging
 - `lib/rate-limit.js` — `checkLimit`, `guardLLM`, `tooMany`
 - `lib/pdf.js`, `lib/docx.js` — parsing defensivo

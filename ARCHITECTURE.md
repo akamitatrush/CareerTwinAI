@@ -1,18 +1,25 @@
 # Arquitetura — CareerTwin AI
 
-Copiloto de carreira em pt-BR. MVP funcional sobre Next.js 14 (App Router), focado em
-diagnostico de empregabilidade, plano de acao e tracking de candidaturas.
+Plataforma de gestao de carreira em pt-BR. MVP funcional sobre Next.js 14 (App Router),
+organizado em 4 pilares: **Autoconhecimento, Diagnostico, Acao e Oportunidade**. Da
+identidade ate a contratacao, com auditabilidade radical e LGPD por construcao.
 
 ## Stack
 
-- **App**: Next.js 14 (App Router, RSC), React 18, JS puro.
+- **App**: Next.js 14 (App Router, RSC), React 18, JS puro. Claude Design System (Plus
+  Jakarta Sans + Spectral, paleta Indigo Sereno).
 - **Banco**: PostgreSQL via Prisma 6.
 - **Auth**: Auth.js v5 (magic link Email + LinkedIn OIDC opcional; CredentialsProvider em dev).
-- **LLM**: Anthropic Claude (saidas estruturadas validadas com Zod).
-- **Vagas**: agregador Adzuna + Jooble + Greenhouse (fallback em fixtures).
+- **LLM**: Anthropic Claude (saidas estruturadas validadas com Zod). LLM gera apenas
+  explicacoes — valores sao calculados deterministicamente em codigo.
+- **Vagas**: agregador 6 providers — Adzuna BR + Jooble + Greenhouse + Lever + Ashby +
+  Workable (fallback em fixtures).
 - **Email**: Resend (prod) com fallback SMTP / Mailpit (dev) via Nodemailer.
 - **Parsing**: pdf-parse (CV em PDF), Zod (entrada e saida).
-- **Testes**: Vitest (unit) + Playwright (e2e).
+- **Knowledge**: RAG-lite com keyword retrieval BM25-like contra knowledge base JSON
+  (`lib/knowledge/`); fontes curadas pra cursos sugeridos.
+- **Observabilidade**: Sentry (errors), PostHog (eventos), UptimeRobot (`/api/health`).
+- **Testes**: Vitest (unit, 200+ casos) + Playwright (e2e, 5 specs).
 
 ## Diagrama (alto nivel)
 
@@ -28,30 +35,61 @@ diagnostico de empregabilidade, plano de acao e tracking de candidaturas.
         |                  |                    |                |
         v                  v                    v                v
   +-----------+     +-------------+     +---------------+   +---------+
-  | Anthropic |     | PostgreSQL  |     | Adzuna/Jooble |   | Resend  |
-  | (Claude)  |     | (Prisma)    |     | / Greenhouse  |   | / SMTP  |
+  | Anthropic |     | PostgreSQL  |     | 6 ATS Provs.  |   | Resend  |
+  | (Claude)  |     | (Prisma)    |     | Adzuna/Jooble |   | / SMTP  |
+  |           |     |             |     | Greenhouse    |   |         |
+  |           |     |             |     | Lever/Ashby   |   |         |
+  |           |     |             |     | Workable      |   |         |
   +-----------+     +-------------+     +---------------+   +---------+
 ```
+
+## 4 Pilares
+
+A aplicacao se organiza em 4 pilares (de identidade a contratacao):
+
+1. **Autoconhecimento** (`/autoconhecimento`) — 3 mini-assessments (DISC-lite, Valores,
+   Ikigai). Persistidos em `AssessmentResult`. Disclaimer etico em todas as telas.
+2. **Diagnostico** (`/dashboard`, `/transparencia`) — Career Health Score (0-100) com 4
+   sub-scores 100% deterministicos em `lib/scoring/subscores.js`. LLM gera apenas
+   explicacoes (nunca valores).
+3. **Acao** (`/gaps`, `/evidencias`, `/cvs-adaptados`) — Skill Gap Mapper com microactions
+   + cursos sugeridos via RAG-lite; evidencias de competencia; CVs adaptados com diff.
+4. **Oportunidade** (`/oportunidades`, `/candidaturas`) — Radar de vagas (6 providers) com
+   match matematico explicado; kanban de candidaturas com timeline auditavel.
 
 ## Estrutura de pastas
 
 ```
-app/                    rotas (RSC + API)
-  api/                  endpoints (/analyze, /opportunities, /applications, /linkedin, /portfolio, /cron/digest, /upload-cv ...)
-  candidaturas/         kanban de candidaturas
-  meu-gemeo/            diagnostico + historico de score
+app/                    rotas (RSC + API) — 12 telas auth + 5 publicas
+  api/                  endpoints (/analyze, /opportunities, /assessments/[kind],
+                        /evidence, /tailored-cvs, /gaps, /courses, /applications,
+                        /linkedin, /portfolio, /cron/digest, /upload-cv, /health ...)
+  dashboard/            Career Health + sub-scores + proximas acoes
+  autoconhecimento/     3 assessments (DISC-lite, Valores, Ikigai)
+  gaps/                 Skill Gap Mapper + microactions + cursos sugeridos
+  oportunidades/        Radar de vagas + match breakdown
+  cvs-adaptados/        Historico de CVs adaptados (diff antes/depois)
+  evidencias/           Evidencias de competencia (projetos, cases, metricas)
+  candidaturas/         Kanban + funil de conversao
+  transparencia/        Formula auditavel + sources + LGPD
+  conta/                Perfil + cargo-alvo + stats
   meus-dados/           LGPD (ver, exportar, apagar)
-components/             UI compartilhada
+components/             UI compartilhada (AppShell, NotificationBell, modais...)
 lib/
-  jobs/                 providers (adzuna, jooble, greenhouse) + cache + types
-  validators.js         Zod schemas (body de rota + shape de LLM)
-  llm.js                wrapper do Claude (retry, sanitizacao)
+  jobs/                 6 providers (adzuna, jooble, greenhouse, lever, ashby,
+                        workable) + cache + fixtures fallback
+  knowledge/            RAG-lite: retrieval + course-retrieval + JSON knowledge base
+  scoring/              subscores deterministicos (TF-like, count/validity/diversity,
+                        completude, year-range)
+  metrics/              completeness.js (weighted field-presence)
+  validators.js         Zod schemas (60+ schemas; body + shape de LLM)
+  llm.js                wrapper Anthropic/OpenAI (retry, sanitizacao, cost log)
   email.js              digest semanal (Resend ou SMTP)
   rate-limit.js         throttle por user/IP
-  score.js, pdf.js, prompts.js, db.js, auth.js
+  score.js, pdf.js, prompts.js, db.js, auth.js, data-export.js
 prisma/schema.prisma    modelo de dados
-tests/unit/             Vitest
-tests/e2e/              Playwright
+tests/unit/             Vitest (200+ casos)
+tests/e2e/              Playwright (5 specs)
 ```
 
 ## Modelos Prisma principais
@@ -60,37 +98,61 @@ tests/e2e/              Playwright
 - **Profile** — perfil 1:1 com User; CV bruto, JSON do LinkedIn, GitHub, portfolio.
 - **ScoreSnapshot** — diagnostico imutavel por momento (overall + sub-scores + perfil JSON).
 - **Gap** — habilidade faltante por snapshot (com microacao e impacto estimado).
-- **PlanItem** — item do plano de 6 semanas por snapshot (pendente/feita).
+- **PlanItem** — item do plano por snapshot (pendente/feita).
+- **AssessmentResult** — resultado de assessment (kind: DISC_LITE | VALUES | IKIGAI;
+  answers + result em JSON).
+- **Evidence** — evidencia de competencia (kind, title, description, url; demonstrar
+  competencia em vez de declarar).
+- **TailoredCv** — CV adaptado por vaga (jobTitle, company, adaptedCv text, diff JSON).
 - **Application** — candidatura salva no kanban (status enum, notas, salario, source).
 - **ApplicationEvent** — historico de transicao de status (audit trail).
-- **Consent** — registro LGPD de cada fonte de dado consentida.
+- **Consent** — registro LGPD de cada fonte de dado consentida (payloadHash SHA256).
 - **DataSource** — metadados de ingestao (rotulo, tamanho, kind).
 
 ## Fluxos-chave
 
 1. **Diagnostico** — usuario cola CV ou faz upload de PDF; rota `/api/analyze` valida com Zod
-   (`AnalyzeBody`), chama o LLM, valida o shape de volta (`DiagShape`), persiste `ScoreSnapshot`
-   + `Gap[]` + `PlanItem[]` se logado, ou retorna apenas em memoria se anonimo.
-2. **Importacao** — `/api/linkedin/parse` recebe texto colado (~120-60k chars), gera CV
-   consolidado e estrutura de perfil; `/api/portfolio/import` extrai stack/projetos do GitHub
-   ou de uma URL pessoal. Ambos passam por Zod no body e na saida do LLM.
-3. **Tracking** — usuario salva vaga (`POST /api/applications`), arrasta entre colunas
+   (`AnalyzeBody`), chama o LLM, valida o shape de volta (`DiagShape`); **sub-scores sao
+   calculados em codigo deterministico** (`lib/scoring/subscores.js`), nao pelo LLM.
+   Persiste `ScoreSnapshot` + `Gap[]` + `PlanItem[]` se logado, ou retorna apenas em
+   memoria se anonimo.
+2. **Autoconhecimento** — `/api/assessments/[kind]` (GET retorna progresso, POST persiste
+   respostas + resultado). 3 kinds: DISC_LITE, VALUES, IKIGAI. Disclaimer etico em todas
+   as telas pra deixar claro que nao substitui avaliacao psicometrica clinica.
+3. **Skill Gap + Cursos** — `/api/gaps/summary` consolida gaps por snapshot; `/api/courses`
+   usa **RAG-lite** (`lib/knowledge/course-retrieval.js`) com skill-keyed lookup + boost
+   pra cursos gratuitos contra knowledge base JSON curada.
+4. **Importacao** — `/api/linkedin/parse` recebe texto colado, gera CV consolidado +
+   estrutura de perfil; `/api/portfolio/import` extrai stack/projetos do GitHub ou de uma
+   URL pessoal (com anti-SSRF). Ambos passam por Zod no body e na saida do LLM.
+5. **Vagas (6 providers)** — `lib/jobs/index.js` busca em paralelo Adzuna BR, Jooble,
+   Greenhouse, Lever, Ashby e Workable (`Promise.allSettled` fail-soft, dedupe + cache
+   TTL 10min). Match calculado por intersecao normalizada de skills.
+6. **CVs adaptados** — `/api/tailor` recebe CV + vaga, retorna CV adaptado com diff
+   antes/depois (campo `diff` JSON em `TailoredCv` pra visualizacao).
+7. **Tracking** — usuario salva vaga (`POST /api/applications`), arrasta entre colunas
    (`PATCH /api/applications/:id`); cada transicao grava `ApplicationEvent` (audit).
-4. **Monitoramento** — `GET /api/cron/digest` (com `CRON_SECRET`) percorre usuarios com
+8. **Monitoramento** — `GET /api/cron/digest` (com `CRON_SECRET`) percorre usuarios com
    `digestEnabled=true` e `targetRole`, busca novas vagas via `lib/jobs`, renderiza HTML em
    `lib/email.js` e dispara via Resend; marca `lastDigestAt` pra nao reenviar na semana.
+9. **Health check** — `GET /api/health` retorna `{status, db, time}` pra UptimeRobot.
 
 ## Seguranca
 
 Toda rota usa Zod com `.strict()` para impedir mass-assignment (ex.: `userId` no body), e as
 saidas do LLM passam por shapes Zod (`.strip()` quando precisa tolerar campos extras sem
 deixa-los persistir). Queries Prisma sempre filtram por `userId` da sessao, nunca aceitam
-ID de dono vindo do cliente. Rate-limit em memoria (`lib/rate-limit.js`) protege rotas
-caras (LLM, jobs, upload). CSP com nonce em `middleware.js`. Uploads de PDF tem teto de
-tamanho, sniffing de magic bytes, e o texto extraido passa por validacao antes do LLM.
-System prompts ficam isolados do user content para mitigar prompt injection (OWASP LLM01).
-Consentimentos LGPD sao registrados em `Consent`, e `/meus-dados` permite exportar e
-apagar tudo (cascade em `User`).
+ID de dono vindo do cliente — **2-step query pattern** evita IDOR (busca `snapshotIds` da
+sessao, depois filtra `IN`; retorna 404 nao 403 pra evitar enumeration). Rate-limit em
+memoria (`lib/rate-limit.js`) protege rotas caras (LLM, jobs, upload). CSP em
+`middleware.js` (`self` + `unsafe-inline` pragmatica em Next 14). Uploads de PDF tem teto
+de tamanho, sniffing de magic bytes (PDF, DOCX, DOC legacy), e o texto extraido passa por
+validacao antes do LLM. System prompts ficam isolados do user content para mitigar prompt
+injection (OWASP LLM01). Portfolio import tem anti-SSRF (bloqueia IPs privados, CGNAT,
+link-local, `.local`/`.internal`). Cron usa `safeCompare` constant-time + header-only.
+Consentimentos LGPD sao registrados em `Consent` com `payloadHash` SHA256, e `/meus-dados`
+permite exportar (inclui assessments + evidence + tailoredCvs) e apagar tudo (cascade em
+`User`).
 
 ## Observabilidade (v0.5)
 
@@ -146,7 +208,7 @@ recomendadas, em ordem de preferencia:
 
 GitHub Actions roda dois workflows em `.github/workflows/`:
 
-- **`ci.yml`** — `npm ci` + `npx prisma generate` + `npm test` (vitest, 112 testes) a cada
+- **`ci.yml`** — `npm ci` + `npx prisma generate` + `npm test` (vitest, 200+ testes) a cada
   push em `main` e em todo PR pra `main`. Bloqueante.
 - **`e2e.yml`** — Playwright contra Postgres em service container. Roda em push pra `main`
   e em PRs *com a label `e2e`* (opt-in pra nao gastar minutos do Actions). Requer secret

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { searchJobs } from "@/lib/jobs";
 import { extractSkills } from "@/lib/skills-taxonomy";
+import { suggestCoursesForGaps } from "@/lib/knowledge/course-retrieval";
 import MicroactionCard from "./MicroactionCard";
 
 // Render dinâmico: auth() (cookies) + Prisma + chamada a provedores externos
@@ -158,6 +159,8 @@ export default async function GapsPage() {
 
       <MicroactionsSection snapshot={data.latestSnapshot} />
 
+      <CourseSuggestionsSection snapshot={data.latestSnapshot} />
+
       {data.noTarget ? (
         <NoTargetState />
       ) : data.summary.totalJobs === 0 ? (
@@ -206,6 +209,65 @@ function MicroactionsSection({ snapshot }) {
         ))}
       </div>
     </div>
+  );
+}
+
+// Fecha o item #3 do Canvas MVP (Skill Gap Mapper completo): alem de
+// identificar e priorizar, sugere cursos REAIS pra cada lacuna do snapshot.
+// Renderiza so se houver gaps no snapshot E pelo menos um deles bater com o
+// catalogo curado em lib/knowledge/courses.json. Sem gaps = sem secao.
+//
+// Decisao de SSR (nao client fetch ao /api/gaps/courses):
+//  - Catalogo eh estatico, sem chamada externa, sem custo.
+//  - Render no servidor evita flicker e melhora LCP da pagina.
+//  - O endpoint /api/gaps/courses ainda existe pra consumidores futuros
+//    (mobile, chat, etc.) — nao foi desperdicio criar.
+function CourseSuggestionsSection({ snapshot }) {
+  if (!snapshot || !Array.isArray(snapshot.gaps) || snapshot.gaps.length === 0) {
+    return null;
+  }
+  const coursesBySkill = suggestCoursesForGaps(snapshot.gaps);
+  const entries = Object.entries(coursesBySkill);
+  if (entries.length === 0) return null;
+
+  return (
+    <section style={{ marginTop: 32, marginBottom: 26 }}>
+      <h2 className="ct-section-title">
+        Cursos sugeridos pra fechar essas lacunas
+      </h2>
+      <p className="ct-section-sub">
+        Curados manualmente. Priorizamos gratuitos e formatos curtos (&lt;40h).
+      </p>
+      {entries.map(([skill, list]) => (
+        <div key={skill} className="ct-courses-group">
+          <h3 className="ct-courses-skill">{skill}</h3>
+          <div className="ct-courses-grid">
+            {list.map((c) => (
+              <a
+                key={c.id}
+                href={c.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ct-course-card"
+              >
+                <div className="ct-course-head">
+                  <span className="ct-course-provider">{c.provider}</span>
+                  {c.free && (
+                    <span className="ct-course-badge-free">grátis</span>
+                  )}
+                </div>
+                <h4 className="ct-course-title">{c.title}</h4>
+                <p className="ct-course-meta">
+                  {c.duration} · {c.level} · {c.language}
+                </p>
+                <p className="ct-course-why">{c.why}</p>
+                <span className="ct-course-cta">Ver curso ↗</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
   );
 }
 

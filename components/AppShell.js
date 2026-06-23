@@ -32,6 +32,13 @@ const NAV = [
     iconPath: "M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6z",
   },
   {
+    // Modulo de autoconhecimento (3 mini-assessments: DISC-lite, Valores,
+    // Ikigai). Item antes de "CVs adaptados" pra agrupar com identidade/perfil.
+    href: "/autoconhecimento",
+    label: "Autoconhecimento",
+    iconPath: "M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm0 2c-3 0-9 1.5-9 4.5V21h18v-2.5c0-3-6-4.5-9-4.5z",
+  },
+  {
     href: "/cvs-adaptados",
     label: "CVs adaptados",
     iconPath: "M14 3v5h5M14 3H6v18h12V8z",
