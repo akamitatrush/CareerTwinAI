@@ -151,12 +151,12 @@ describe("checkUsage (read-only)", () => {
 
   it("nega free quando used >= limit", async () => {
     prisma.subscription.findUnique.mockResolvedValueOnce(null);
-    prisma.usageMeter.findUnique.mockResolvedValueOnce({ count: 3 });
+    prisma.usageMeter.findUnique.mockResolvedValueOnce({ count: 10 });
     const r = await checkUsage("u1", "analyze");
     expect(r.ok).toBe(false);
     expect(r.reason).toBe("limit_reached");
     expect(r.remaining).toBe(0);
-    expect(r.limit).toBe(3);
+    expect(r.limit).toBe(10);
     expect(r.plan).toBe("free");
   });
 
@@ -165,8 +165,8 @@ describe("checkUsage (read-only)", () => {
     prisma.usageMeter.findUnique.mockResolvedValueOnce({ count: 1 });
     const r = await checkUsage("u1", "analyze");
     expect(r.ok).toBe(true);
-    expect(r.remaining).toBe(2);
-    expect(r.limit).toBe(3);
+    expect(r.remaining).toBe(9);
+    expect(r.limit).toBe(10);
   });
 
   it("permite free sem meter (used=0)", async () => {
@@ -174,7 +174,7 @@ describe("checkUsage (read-only)", () => {
     prisma.usageMeter.findUnique.mockResolvedValueOnce(null);
     const r = await checkUsage("u1", "analyze");
     expect(r.ok).toBe(true);
-    expect(r.remaining).toBe(3);
+    expect(r.remaining).toBe(10);
   });
 
   it("usa dayKey pra opportunities (feature diaria)", async () => {
@@ -182,7 +182,7 @@ describe("checkUsage (read-only)", () => {
     prisma.usageMeter.findUnique.mockResolvedValueOnce({ count: 2 });
     const r = await checkUsage("u1", "opportunities");
     expect(r.ok).toBe(true);
-    expect(r.limit).toBe(5);
+    expect(r.limit).toBe(20);
     const call = prisma.usageMeter.findUnique.mock.calls[0][0];
     expect(call.where.userId_feature_periodKey.periodKey).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
@@ -253,7 +253,7 @@ describe("enforceUsage — fix TOCTOU (check + increment atomico)", () => {
     prisma.usageMeter.upsert.mockResolvedValueOnce({ count: 2 });
     const r = await enforceUsage("u1", "analyze");
     expect(r.ok).toBe(true);
-    expect(r.remaining).toBe(1); // limit 3 - used 1 - 1 (incrementado) = 1
+    expect(r.remaining).toBe(8); // limit 10 - used 1 - 1 (incrementado) = 8
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     // Verifica que foi com Serializable
     const txCall = prisma.$transaction.mock.calls[0];
@@ -264,7 +264,7 @@ describe("enforceUsage — fix TOCTOU (check + increment atomico)", () => {
 
   it("nega free quando used >= limit SEM incrementar", async () => {
     prisma.subscription.findUnique.mockResolvedValueOnce(null);
-    prisma.usageMeter.findUnique.mockResolvedValueOnce({ count: 3 });
+    prisma.usageMeter.findUnique.mockResolvedValueOnce({ count: 10 });
     const r = await enforceUsage("u1", "analyze");
     expect(r.ok).toBe(false);
     expect(r.reason).toBe("limit_reached");
@@ -273,11 +273,11 @@ describe("enforceUsage — fix TOCTOU (check + increment atomico)", () => {
     expect(prisma.usageMeter.upsert).not.toHaveBeenCalled();
   });
 
-  it("TOCTOU defense: 10 reqs paralelas com used=0, limit=3 — so 3 passam", async () => {
+  it("TOCTOU defense: 15 reqs paralelas com used=0, limit=10 — so 10 passam", async () => {
     // Simulamos transaction Serializable: cada chamada serializa em ordem.
     // O mock usa contador compartilhado pra simular o estado real do DB.
     let dbCount = 0;
-    const limit = 3;
+    const limit = 10;
 
     prisma.subscription.findUnique.mockResolvedValue(null); // free
     prisma.usageMeter.findUnique.mockImplementation(async () => ({ count: dbCount }));
@@ -294,15 +294,15 @@ describe("enforceUsage — fix TOCTOU (check + increment atomico)", () => {
       return await next;
     });
 
-    // 10 reqs paralelas
+    // 15 reqs paralelas
     const results = await Promise.all(
-      Array.from({ length: 10 }, () => enforceUsage("u1", "analyze"))
+      Array.from({ length: 15 }, () => enforceUsage("u1", "analyze"))
     );
     const passed = results.filter((r) => r.ok).length;
     const rejected = results.filter((r) => !r.ok && r.reason === "limit_reached").length;
-    expect(passed).toBe(limit); // exatamente 3 — sem amplificacao
-    expect(rejected).toBe(10 - limit); // restantes 7 negados
-    expect(dbCount).toBe(limit); // DB ficou consistente em count=3
+    expect(passed).toBe(limit); // exatamente 10 — sem amplificacao
+    expect(rejected).toBe(15 - limit); // restantes 5 negados
+    expect(dbCount).toBe(limit); // DB ficou consistente em count=10
   });
 
   it("captura serialization failure e retorna internal_error", async () => {

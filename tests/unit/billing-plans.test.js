@@ -10,10 +10,16 @@ describe("PLANS config", () => {
   });
 
   it("free tem limites finitos por feature", () => {
-    expect(PLANS.free.limits.analyze).toBe(3);
-    expect(PLANS.free.limits.tailor).toBe(1);
-    expect(PLANS.free.limits.opportunities).toBe(5);
-    expect(PLANS.free.limits.interview).toBe(5);
+    // Limites generosos durante validacao (pre-revenue).
+    // Quando atingir ~100 users com dado real, ajustar pra forcar upgrade.
+    expect(PLANS.free.limits.analyze).toBe(10);
+    expect(PLANS.free.limits.tailor).toBe(5);
+    expect(PLANS.free.limits.opportunities).toBe(20);
+    expect(PLANS.free.limits.interview).toBe(10);
+    // Importante: nenhum Infinity (free DEVE ter limite)
+    for (const f of ["analyze", "tailor", "opportunities", "interview"]) {
+      expect(PLANS.free.limits[f]).toBeLessThan(Infinity);
+    }
   });
 
   it("pro tem Infinity em todas as features", () => {
