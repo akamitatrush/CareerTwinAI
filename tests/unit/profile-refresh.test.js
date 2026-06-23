@@ -313,6 +313,38 @@ describe("POST /api/profile/refresh — fluxo de sucesso", () => {
     expect(prisma.profile.update).not.toHaveBeenCalled();
   });
 
+  it("applyCompletedSkills=true com impactoPontos aplica bonus deterministico ao score", async () => {
+    // Quando user marca gap concluida e ela tem impactoDimensao+impactoPontos,
+    // o refresh aplica bonus aos sub-scores correspondentes. Sem esse bonus,
+    // o score nunca subia (bug reportado pelo user: "marco done, score nao
+    // muda, mesmo gap volta na lista, marco de novo, loop infinito").
+    setupOk({
+      previousOverall: 60,
+      existingSkills: ["python"],
+      completedGaps: [
+        {
+          habilidade: "Discovery de Produto",
+          completedAt: new Date(),
+          impactoDimensao: "aderencia_vagas",
+          impactoPontos: 10,
+        },
+        {
+          habilidade: "Metricas de IA",
+          completedAt: new Date(),
+          impactoDimensao: "relevancia_habilidades",
+          impactoPontos: 8,
+        },
+      ],
+    });
+    const r = await POST(makeReq({ applyCompletedSkills: true }));
+    expect(r.status).toBe(200);
+    const data = await r.json();
+    // Score sobe — quanto exatamente depende do computeAllSubScores base,
+    // mas com 18 pts capados em 20, a soma deve refletir aumento real.
+    expect(data.score).toBeGreaterThan(0);
+    expect(data.delta).toBeGreaterThan(0);
+  });
+
   it("applyCompletedSkills=true dedup case-insensitive (não duplica 'Python' se 'python' existe)", async () => {
     setupOk({
       previousOverall: 60,

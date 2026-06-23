@@ -161,23 +161,39 @@ export async function POST(req) {
     include: { gaps: true },
   });
 
-  // 7) Se aplicar skills, agrega habilidades de gaps concluídas ao perfil.
-  //    Skills armazenadas só após user explicitar consentimento na UI
-  //    (modal "Aplicar conquistas?"). Sem applyCompletedSkills, perfilJson
-  //    fica intacto — só recalculamos o score com o estado atual.
+  // 7) Se aplicar skills, agrega habilidades de gaps concluídas ao perfil
+  //    + coleta impactoPontos pra aplicar como bonus deterministico nos
+  //    sub-scores (cap pra prevenir gaming). Skills armazenadas só após user
+  //    explicitar consentimento na UI (modal "Aplicar conquistas?").
+  //    Sem applyCompletedSkills, perfilJson fica intacto e nenhum bonus aplicado.
   let appliedSkills = [];
   let mergedSkills = Array.isArray(profile.skills) ? [...profile.skills] : [];
+  let completedHabilidades = []; // pra passar pro LLM (evita loop)
+  let projectedGains = {
+    aderencia_vagas: 0,
+    relevancia_habilidades: 0,
+    otimizacao_perfil: 0,
+    experiencia_mercado: 0,
+  };
   if (applyCompletedSkills && previousSnapshot) {
     const completed = previousSnapshot.gaps.filter((g) => g.completedAt);
     const existing = new Set(mergedSkills.map((s) => String(s).toLowerCase()));
     for (const g of completed) {
       const skill = String(g.habilidade || "").trim();
       if (!skill) continue;
+      completedHabilidades.push(skill);
       const lc = skill.toLowerCase();
       if (!existing.has(lc)) {
         appliedSkills.push(skill);
         existing.add(lc);
         mergedSkills.push(skill);
+      }
+      // Acumula projected gain por dimensao (cap 15 pts por sub-score)
+      if (g.impactoDimensao && g.impactoPontos && projectedGains[g.impactoDimensao] !== undefined) {
+        projectedGains[g.impactoDimensao] = Math.min(
+          15,
+          projectedGains[g.impactoDimensao] + g.impactoPontos,
+        );
       }
     }
     if (mergedSkills.length > SKILLS_CAP) {
@@ -193,10 +209,15 @@ export async function POST(req) {
 
   let llmDiag;
   try {
-    const raw = await completeJSON(await promptDiag(role.trim(), cv.trim()), {
-      route: "profile.refresh",
-      userId,
-    });
+    // Passa completedHabilidades pro LLM evitar repetir as mesmas microacoes
+    // (loop "marca done -> volta mesma sugestao -> marca de novo").
+    const raw = await completeJSON(
+      await promptDiag(role.trim(), cv.trim(), completedHabilidades),
+      {
+        route: "profile.refresh",
+        userId,
+      }
+    );
     const valid = DiagShape.safeParse(raw);
     if (!valid.success) {
       console.error("profile.refresh: LLM shape inválido");
@@ -262,7 +283,37 @@ export async function POST(req) {
   };
 
   // 11) Score determinístico — mesma função usada em /api/analyze.
+  //     Quando applyCompletedSkills, aplica projectedGains como bonus aos
+  //     sub-scores correspondentes (capado a 15 pts por dimensao, 20 total).
+  //     Sem isso, o score NUNCA subia (loop infinito do user).
   const computed = computeAllSubScores(syntheticProfile, role, jobsForScore);
+
+  if (applyCompletedSkills) {
+    let totalBonus = 0;
+    const MAX_TOTAL_BONUS = 20;
+    for (const dim of Object.keys(projectedGains)) {
+      const gain = projectedGains[dim] || 0;
+      if (gain <= 0) continue;
+      const remaining = Math.max(0, MAX_TOTAL_BONUS - totalBonus);
+      const applied = Math.min(gain, remaining);
+      if (applied > 0 && computed.sub_scores[dim]) {
+        const newValor = Math.min(100, computed.sub_scores[dim].valor + applied);
+        computed.sub_scores[dim].valor = newValor;
+        totalBonus += applied;
+      }
+    }
+    // So recalcula overall se houve bonus aplicado real. Sem isso, mantem
+    // o overall original do computeAllSubScores (evita drift de arredondamento).
+    if (totalBonus > 0) {
+      computed.overall = Math.round(
+        computed.sub_scores.aderencia_vagas.valor * 0.4 +
+          computed.sub_scores.relevancia_habilidades.valor * 0.3 +
+          computed.sub_scores.otimizacao_perfil.valor * 0.2 +
+          computed.sub_scores.experiencia_mercado.valor * 0.1,
+      );
+    }
+  }
+
   const overall = computed.overall;
 
   // 12) Merge: números do código + explicações do LLM (com fallback).
