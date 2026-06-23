@@ -4601,3 +4601,94 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 .ct-btn-text:hover:not(:disabled) { color: var(--text); }
 .ct-btn-text:disabled { opacity: .55; cursor: not-allowed; }
 
+/* ===== Report (resultado do diagnostico inline em /) =====
+ * Polish do componente components/Report.js. Note bem:
+ * - .ct-report-section convive com .sec (legado, ainda em uso em /meu-gemeo);
+ *   usamos a .ct-report-section pra ter padding/border consistente novo.
+ * - As cores good/mid/low refletem o threshold do intensityClass() em Report.js.
+ * - --positive-tint/--attention-tint/--primary-tint sao usadas no gradient
+ *   das barras (nao temos --*-light no projeto, mas o tint cumpre bem o papel).
+ */
+.ct-report-cta-bar { display: flex; gap: 10px; flex-wrap: wrap; margin: 18px 0 28px; }
+.ct-report-cta-primary {
+  background: var(--primary); color: white;
+  padding: 11px 18px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 700;
+  text-decoration: none; box-shadow: var(--shadow-sm);
+  transition: transform 160ms, box-shadow 160ms;
+}
+.ct-report-cta-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.ct-report-cta-secondary {
+  color: var(--primary); border: 1px solid var(--primary-tint);
+  padding: 11px 16px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 600;
+  text-decoration: none; background: var(--surface);
+}
+.ct-report-cta-secondary:hover { border-color: var(--primary); background: var(--primary-soft); }
+
+.ct-report-section { padding: 36px 0; border-top: 1px solid var(--border); }
+.ct-report-section:first-of-type { border-top: 0; padding-top: 18px; }
+.ct-report-section-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  font-family: var(--font-display); font-size: 16px; font-weight: 800;
+  color: white; margin-right: 12px;
+  /* sobrescreve o .sec-no legado (cor/fonte/tamanho monoespaco) */
+  font-variant-numeric: tabular-nums;
+  text-transform: none; letter-spacing: 0;
+}
+.ct-report-section-num.s1 { background: var(--primary); }
+.ct-report-section-num.s2 { background: var(--positive); }
+.ct-report-section-num.s3 { background: var(--attention); }
+
+.ct-subscores-list { display: flex; flex-direction: column; margin-top: 18px; }
+.ct-subscore-compact { padding: 14px 0; border-bottom: 1px dashed var(--border); }
+.ct-subscore-compact:last-child { border-bottom: 0; }
+.ct-ss-c-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.ct-ss-c-label { font-family: var(--font-display); font-weight: 700; color: var(--text); font-size: 14.5px; }
+.ct-ss-c-weight {
+  font-size: 11px; font-weight: 700; color: var(--text-soft);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.ct-ss-c-value {
+  margin-left: auto;
+  font-family: var(--font-display); font-weight: 800; font-size: 22px;
+  color: var(--text); font-variant-numeric: tabular-nums;
+}
+.ct-ss-c-bar { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.ct-ss-c-fill { height: 100%; transition: width 280ms ease; border-radius: inherit; }
+.ct-ss-c-fill.good { background: linear-gradient(90deg, var(--positive-tint), var(--positive)); }
+.ct-ss-c-fill.mid { background: linear-gradient(90deg, var(--primary-tint), var(--primary)); }
+.ct-ss-c-fill.low { background: linear-gradient(90deg, var(--attention-tint), var(--attention)); }
+.ct-ss-c-why { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0 0 6px; }
+.ct-subscore-compact details { margin-top: 4px; }
+.ct-subscore-compact details summary {
+  cursor: pointer; font-size: 12px; color: var(--text-soft); font-weight: 600;
+  list-style: revert;
+}
+.ct-subscore-compact details summary:hover { color: var(--text); }
+.ct-ss-c-math { font-size: 11.5px; color: var(--text-soft); font-family: var(--font-mono); margin-top: 6px; }
+
+.ct-report-microactions { /* mantem o gap-list legado, so encapsula semanticamente */ }
+.ct-report-see-more {
+  display: inline-block; margin-top: 16px;
+  font-size: 13px; font-weight: 700; color: var(--primary);
+  text-decoration: none; border-bottom: 1px dashed var(--primary-tint);
+}
+.ct-report-see-more:hover { border-bottom-color: var(--primary); }
+
+.ct-report-footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
+.ct-report-footer-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.ct-report-footer-cta {
+  background: var(--primary); color: white;
+  padding: 11px 20px; border-radius: 10px;
+  font-size: 13.5px; font-weight: 700; text-decoration: none;
+}
+.ct-report-footer-cta:hover { background: var(--primary-deep); }
+.ct-report-footer-text {
+  background: transparent; border: 0; color: var(--text-muted);
+  font-size: 13px; cursor: pointer; padding: 11px 4px;
+}
+.ct-report-footer-text:hover { color: var(--text); }
+.ct-report-transparency { font-size: 12px; color: var(--text-soft); line-height: 1.55; margin: 0; }
+

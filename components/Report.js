@@ -155,13 +155,13 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
         </div>
 
         <div className="ct-report-cta-bar" role="navigation" aria-label="Próximos passos">
-          <Link href="/meu-gemeo" className="ct-report-cta-primary">
+          <Link href="/dashboard" className="ct-report-cta-primary">
             Ir pro dashboard completo →
           </Link>
-          <Link href="/meu-gemeo#gaps" className="ct-report-cta-secondary">
+          <Link href="/gaps" className="ct-report-cta-secondary">
             Ver todas as ações
           </Link>
-          <Link href="/meu-gemeo#oportunidades" className="ct-report-cta-secondary">
+          <Link href="/oportunidades" className="ct-report-cta-secondary">
             Radar de vagas
           </Link>
         </div>
@@ -230,7 +230,7 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
           })}
         </div>
         {gaps.length > MAX_GAPS_INLINE && (
-          <Link href="/meu-gemeo#gaps" className="ct-report-see-more">
+          <Link href="/gaps" className="ct-report-see-more">
             Ver todas as {gaps.length} ações →
           </Link>
         )}
@@ -321,7 +321,7 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
             })}
           </div>
           {allJobs.length > visibleJobs.length && (
-            <Link href="/meu-gemeo#oportunidades" className="ct-report-see-more">
+            <Link href="/oportunidades" className="ct-report-see-more">
               Ver todas as {allJobs.length} vagas no radar completo →
             </Link>
           )}
@@ -355,7 +355,7 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
 
       <footer className="ct-report-footer">
         <div className="ct-report-footer-actions">
-          <Link href="/meu-gemeo" className="ct-report-footer-cta">Continuar pro dashboard →</Link>
+          <Link href="/dashboard" className="ct-report-footer-cta">Continuar pro dashboard →</Link>
           {onRestart && (
             <button className="ct-report-footer-text" onClick={onRestart}>← Construir outro gêmeo</button>
           )}
