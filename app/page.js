@@ -6,6 +6,7 @@ import { SAMPLE_CV, SAMPLE_ROLE } from "@/lib/sample";
 import Report from "@/components/Report";
 import LinkedinImportButton from "@/components/LinkedinImportButton";
 import PortfolioImportButton from "@/components/PortfolioImportButton";
+import OnboardingChat from "@/components/OnboardingChat";
 import { track } from "@/components/PostHogProvider";
 import { EVENTS } from "@/lib/analytics/events";
 
@@ -34,6 +35,10 @@ function SourceCard({ label, done }) {
 export default function Home() {
   const router = useRouter();
   const [stage, setStage] = useState("input");
+  // Modo de entrada do CV. "paste" = textarea tradicional (default).
+  // "chat" = onboarding conversacional (6 perguntas, sem LLM, monta CV
+  // estruturado e devolve pra setCv via onComplete).
+  const [mode, setMode] = useState("paste");
   const [cv, setCv] = useState("");
   const [role, setRole] = useState("");
   const [error, setError] = useState("");
@@ -333,11 +338,57 @@ export default function Home() {
 
                 {/* Builder — mantém estrutura mas com tokens novos */}
                 <div className="ct-onb-builder">
-                  <div className="field">
-                    <label htmlFor="cvText">Seu currículo</label>
-                    <textarea id="cvText" value={cv} onChange={(e) => setCv(e.target.value)} placeholder="Cole o texto do CV ou conteúdo do LinkedIn (experiências, habilidades, formação)..." />
-                    <p className="field-hint">Quanto mais detalhado, melhor o diagnóstico — não tem certo nem errado.</p>
+                  {/* Tabs: paste vs chat. Chat eh opcional; default paste pq eh o
+                      modo que ja existia e nao queremos surpreender returning users. */}
+                  <div className="ct-onb-mode-tabs" role="tablist" aria-label="Como informar seu currículo">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={mode === "paste"}
+                      tabIndex={mode === "paste" ? 0 : -1}
+                      className={mode === "paste" ? "active" : ""}
+                      onClick={() => {
+                        if (mode !== "paste") {
+                          track(EVENTS.ONBOARDING_MODE_SWITCHED, { from: mode, to: "paste" });
+                          setMode("paste");
+                        }
+                      }}
+                    >
+                      Colar CV
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={mode === "chat"}
+                      tabIndex={mode === "chat" ? 0 : -1}
+                      className={mode === "chat" ? "active" : ""}
+                      onClick={() => {
+                        if (mode !== "chat") {
+                          track(EVENTS.ONBOARDING_MODE_SWITCHED, { from: mode, to: "chat" });
+                          setMode("chat");
+                        }
+                      }}
+                    >
+                      Conversar com IA
+                    </button>
                   </div>
+
+                  {mode === "paste" ? (
+                    <div className="field">
+                      <label htmlFor="cvText">Seu currículo</label>
+                      <textarea id="cvText" value={cv} onChange={(e) => setCv(e.target.value)} placeholder="Cole o texto do CV ou conteúdo do LinkedIn (experiências, habilidades, formação)..." />
+                      <p className="field-hint">Quanto mais detalhado, melhor o diagnóstico — não tem certo nem errado.</p>
+                    </div>
+                  ) : (
+                    <OnboardingChat
+                      onComplete={(extractedCv) => {
+                        // Chat terminou: preenche CV e volta pro modo paste pro user
+                        // poder revisar/editar o texto antes de gerar o diagnostico.
+                        setCv(extractedCv);
+                        setMode("paste");
+                      }}
+                    />
+                  )}
                   <div className="field">
                     <label htmlFor="roleText">Cargo-alvo</label>
                     <input

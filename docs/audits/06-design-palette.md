@@ -164,3 +164,56 @@ Light: `--text-soft: #797585` (luma ~47%), `--text-faint: #6B6679` (luma ~41%). 
 | **Wave B (theme selector)** | 🟢 Depois da Wave A. Atende literalmente o pedido do user. |
 
 **Nota:** Wave A é hotfix de paleta, não redesign — mantém todos componentes, só conserta tokens. Risco mínimo, ganho alto.
+
+---
+
+## Status de remediação Wave A
+
+- [x] **Issue #1 — Tokens marca em dark** RESOLVIDO (2026-06-22)
+  - Adicionados overrides em `[data-theme="dark"]` pra `--primary`, `--primary-light`, `--primary-deep`, `--primary-soft`, `--primary-tint`, `--positive`, `--positive-deep`, `--positive-soft`, `--positive-tint`, `--attention`, `--attention-deep`, `--attention-soft`, `--attention-tint`.
+  - Soft/tint agora apontam pra washes deep (ex.: `--primary-soft: #2A2A4F` em dark vs `#EEEEFB` em light) — chips/badges param de virar manchas brancas sobre surfaces dark.
+- [x] **Issue #2 — Primary chapado em dark** RESOLVIDO
+  - `--primary`: `#4F4FB0` → `#8585D9` em dark (luminance-adjusted, contrasta com bg dark).
+  - `--primary-light`: `#A2A2E5`, `--primary-deep`: `#6B6BC8`.
+  - Gradient `.btn-primary` (`primary-light → primary`) ganha range visual em dark.
+- [x] **Issue #3 — Hierarquia text-faint invertida** RESOLVIDO
+  - Light: `--text-soft` agora `#4A4D63` (era `#797585`), `--text-faint` agora `#9CA0AE` (era `#6B6679` — mais escuro que soft!).
+  - Hierarquia correta: `text` (1A1B2E) → `text-soft` (4A4D63) → `text-muted` (6B7180) → `text-faint` (9CA0AE).
+  - Dark: mesma hierarquia preservada (`text-soft` C9CDD8 → `text-muted` 8A8FA1 → `text-faint` 5C6171).
+- [x] **Issue #4 — Background light bege** RESOLVIDO
+  - `--bg`: `#F6F5F2` (bege quente) → `#F4F6FA` (cinza-azul neutro frio, alinhado com índigo).
+  - `--surface-2`: `#FAF9F5` → `#F8FAFC` (cool gray).
+  - `--surface-3`: `#F2F0EA` → `#EDF1F7` (ΔL maior pra depth real, não colapsa mais com `--bg`).
+  - `--border`: `#E7E4EC` → `#E4E7F0` (sem tint bege).
+- [x] **Issue #5 — Positive/Attention dessaturados** RESOLVIDO
+  - `--positive`: `#1E9C7E` → `#15A871` (mais saturado/vivo, sai do "spa shampoo").
+  - `--attention`: `#B6822A` → `#D97706` (laranja-damasco distinto, não mais "mostarda institucional").
+  - Dark: `--positive: #34D399`, `--attention: #F59E0B` (lighter pra contraste).
+
+### Mudanças complementares
+
+- **Sombras dark** com alpha aumentado (0.4-0.6 vs 0.25-0.45) pra ter depth real sobre `#0D1117`.
+- **`--shadow-focus` em dark** agora referencia `--primary-tint` (indigo médio `#5C5CA8`) em vez de `--primary-soft` (que em light era quase-branco e gerava ring fantasmagórico).
+- **`--text-muted`** introduzido como novo nível intermediário entre `--text-soft` e `--text-faint` em ambos modos.
+
+### Não fix (fora do escopo Wave A)
+
+- **Linha 1656** (`.appshell-lgpd-card`): gradient com `rgba(238,238,251,0.4)` hardcoded — valor antigo de `--primary-soft` light. Em dark mode ainda aparecerá como uma tint clara translucida sobre `--primary-soft` dark (`#2A2A4F`). Trocar pra token requer refactor de classes — Wave A é só tokens.
+- **Linha 3310** (`.ct-onb-lgpd p`): `color: #DEDEF4` hardcoded em painel glassy de onboarding. Não é token, fora do escopo.
+
+### Validação
+
+- `npm test`: **63 files, 811 tests passed**.
+- `AUTH_DEV_CREDENTIALS= npm run build`: **EXIT=0**, todas as 22 rotas geradas.
+- Validação WCAG mental (light, sobre `--bg #F4F6FA`):
+  - `--text #1A1B2E`: ratio ≈ 16:1 ✅
+  - `--text-soft #4A4D63`: ratio ≈ 8.5:1 ✅
+  - `--text-muted #6B7180`: ratio ≈ 5.0:1 ✅ (AA)
+  - `--text-faint #9CA0AE`: ratio ≈ 3.1:1 ✅ (AA Large / decorativo)
+  - `--primary #4F4FB0` em surface `#FFFFFF`: ratio ≈ 6.5:1 ✅
+- Validação WCAG mental (dark, sobre `--bg #0D1117`):
+  - `--text #F0F2F6`: ratio ≈ 17:1 ✅
+  - `--text-soft #C9CDD8`: ratio ≈ 11:1 ✅
+  - `--text-muted #8A8FA1`: ratio ≈ 5.4:1 ✅ (AA)
+  - `--text-faint #5C6171`: ratio ≈ 2.6:1 ⚠️ (decorativo/non-essential apenas)
+  - `--primary #8585D9` em surface `#161B22`: ratio ≈ 5.5:1 ✅

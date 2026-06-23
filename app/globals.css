@@ -5,22 +5,25 @@
  * =========================================================== */
 
 :root {
-  /* === Paleta nova "Índigo Sereno" — shared entre temas === */
+  /* === Paleta "Índigo Sereno" refinada (Wave A) — defaults p/ light ===
+     IMPORTANTE: estes tokens DEVEM ser reescritos em [data-theme="dark"]
+     abaixo, senão os soft/tint quase-brancos viram fundo de chips
+     sobre surfaces dark (bug arquitetural pré-Wave A). */
   --primary: #4F4FB0;
   --primary-deep: #34357E;
   --primary-soft: #EEEEFB;
-  --primary-tint: #DEDEF4;
-  --primary-light: #6E6EC8;
+  --primary-tint: #C7C7E8;
+  --primary-light: #6B6BC8;
 
-  --positive: #1E9C7E;
-  --positive-deep: #1E7E66;
-  --positive-soft: #ECF6F0;
-  --positive-tint: #CFE8DB;
+  --positive: #15A871;
+  --positive-deep: #0E7B53;
+  --positive-soft: #E0F5EC;
+  --positive-tint: #A7E0C7;
 
-  --attention: #B6822A;
-  --attention-deep: #7A6326;
-  --attention-soft: #FBF6EC;
-  --attention-tint: #F0E4C9;
+  --attention: #D97706;
+  --attention-deep: #92400E;
+  --attention-soft: #FEF3E7;
+  --attention-tint: #FACA94;
 
   --avatar-from: #E7B98C;
   --avatar-to: #C98A57;
@@ -74,47 +77,81 @@
   --inset-top-light: inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
 }
 
-/* LIGHT é o novo default — aplica em :root sem data-theme E em data-theme="light" */
+/* LIGHT é o novo default — aplica em :root sem data-theme E em data-theme="light"
+   Wave A: bg trocado de bege quente (#F6F5F2) pra cinza-azul neutro frio
+   alinhado com índigo. Surface-2/3 puxados pro cool gray pra ter depth real. */
 :root,
 :root[data-theme="light"] {
-  --bg: #F6F5F2;
+  --bg: #F4F6FA;          /* era #F6F5F2 (bege) — cool gray neutro */
   --surface: #FFFFFF;
-  --surface-2: #FAF9F5;
-  --surface-3: #F2F0EA;
-  --border: #E7E4EC;
-  --border-strong: #DEDBE6;
-  --text: #1F1D33;
-  --text-strong: #1F1D33;
-  --text-muted: #514E5C;
-  --text-soft: #797585;
-  --text-faint: #6B6679; /* A11y AA: ratio ≈ 4.6:1 sobre #FAF9F5 (text normal); subiu de #9893A4 (~2.9:1, FAIL) */
-  --text-subtle: #797585;  /* alias legado — usado em ~32 lugares, mapeia pro novo --text-soft */
-  --scrim: rgba(31, 29, 51, 0.4);
+  --surface-2: #F8FAFC;   /* era #FAF9F5 (bege) — cool gray cool */
+  --surface-3: #EDF1F7;   /* era #F2F0EA — ΔL maior p/ depth real */
+  --border: #E4E7F0;      /* era #E7E4EC (bege tint) */
+  --border-strong: #C9CDD8;
+  --text: #1A1B2E;
+  --text-strong: #1A1B2E;
+  --text-soft: #4A4D63;   /* era #797585 — escurece p/ corrigir hierarquia (soft mais escuro que faint) */
+  --text-muted: #6B7180;  /* novo nível intermediário entre soft e faint */
+  --text-faint: #9CA0AE;  /* era #6B6679 — agora MAIS CLARO que soft (hierarquia correta) */
+  --text-subtle: #4A4D63; /* alias legado mapeia pro novo --text-soft */
+  --scrim: rgba(26, 27, 46, 0.4);
 }
 
 :root[data-theme="dark"] {
-  /* Dark mode mantido como opt-in. Paleta nova adaptada (cinzas frios em vez
-     dos cinzas neutros da v0.6 — combina com o índigo). */
-  --bg: #0A0A12;
-  --surface: #1A1A26;
-  --surface-2: #232333;
-  --surface-3: #2A2A3C;
-  --border: #2E2E40;
-  --border-strong: #3F3F56;
-  --text: #E8E6F0;
+  /* Wave A — REESCRITA COMPLETA dos tokens em dark.
+     Antes: só bg/surface/text eram overridados; primary/positive/attention
+     + 6 soft/tint vinham do :root (calibrados pra light) e geravam
+     manchas brancas em ~146 chips/badges sobre surfaces escuras.
+     Agora: TODOS os tokens de marca + soft/tint são reescritos. */
+
+  /* === Background — preto azulado frio === */
+  --bg: #0D1117;
+  --surface: #161B22;
+  --surface-2: #1F2530;
+  --surface-3: #2A3140;
+
+  /* === Text — hierarquia preservada (faint > muted > soft em luminance) === */
+  --text: #F0F2F6;
   --text-strong: #FFFFFF;
-  --text-muted: #B5B0C4;
-  --text-soft: #9089A3;
-  --text-faint: #908AA8; /* A11y AA: ratio ≈ 4.5:1 sobre #1A1A26 (dark surface); subiu de #6F6A80 (~2.5:1, FAIL) */
-  --text-subtle: #9089A3;  /* alias legado */
+  --text-soft: #C9CDD8;
+  --text-muted: #8A8FA1;
+  --text-faint: #5C6171;
+  --text-subtle: #C9CDD8;  /* alias legado mapeia pro novo --text-soft dark */
   --scrim: rgba(0, 0, 0, 0.6);
 
-  /* Sombras adaptadas pra dark — alpha mais alto porque fundo é escuro,
-     senão sombra some. Mesma estrutura de camadas dupla. */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.35);
+  /* === Border === */
+  --border: #2A3140;
+  --border-strong: #3D4555;
+
+  /* === Primary — luminance-adjusted (mais claro pra contrastar com bg dark) === */
+  --primary: #8585D9;
+  --primary-light: #A2A2E5;
+  --primary-deep: #6B6BC8;
+  --primary-soft: #2A2A4F;       /* era #EEEEFB (quase branco em light) → indigo deep wash */
+  --primary-tint: #5C5CA8;       /* era #C7C7E8 — agora tom médio dark */
+
+  /* === Positive — verde mais claro pra dark === */
+  --positive: #34D399;
+  --positive-deep: #10B981;
+  --positive-soft: #16321F;      /* era #E0F5EC (quase branco) → verde deep wash */
+  --positive-tint: #1F6A47;
+
+  /* === Attention — laranja-damasco dark === */
+  --attention: #F59E0B;
+  --attention-deep: #D97706;
+  --attention-soft: #2E1F0A;     /* era #FEF3E7 (quase branco) → laranja deep wash */
+  --attention-tint: #92400E;
+
+  /* === Sombras dark — alpha aumentado pra ter depth sobre #0D1117 === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+
+  /* Focus ring: agora --primary-tint em dark é um indigo médio (#5C5CA8)
+     em vez de quase-branco — ring visível mas não fantasmagórico. */
+  --shadow-focus: 0 0 0 3px var(--primary-tint);
+
   --inset-top-light: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -3328,6 +3365,29 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 .ct-onb-foot { font-size: 11.5px; color: var(--text-soft); line-height: 1.55; margin: 12px 0 0; }
 .ct-onb-foot a { color: var(--primary); font-weight: 600; }
 .ct-onb-builder .err { background: var(--attention-soft); border: 1px solid var(--attention-tint); color: var(--attention-deep); border-radius: var(--radius-sm); padding: 11px 13px; font-size: 13px; }
+
+/* === Onboarding tabs (paste vs chat) — segmented control com pill ativa */
+.ct-onb-mode-tabs { display: flex; gap: 2px; margin-bottom: 4px; background: var(--surface-2); padding: 3px; border-radius: 10px; }
+.ct-onb-mode-tabs button { flex: 1; padding: 8px 12px; border: 0; background: transparent; color: var(--text-soft); font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: background 160ms var(--ease-standard), color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard); font-family: inherit; }
+.ct-onb-mode-tabs button:hover { color: var(--text); }
+.ct-onb-mode-tabs button.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+.ct-onb-mode-tabs button:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* === Onboarding chat (modo "Conversar com IA") */
+.ct-onb-chat { display: flex; flex-direction: column; gap: 14px; }
+.ct-onb-chat-progress { font-size: 11.5px; color: var(--text-soft); font-weight: 600; letter-spacing: .02em; }
+.ct-onb-chat-bar { height: 4px; background: var(--surface-2); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.ct-onb-chat-bar > div { height: 100%; background: var(--primary); transition: width 220ms var(--ease-standard); }
+.ct-onb-chat-question { background: var(--primary-soft); padding: 16px; border-radius: 12px; border-left: 3px solid var(--primary); }
+.ct-onb-chat-question p { font-family: var(--font-display); font-weight: 700; font-size: 15.5px; color: var(--text); margin: 0; line-height: 1.4; }
+.ct-onb-chat-input { width: 100%; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); font-size: 14px; color: var(--text); background: var(--surface); outline: none; transition: border-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard); resize: vertical; font-family: var(--font-body); box-shadow: inset 0 1px 2px 0 rgba(15, 23, 42, 0.04); }
+.ct-onb-chat-input::placeholder { color: var(--text-faint); opacity: 0.85; }
+.ct-onb-chat-input:focus { border-color: var(--primary); box-shadow: inset 0 1px 2px 0 rgba(15, 23, 42, 0.04), var(--shadow-focus); }
+.ct-onb-chat-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+.ct-onb-chat-back { background: transparent; border: 0; color: var(--text-soft); font-size: 13px; font-weight: 600; padding: 8px 10px; cursor: pointer; border-radius: var(--radius-sm); font-family: inherit; transition: color 160ms var(--ease-standard), background 160ms var(--ease-standard); }
+.ct-onb-chat-back:hover { color: var(--text); background: var(--surface-2); }
+.ct-onb-chat-back:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.ct-onb-chat-next { margin-left: auto; }
 
 /* ===== AppShell notifications ===== */
 .appshell-notif-btn {
