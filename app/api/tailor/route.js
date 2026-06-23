@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { promptTailor } from "@/lib/prompts";
 import { TailorBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
-import { enforceUsage } from "@/lib/billing/enforce";
+import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export async function POST(req) {
 
   // Enforcement do plano apenas pra logados (anonimos sao rate-limited acima).
   // enforceUsage AGORA INCREMENTA ATOMICAMENTE — nao chamar trackUsage depois.
+  let userPlan = null;
   if (userId) {
     const lim = await enforceUsage(userId, "tailor");
     if (!lim.ok) {
@@ -29,6 +31,28 @@ export async function POST(req) {
           feature: "tailor",
           plan: lim.plan,
           limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+    userPlan = lim.plan;
+    // Pre-check de budget diario (cost amplification defense — Wave 11).
+    const budget = await checkDailyBudget(userId, userPlan);
+    if (!budget.ok) {
+      await audit({
+        userId,
+        action: "SECURITY_BUDGET_EXCEEDED",
+        target: `User:${userId}`,
+        req,
+        meta: { feature: "tailor", used: budget.used, cap: budget.cap },
+      });
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite diario de uso de IA. Volte amanha ou faca upgrade.",
+          code: "BUDGET_EXCEEDED",
+          used: budget.used,
+          cap: budget.cap,
           upgradeUrl: "/precos",
         },
         { status: 402 }
@@ -78,7 +102,35 @@ export async function POST(req) {
   const { role, cv, vaga, applicationId, vagaTitulo, vagaEmpresa } = parsed.data;
 
   try {
-    const data = await completeJSON(promptTailor(role, cv, vaga), { route: "tailor", userId });
+    const { result: data, usage: llmUsage } = await completeJSONWithUsage(
+      promptTailor(role, cv, vaga),
+      { route: "tailor", userId }
+    );
+
+    // Tokens cobrados pelo provider — track imediatamente, antes do persist.
+    // Garantia: mesmo se persist abaixo falhar, o uso conta pro budget diario.
+    if (userId && llmUsage) {
+      await trackTokenUsage(userId, "tailor", llmUsage);
+      try {
+        const budgetAfter = await checkDailyBudget(userId, userPlan);
+        if (!budgetAfter.ok) {
+          await audit({
+            userId,
+            action: "SECURITY_BUDGET_EXCEEDED",
+            target: `User:${userId}`,
+            req,
+            meta: {
+              feature: "tailor",
+              used: budgetAfter.used,
+              cap: budgetAfter.cap,
+              phase: "post-llm",
+            },
+          });
+        }
+      } catch (e) {
+        console.error("tailor: post-budget check falhou", e?.message);
+      }
+    }
 
     // Persiste no historico se o user estiver logado. User anonimo NAO gera
     // TailoredCv (sem userId nao tem dono — fail closed; resposta volta igual).

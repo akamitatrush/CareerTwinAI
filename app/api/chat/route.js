@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { promptChat } from "@/lib/prompts";
 import { ChatBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { trackTokenUsage, checkDailyBudget, getUserPlan } from "@/lib/billing/enforce";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +23,32 @@ export async function POST(req) {
 
   const limit = await guardLLM(req, { name: "chat", userId, perMinuteAnon: 5, perMinuteUser: 30 });
   if (!limit.ok) return tooMany(limit);
+
+  // Chat nao tem enforceUsage (sem limite mensal por feature — coberto por
+  // rate-limit acima). Mas tem cap diario de custo USD (defesa anti
+  // cost-amplification): se user passou do budget agregado, bloqueia antes
+  // do LLM. Reaproveita o plano em trackTokenUsage depois.
+  const userPlan = (await getUserPlan(userId)).id;
+  const budget = await checkDailyBudget(userId, userPlan);
+  if (!budget.ok) {
+    await audit({
+      userId,
+      action: "SECURITY_BUDGET_EXCEEDED",
+      target: `User:${userId}`,
+      req,
+      meta: { feature: "chat", used: budget.used, cap: budget.cap },
+    });
+    return NextResponse.json(
+      {
+        error: "Voce atingiu o limite diario de uso de IA. Volte amanha ou faca upgrade.",
+        code: "BUDGET_EXCEEDED",
+        used: budget.used,
+        cap: budget.cap,
+        upgradeUrl: "/precos",
+      },
+      { status: 402 }
+    );
+  }
 
   let body;
   try {
@@ -92,10 +120,33 @@ export async function POST(req) {
     .slice(0, 20);
 
   try {
-    const data = await completeJSON(
+    const { result: data, usage } = await completeJSONWithUsage(
       promptChat(role, perfil, gaps, history, message),
       { route: "chat", userId }
     );
+    // Token tracking (Wave 11). Falha silenciosa.
+    if (usage) {
+      await trackTokenUsage(userId, "chat", usage);
+      try {
+        const budgetAfter = await checkDailyBudget(userId, userPlan);
+        if (!budgetAfter.ok) {
+          await audit({
+            userId,
+            action: "SECURITY_BUDGET_EXCEEDED",
+            target: `User:${userId}`,
+            req,
+            meta: {
+              feature: "chat",
+              used: budgetAfter.used,
+              cap: budgetAfter.cap,
+              phase: "post-llm",
+            },
+          });
+        }
+      } catch (e) {
+        console.error("chat: post-budget check falhou", e?.message);
+      }
+    }
     return NextResponse.json(data);
   } catch (e) {
     console.error("chat: LLM falhou", e?.message);

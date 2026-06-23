@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { promptOpp, promptOppReal, promptPlano } from "@/lib/prompts";
 import { OppBody, OppShape, PorquesShape, PlanoShape } from "@/lib/validators";
 import { searchJobs } from "@/lib/jobs";
 import { extractSkills, matchScore } from "@/lib/skills-taxonomy";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
-import { enforceUsage } from "@/lib/billing/enforce";
+import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,6 +32,7 @@ export async function POST(req) {
 
   // Enforcement de plano (5 buscas/dia no Free). Diario => dayKey() interno.
   // enforceUsage AGORA INCREMENTA ATOMICAMENTE — nao chamar trackUsage depois.
+  let userPlan = null;
   if (userId) {
     const lim = await enforceUsage(userId, "opportunities");
     if (!lim.ok) {
@@ -41,6 +43,30 @@ export async function POST(req) {
           feature: "opportunities",
           plan: lim.plan,
           limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+    userPlan = lim.plan;
+    // Pre-check budget diario (Wave 11 — cost amplification defense).
+    // opportunities faz ate 2 chamadas LLM (porques + plano), o que amplifica
+    // o custo — por isso o check antes mesmo de gastar.
+    const budget = await checkDailyBudget(userId, userPlan);
+    if (!budget.ok) {
+      await audit({
+        userId,
+        action: "SECURITY_BUDGET_EXCEEDED",
+        target: `User:${userId}`,
+        req,
+        meta: { feature: "opportunities", used: budget.used, cap: budget.cap },
+      });
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite diario de uso de IA. Volte amanha ou faca upgrade.",
+          code: "BUDGET_EXCEEDED",
+          used: budget.used,
+          cap: budget.cap,
           upgradeUrl: "/precos",
         },
         { status: 402 }
@@ -212,51 +238,87 @@ export async function POST(req) {
   // Paraleliza porques + plano — antes serializadas, somando 30-60s. Agora
   // max(porques, plano) ≈ 15-25s. Quando withPlan=false (radar), so dispara
   // porques. promptOppReal pra vagas reais, promptOpp pra fixtures.
+  //
+  // Wave 11 token tracking: cada call retorna { result, usage } — agregamos
+  // tokens/cost de TODAS as chamadas LLM da rota (1 porques + 0/1 plano) e
+  // chamamos trackTokenUsage UMA vez no final pra economizar upsert no DB.
   const usePromptReal = top.length > 0 && !allIllustrative;
   const porquesPromise = (async () => {
-    if (top.length === 0) return null;
+    if (top.length === 0) return { porques: null, usage: null };
     try {
       if (usePromptReal) {
-        const raw = await completeJSON(promptOppReal(role, perfil, topForLLM, gaps), {
-          route: "opp.real",
-          userId,
-        });
+        const { result: raw, usage } = await completeJSONWithUsage(
+          promptOppReal(role, perfil, topForLLM, gaps),
+          { route: "opp.real", userId }
+        );
         const valid = PorquesShape.safeParse(raw);
         if (!valid.success) throw new Error("LLM shape porques invalido");
-        return { kind: "real", porques: valid.data.porques };
+        return { porques: { kind: "real", porques: valid.data.porques }, usage };
       } else {
-        const raw = await completeJSON(promptOpp(role, perfil, gaps), {
-          route: "opp.illustrative",
-          userId,
-        });
+        const { result: raw, usage } = await completeJSONWithUsage(
+          promptOpp(role, perfil, gaps),
+          { route: "opp.illustrative", userId }
+        );
         const valid = OppShape.safeParse(raw);
         if (!valid.success) throw new Error("LLM shape opp invalido");
-        return { kind: "illustrative", vagas: valid.data.vagas };
+        return { porques: { kind: "illustrative", vagas: valid.data.vagas }, usage };
       }
     } catch (e) {
       console.error("opp: porques falharam, usando fallback determinico:", e?.message);
-      return null;
+      return { porques: null, usage: null };
     }
   })();
 
   const planoPromise = withPlan
     ? (async () => {
         try {
-          const raw = await completeJSON(promptPlano(role, perfil, gaps), {
-            route: "opp.plano",
-            userId,
-          });
+          const { result: raw, usage } = await completeJSONWithUsage(
+            promptPlano(role, perfil, gaps),
+            { route: "opp.plano", userId }
+          );
           const valid = PlanoShape.safeParse(raw);
           if (!valid.success) throw new Error("LLM shape plano invalido");
-          return valid.data.plano;
+          return { plano: valid.data.plano, usage };
         } catch (e) {
           console.error("opp: plano falhou:", e?.message);
-          return [];
+          return { plano: [], usage: null };
         }
       })()
-    : Promise.resolve([]);
+    : Promise.resolve({ plano: [], usage: null });
 
-  const [porquesResult, plano] = await Promise.all([porquesPromise, planoPromise]);
+  const [porquesOut, planoOut] = await Promise.all([porquesPromise, planoPromise]);
+  const porquesResult = porquesOut.porques;
+  const plano = planoOut.plano;
+
+  // Soma usage das duas chamadas pra track + audit. Tokens cobrados pelo
+  // provider mesmo se safeParse falhou — preserva contagem fiel.
+  const aggregatedUsage = {
+    tokensIn: (porquesOut.usage?.tokensIn || 0) + (planoOut.usage?.tokensIn || 0),
+    tokensOut: (porquesOut.usage?.tokensOut || 0) + (planoOut.usage?.tokensOut || 0),
+    costUsd: (porquesOut.usage?.costUsd || 0) + (planoOut.usage?.costUsd || 0),
+  };
+  if (userId && (aggregatedUsage.tokensIn > 0 || aggregatedUsage.tokensOut > 0)) {
+    await trackTokenUsage(userId, "opportunities", aggregatedUsage);
+    try {
+      const budgetAfter = await checkDailyBudget(userId, userPlan);
+      if (!budgetAfter.ok) {
+        await audit({
+          userId,
+          action: "SECURITY_BUDGET_EXCEEDED",
+          target: `User:${userId}`,
+          req,
+          meta: {
+            feature: "opportunities",
+            used: budgetAfter.used,
+            cap: budgetAfter.cap,
+            phase: "post-llm",
+          },
+        });
+      }
+    } catch (e) {
+      console.error("opp: post-budget check falhou", e?.message);
+    }
+  }
 
   let vagasOut;
   if (porquesResult?.kind === "real") {

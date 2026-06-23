@@ -26,6 +26,11 @@ model User {
   lastDigestAt  DateTime?
   digestEnabled Boolean   @default(true)
 
+  // Daily briefing — cron-daily-briefing checa pra nao mandar 2x em 18h.
+  // Compartilha o flag digestEnabled (1 toggle, 2 cadencias). Quando user
+  // desliga digestEnabled, ambos cron (weekly + daily) param de enviar.
+  lastDailyBriefingAt DateTime?
+
   accounts      Account[]
   sessions      Session[]
   profile       Profile?
@@ -42,6 +47,7 @@ model User {
   billingEvents BillingEvent[]
   auditLogs     AuditLog[]
   outcomes      Outcome[]
+  achievements  Achievement[]
 }
 
 model Account {
@@ -286,6 +292,8 @@ enum NotificationKind {
   DIGEST_SENT
   APPLICATION_STATUS
   WELCOME
+  DAILY_BRIEFING
+  ACHIEVEMENT_UNLOCKED
 }
 
 // Resultado de mini-assessments de autoconhecimento (DISC-lite, Valores, Ikigai).
@@ -519,6 +527,7 @@ enum AuditAction {
   OUTCOME_REPORTED
   OUTCOME_SURVEY_SENT
   OUTCOME_SURVEY_DECLINED
+  DAILY_BRIEFING_SENT
 }
 
 // Outcome: dataset proprietario pra calcular mediana real de contratados.
@@ -579,4 +588,44 @@ enum SurveyKind {
   SIXTY_DAYS
   NINETY_DAYS
   SELF_REPORTED
+}
+
+// ============ Achievements (gamificacao sutil — feature #8 do STRATEGY_ROADMAP) ============
+
+// Achievement: conquistas pontuais do user (primeiro diagnostico, 5 lacunas fechadas,
+// score 80+, etc). Idempotente via unique (userId, kind) — segundo grant do mesmo
+// kind retorna P2002 e ja sai com alreadyEarned. meta e Json opcional pra carregar
+// contexto (ex: scoreAtTime, gapId). Cascade no userId pra "apagar minha conta"
+// limpar junto. Indice (userId, earnedAt) atende a listagem cronologica em /conta.
+model Achievement {
+  id       String          @id @default(cuid())
+  userId   String
+  kind     AchievementKind
+  earnedAt DateTime        @default(now())
+  meta     Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind])
+  @@index([userId, earnedAt])
+}
+
+enum AchievementKind {
+  FIRST_DIAGNOSIS
+  FIRST_GAP_COMPLETED
+  FIVE_GAPS_COMPLETED
+  TEN_GAPS_COMPLETED
+  FIRST_TAILOR
+  FIRST_APPLICATION
+  FIRST_INTERVIEW
+  PROFILE_100_PERCENT
+  ALL_ASSESSMENTS_COMPLETED
+  STREAK_7_DAYS
+  STREAK_30_DAYS
+  SCORE_70
+  SCORE_80
+  SCORE_90
+  FIRST_REFRESH
+  FIRST_EVIDENCE
+  COURSE_COMPLETED
 }

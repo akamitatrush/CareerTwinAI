@@ -2,14 +2,14 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { promptDiag } from "@/lib/prompts";
 import { AnalyzeBody, DiagShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { searchJobs } from "@/lib/jobs";
 import { computeAllSubScores } from "@/lib/scoring/subscores";
 import { notify, NotificationTemplates } from "@/lib/notifications";
-import { enforceUsage } from "@/lib/billing/enforce";
+import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
@@ -49,6 +49,7 @@ export async function POST(req) {
   // Enforcement de plano (apenas pra logados; anonimos rodam efemero e ja
   // sao rate-limited mais agressivamente acima). 402 Payment Required.
   // enforceUsage AGORA INCREMENTA ATOMICAMENTE — nao chamar trackUsage depois.
+  let userPlan = null;
   if (userId) {
     const lim = await enforceUsage(userId, "analyze");
     if (!lim.ok) {
@@ -59,6 +60,32 @@ export async function POST(req) {
           feature: "analyze",
           plan: lim.plan,
           limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+    // Pre-check de budget diario (cost amplification defense). Mesmo passando
+    // no enforceUsage (count nao bateu o limite mensal), o custo agregado USD
+    // de TODAS as features do user pode estar acima do cap diario do plano —
+    // atacante tentando rodar LLM em loop pra esgotar API budget. 402 antes
+    // do LLM rodar = $0 gasto. Reutilizamos planId em trackTokenUsage abaixo.
+    userPlan = lim.plan;
+    const budget = await checkDailyBudget(userId, userPlan);
+    if (!budget.ok) {
+      await audit({
+        userId,
+        action: "SECURITY_BUDGET_EXCEEDED",
+        target: `User:${userId}`,
+        req,
+        meta: { feature: "analyze", used: budget.used, cap: budget.cap },
+      });
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite diario de uso de IA. Volte amanha ou faca upgrade.",
+          code: "BUDGET_EXCEEDED",
+          used: budget.used,
+          cap: budget.cap,
           upgradeUrl: "/precos",
         },
         { status: 402 }
@@ -113,11 +140,21 @@ export async function POST(req) {
 
   // 1) LLM: extrai perfil + escreve explicacoes + lista lacunas. Nao gera numeros.
   let diag;
+  let llmUsage = null; // capturado pra trackTokenUsage depois do persist
   try {
-    const raw = await completeJSON(await promptDiag(role.trim(), cv.trim()), { route: "analyze", userId });
+    const { result: raw, usage } = await completeJSONWithUsage(
+      await promptDiag(role.trim(), cv.trim()),
+      { route: "analyze", userId }
+    );
+    llmUsage = usage;
     const valid = DiagShape.safeParse(raw);
     if (!valid.success) {
       console.error("analyze: LLM shape inválido");
+      // Tokens ja foram gastos pelo provider — track agora (track block pos-LLM
+      // nao roda nesse branch). Falha silenciosa (uso ja gastou).
+      if (userId && llmUsage) {
+        await trackTokenUsage(userId, "analyze", llmUsage);
+      }
       return NextResponse.json(
         {
           error: "A IA devolveu uma resposta em formato inesperado. Tente novamente em alguns segundos.",
@@ -128,7 +165,8 @@ export async function POST(req) {
     }
     diag = valid.data;
   } catch (e) {
-    // Não vazar detalhes ao cliente.
+    // Não vazar detalhes ao cliente. LLM lancou antes de responder => sem
+    // tokens cobrados pelo provider, nada a track.
     console.error("analyze: LLM falhou", e?.message);
     return NextResponse.json(
       {
@@ -137,6 +175,33 @@ export async function POST(req) {
       },
       { status: 502 }
     );
+  }
+
+  // LLM passou: tokens ja foram cobrados pelo provider. Track AGORA pra
+  // garantir contagem mesmo se persist abaixo falhar. Falha silenciosa. Em
+  // seguida verifica budget pos-uso e dispara audit log se o user passou do
+  // cap mesmo apos a chamada (sinal de bypass do pre-check ou cap apertado).
+  if (userId && llmUsage) {
+    await trackTokenUsage(userId, "analyze", llmUsage);
+    try {
+      const budgetAfter = await checkDailyBudget(userId, userPlan);
+      if (!budgetAfter.ok) {
+        await audit({
+          userId,
+          action: "SECURITY_BUDGET_EXCEEDED",
+          target: `User:${userId}`,
+          req,
+          meta: {
+            feature: "analyze",
+            used: budgetAfter.used,
+            cap: budgetAfter.cap,
+            phase: "post-llm",
+          },
+        });
+      }
+    } catch (e) {
+      console.error("analyze: post-budget check falhou", e?.message);
+    }
   }
 
   // 2) Busca vagas reais (Adzuna/Jooble/Greenhouse/Lever) ou cai em fixtures.
@@ -326,7 +391,9 @@ export async function POST(req) {
 
     // Uso ja foi contabilizado atomicamente em enforceUsage no inicio do POST
     // (fix TOCTOU — antes era check + trackUsage com race window). NAO chamar
-    // trackUsage aqui senao duplica o count.
+    // trackUsage aqui senao duplica o count. Token tracking (tokensIn/Out +
+    // costUsd) ja foi feito apos completeJSONWithUsage, antes desse persist
+    // block, pra garantir contagem mesmo se persist falhar.
 
     // Rastro LGPD: registra fonte + consentimento (payloadHash prova consent
     // sem reter o bruto se o usuario revogar/apagar).

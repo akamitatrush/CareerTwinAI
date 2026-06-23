@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { promptPortfolio } from "@/lib/prompts";
 import { PortfolioImportBody, PortfolioShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { safeFetchExternal, isPrivateIp } from "@/lib/safe-fetch";
+import { trackTokenUsage, checkDailyBudget, getUserPlan } from "@/lib/billing/enforce";
+import { audit } from "@/lib/audit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -112,6 +114,32 @@ export async function POST(req) {
   const limit = await guardLLM(req, { name: "portfolio", userId, perMinuteAnon: 2, perMinuteUser: 8 });
   if (!limit.ok) return tooMany(limit);
 
+  // Wave 11: cost amplification defense — budget diario antes do LLM rodar.
+  let userPlan = null;
+  if (userId) {
+    userPlan = (await getUserPlan(userId)).id;
+    const budget = await checkDailyBudget(userId, userPlan);
+    if (!budget.ok) {
+      await audit({
+        userId,
+        action: "SECURITY_BUDGET_EXCEEDED",
+        target: `User:${userId}`,
+        req,
+        meta: { feature: "portfolio", used: budget.used, cap: budget.cap },
+      });
+      return NextResponse.json(
+        {
+          error: "Você atingiu o limite diário de uso de IA. Volte amanhã ou faça upgrade.",
+          code: "BUDGET_EXCEEDED",
+          used: budget.used,
+          cap: budget.cap,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+  }
+
   let body;
   try {
     body = await req.json();
@@ -192,13 +220,16 @@ export async function POST(req) {
   }
 
   let portfolio;
+  let llmUsage = null;
   try {
-    const raw = await completeJSON(promptPortfolio(github, repos, siteText), {
-      route: "portfolio.import",
-      userId,
-    });
+    const { result: raw, usage } = await completeJSONWithUsage(
+      promptPortfolio(github, repos, siteText),
+      { route: "portfolio.import", userId }
+    );
+    llmUsage = usage;
     const valid = PortfolioShape.safeParse(raw);
     if (!valid.success) {
+      if (userId && llmUsage) await trackTokenUsage(userId, "portfolio", llmUsage);
       return NextResponse.json(
         {
           error: "A IA devolveu uma resposta em formato inesperado. Tente novamente em alguns segundos.",
@@ -217,6 +248,30 @@ export async function POST(req) {
       },
       { status: 502 }
     );
+  }
+
+  // Wave 11: token tracking + post-budget audit. Falha silenciosa.
+  if (userId && llmUsage) {
+    await trackTokenUsage(userId, "portfolio", llmUsage);
+    try {
+      const budgetAfter = await checkDailyBudget(userId, userPlan);
+      if (!budgetAfter.ok) {
+        await audit({
+          userId,
+          action: "SECURITY_BUDGET_EXCEEDED",
+          target: `User:${userId}`,
+          req,
+          meta: {
+            feature: "portfolio",
+            used: budgetAfter.used,
+            cap: budgetAfter.cap,
+            phase: "post-llm",
+          },
+        });
+      }
+    } catch (e) {
+      console.error("portfolio: post-budget check falhou", e?.message);
+    }
   }
 
   if (userId) {

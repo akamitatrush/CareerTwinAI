@@ -23,13 +23,18 @@ vi.mock("@/lib/db", () => {
   return { prisma: mock };
 });
 
-vi.mock("@/lib/llm", () => ({ completeJSON: vi.fn() }));
+vi.mock("@/lib/llm", () => ({
+  completeJSON: vi.fn(),
+  completeJSONWithUsage: vi.fn(),
+}));
 vi.mock("@/lib/prompts", () => ({
   promptTailor: vi.fn(() => ({ system: "sys", user: "usr" })),
 }));
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/billing/enforce", () => ({
   enforceUsage: vi.fn(async () => ({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" })),
+  trackTokenUsage: vi.fn(async () => undefined),
+  checkDailyBudget: vi.fn(async () => ({ ok: true, used: 0, cap: 100 })),
 }));
 vi.mock("@/lib/rate-limit", () => ({
   guardLLM: vi.fn(async () => ({ ok: true })),
@@ -42,9 +47,13 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSON, completeJSONWithUsage } from "@/lib/llm";
 import { auth } from "@/lib/auth";
-import { enforceUsage } from "@/lib/billing/enforce";
+import {
+  enforceUsage,
+  trackTokenUsage,
+  checkDailyBudget,
+} from "@/lib/billing/enforce";
 import { guardLLM } from "@/lib/rate-limit";
 
 const VALID_CV = "Maria, dev backend ha 5 anos. Trabalhou com Python e SQL em empresas grandes brasileiras.";
@@ -68,9 +77,14 @@ beforeEach(async () => {
   prisma.application.findUnique.mockReset();
   prisma.tailoredCv.create.mockReset();
   completeJSON.mockReset();
+  completeJSONWithUsage.mockReset();
   auth.mockReset();
   enforceUsage.mockReset();
   enforceUsage.mockResolvedValue({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" });
+  trackTokenUsage.mockReset();
+  trackTokenUsage.mockResolvedValue(undefined);
+  checkDailyBudget.mockReset();
+  checkDailyBudget.mockResolvedValue({ ok: true, used: 0, cap: 100 });
   guardLLM.mockReset();
   guardLLM.mockResolvedValue({ ok: true });
 
@@ -123,7 +137,7 @@ describe("POST /api/tailor — gates billing e rate-limit", () => {
     guardLLM.mockResolvedValueOnce({ ok: false, retryAfter: 30 });
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend", vaga: VALID_VAGA }));
     expect(r.status).toBe(429);
-    expect(completeJSON).not.toHaveBeenCalled();
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
   });
 
   it("402 LIMIT_REACHED quando enforceUsage nega (Free)", async () => {
@@ -139,12 +153,12 @@ describe("POST /api/tailor — gates billing e rate-limit", () => {
     const data = await r.json();
     expect(data.code).toBe("LIMIT_REACHED");
     expect(data.feature).toBe("tailor");
-    expect(completeJSON).not.toHaveBeenCalled();
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
   });
 
   it("anonimo NAO chama enforceUsage", async () => {
     auth.mockResolvedValue(null);
-    completeJSON.mockResolvedValue(VALID_TAILOR_RESULT);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_TAILOR_RESULT, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend", vaga: VALID_VAGA }));
     expect(r.status).toBe(200);
     expect(enforceUsage).not.toHaveBeenCalled();
@@ -154,7 +168,7 @@ describe("POST /api/tailor — gates billing e rate-limit", () => {
 describe("POST /api/tailor — LLM e persistencia", () => {
   it("502 LLM_FAILED quando completeJSON lanca", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockRejectedValue(new Error("timeout"));
+    completeJSONWithUsage.mockRejectedValue(new Error("timeout"));
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend", vaga: VALID_VAGA }));
     expect(r.status).toBe(502);
     const data = await r.json();
@@ -164,7 +178,7 @@ describe("POST /api/tailor — LLM e persistencia", () => {
 
   it("200 anonimo: retorna data SEM tailoredCvId (nao persiste)", async () => {
     auth.mockResolvedValue(null);
-    completeJSON.mockResolvedValue(VALID_TAILOR_RESULT);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_TAILOR_RESULT, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend", vaga: VALID_VAGA }));
     expect(r.status).toBe(200);
     const data = await r.json();
@@ -175,7 +189,7 @@ describe("POST /api/tailor — LLM e persistencia", () => {
 
   it("200 autenticado: persiste TailoredCv + retorna id", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockResolvedValue(VALID_TAILOR_RESULT);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_TAILOR_RESULT, usage: { inputTokens: 100, outputTokens: 50 } });
     prisma.tailoredCv.create.mockResolvedValue({ id: "tcv-1" });
     const r = await POST(
       makeReq({
@@ -199,7 +213,7 @@ describe("POST /api/tailor — LLM e persistencia", () => {
 
   it("applicationId valido (do mesmo user) e gravado", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockResolvedValue(VALID_TAILOR_RESULT);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_TAILOR_RESULT, usage: { inputTokens: 100, outputTokens: 50 } });
     prisma.application.findUnique.mockResolvedValue({ userId: "u1" });
     prisma.tailoredCv.create.mockResolvedValue({ id: "tcv-1" });
     await POST(
@@ -216,7 +230,7 @@ describe("POST /api/tailor — LLM e persistencia", () => {
 
   it("applicationId de OUTRO user e ignorado silenciosamente (IDOR-safe)", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockResolvedValue(VALID_TAILOR_RESULT);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_TAILOR_RESULT, usage: { inputTokens: 100, outputTokens: 50 } });
     // App existe mas pertence a outro user.
     prisma.application.findUnique.mockResolvedValue({ userId: "outro" });
     prisma.tailoredCv.create.mockResolvedValue({ id: "tcv-1" });
@@ -235,7 +249,7 @@ describe("POST /api/tailor — LLM e persistencia", () => {
 
   it("persistencia falha NAO derruba resposta (graceful degradation)", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockResolvedValue(VALID_TAILOR_RESULT);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_TAILOR_RESULT, usage: { inputTokens: 100, outputTokens: 50 } });
     prisma.tailoredCv.create.mockRejectedValue(new Error("DB pool exhausted"));
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend", vaga: VALID_VAGA }));
     // 200 porque o LLM ja gerou — apenas tailoredCvId fica null.

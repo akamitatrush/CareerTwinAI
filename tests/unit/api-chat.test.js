@@ -22,7 +22,10 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-vi.mock("@/lib/llm", () => ({ completeJSON: vi.fn() }));
+vi.mock("@/lib/llm", () => ({
+  completeJSON: vi.fn(),
+  completeJSONWithUsage: vi.fn(),
+}));
 vi.mock("@/lib/prompts", () => ({
   promptChat: vi.fn(() => ({ system: "sys", user: "usr" })),
 }));
@@ -36,12 +39,23 @@ vi.mock("@/lib/rate-limit", () => ({
     })
   ),
 }));
+vi.mock("@/lib/billing/enforce", () => ({
+  trackTokenUsage: vi.fn(async () => undefined),
+  checkDailyBudget: vi.fn(async () => ({ ok: true, used: 0, cap: 100 })),
+  getUserPlan: vi.fn(async () => ({ id: "pro_monthly", name: "Pro" })),
+}));
+vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSON, completeJSONWithUsage } from "@/lib/llm";
 import { auth } from "@/lib/auth";
 import { guardLLM } from "@/lib/rate-limit";
 import { promptChat } from "@/lib/prompts";
+import {
+  trackTokenUsage,
+  checkDailyBudget,
+  getUserPlan,
+} from "@/lib/billing/enforce";
 
 let POST;
 
@@ -50,10 +64,17 @@ beforeEach(async () => {
   prisma.profile.findUnique.mockReset();
   prisma.scoreSnapshot.findFirst.mockReset();
   completeJSON.mockReset();
+  completeJSONWithUsage.mockReset();
   auth.mockReset();
   guardLLM.mockReset();
   guardLLM.mockResolvedValue({ ok: true });
   promptChat.mockClear();
+  trackTokenUsage.mockReset();
+  trackTokenUsage.mockResolvedValue(undefined);
+  checkDailyBudget.mockReset();
+  checkDailyBudget.mockResolvedValue({ ok: true, used: 0, cap: 100 });
+  getUserPlan.mockReset();
+  getUserPlan.mockResolvedValue({ id: "pro_monthly", name: "Pro" });
 
   const mod = await import("@/app/api/chat/route.js");
   POST = mod.POST;
@@ -137,7 +158,7 @@ describe("POST /api/chat — ownership: usa perfil do DB, NAO do body", () => {
     prisma.scoreSnapshot.findFirst.mockResolvedValue({
       gaps: [{ habilidade: "kubernetes" }],
     });
-    completeJSON.mockResolvedValue({ reply: "ola maria" });
+    completeJSONWithUsage.mockResolvedValue({ result: { reply: "ola maria" }, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ role: "Backend", message: "como melhoro?" }));
     expect(r.status).toBe(200);
     // Confirma scope correto na query (IDOR-safe).
@@ -165,7 +186,7 @@ describe("POST /api/chat — ownership: usa perfil do DB, NAO do body", () => {
       skills: ["python", "sql"],
     });
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
-    completeJSON.mockResolvedValue({ reply: "oi joao" });
+    completeJSONWithUsage.mockResolvedValue({ result: { reply: "oi joao" }, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ role: "Backend", message: "oi" }));
     expect(r.status).toBe(200);
     const [, perfilArg, gapsArg] = promptChat.mock.calls[0];
@@ -179,7 +200,7 @@ describe("POST /api/chat — ownership: usa perfil do DB, NAO do body", () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
     prisma.profile.findUnique.mockResolvedValue(null);
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
-    completeJSON.mockResolvedValue({ reply: "ola" });
+    completeJSONWithUsage.mockResolvedValue({ result: { reply: "ola" }, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ role: "Backend", message: "oi" }));
     expect(r.status).toBe(200);
     const [, perfilArg, gapsArg] = promptChat.mock.calls[0];
@@ -194,7 +215,7 @@ describe("POST /api/chat — LLM failure", () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
     prisma.profile.findUnique.mockResolvedValue({ perfilJson: {} });
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
-    completeJSON.mockRejectedValue(new Error("LLM down"));
+    completeJSONWithUsage.mockRejectedValue(new Error("LLM down"));
     const r = await POST(makeReq({ role: "Backend", message: "oi" }));
     expect(r.status).toBe(502);
     const data = await r.json();

@@ -20,13 +20,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { promptDiag } from "@/lib/prompts";
 import { DiagShape } from "@/lib/validators";
 import { computeAllSubScores } from "@/lib/scoring/subscores";
 import { searchJobs } from "@/lib/jobs";
 import { audit } from "@/lib/audit";
-import { enforceUsage } from "@/lib/billing/enforce";
+import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -92,6 +92,29 @@ export async function POST(req) {
         feature: "analyze",
         plan: enforce.plan,
         limit: enforce.limit,
+        upgradeUrl: "/precos",
+      },
+      { status: 402 }
+    );
+  }
+  const userPlan = enforce.plan;
+
+  // 3.5) Pre-check budget diario (cost amplification defense — Wave 11).
+  const budget = await checkDailyBudget(userId, userPlan);
+  if (!budget.ok) {
+    await audit({
+      userId,
+      action: "SECURITY_BUDGET_EXCEEDED",
+      target: `User:${userId}`,
+      req,
+      meta: { feature: "analyze", route: "profile.refresh", used: budget.used, cap: budget.cap },
+    });
+    return NextResponse.json(
+      {
+        error: "Você atingiu o limite diário de uso de IA. Volte amanhã ou faça upgrade.",
+        code: "BUDGET_EXCEEDED",
+        used: budget.used,
+        cap: budget.cap,
         upgradeUrl: "/precos",
       },
       { status: 402 }
@@ -238,19 +261,23 @@ export async function POST(req) {
   const role = profile.targetRole;
 
   let llmDiag;
+  let llmUsage = null; // Wave 11: capturado pra trackTokenUsage
   try {
     // Passa completedHabilidades pro LLM evitar repetir as mesmas microacoes
     // (loop "marca done -> volta mesma sugestao -> marca de novo").
-    const raw = await completeJSON(
+    const { result: raw, usage } = await completeJSONWithUsage(
       await promptDiag(role.trim(), cv.trim(), completedHabilidades),
       {
         route: "profile.refresh",
         userId,
       }
     );
+    llmUsage = usage;
     const valid = DiagShape.safeParse(raw);
     if (!valid.success) {
       console.error("profile.refresh: LLM shape inválido");
+      // Tokens ja gastos — track antes do 502.
+      if (llmUsage) await trackTokenUsage(userId, "analyze", llmUsage);
       return NextResponse.json(
         {
           error: "A IA devolveu resposta em formato inesperado. Tente novamente em alguns segundos.",
@@ -270,6 +297,31 @@ export async function POST(req) {
       },
       { status: 502 }
     );
+  }
+
+  // Token tracking + post-budget audit (Wave 11). Falha silenciosa.
+  if (llmUsage) {
+    await trackTokenUsage(userId, "analyze", llmUsage);
+    try {
+      const budgetAfter = await checkDailyBudget(userId, userPlan);
+      if (!budgetAfter.ok) {
+        await audit({
+          userId,
+          action: "SECURITY_BUDGET_EXCEEDED",
+          target: `User:${userId}`,
+          req,
+          meta: {
+            feature: "analyze",
+            route: "profile.refresh",
+            used: budgetAfter.used,
+            cap: budgetAfter.cap,
+            phase: "post-llm",
+          },
+        });
+      }
+    } catch (e) {
+      console.error("profile.refresh: post-budget check falhou", e?.message);
+    }
   }
 
   // 9) Busca vagas (falha graceful — score continua valido com 0 vagas).

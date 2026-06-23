@@ -32,7 +32,10 @@ vi.mock("@/lib/db", () => {
   return { prisma: mock };
 });
 
-vi.mock("@/lib/llm", () => ({ completeJSON: vi.fn() }));
+vi.mock("@/lib/llm", () => ({
+  completeJSON: vi.fn(),
+  completeJSONWithUsage: vi.fn(),
+}));
 vi.mock("@/lib/prompts", () => ({
   promptDiag: vi.fn(async () => ({ system: "sys", user: "usr" })),
 }));
@@ -40,6 +43,8 @@ vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/billing/enforce", () => ({
   enforceUsage: vi.fn(async () => ({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" })),
+  trackTokenUsage: vi.fn(async () => undefined),
+  checkDailyBudget: vi.fn(async () => ({ ok: true, used: 0, cap: 100 })),
 }));
 vi.mock("@/lib/rate-limit", () => ({
   guardLLM: vi.fn(async () => ({ ok: true })),
@@ -73,10 +78,14 @@ vi.mock("@/lib/notifications", () => ({
 }));
 
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSON, completeJSONWithUsage } from "@/lib/llm";
 import { audit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
-import { enforceUsage } from "@/lib/billing/enforce";
+import {
+  enforceUsage,
+  trackTokenUsage,
+  checkDailyBudget,
+} from "@/lib/billing/enforce";
 import { guardLLM } from "@/lib/rate-limit";
 
 const VALID_CV = "Maria, dev backend ha 5 anos. Trabalhou com Python, SQL, Docker e AWS em empresas grandes.";
@@ -122,10 +131,15 @@ beforeEach(async () => {
     return await Promise.all(cb);
   });
   completeJSON.mockReset();
+  completeJSONWithUsage.mockReset();
   audit.mockReset();
   auth.mockReset();
   enforceUsage.mockReset();
   enforceUsage.mockResolvedValue({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" });
+  trackTokenUsage.mockReset();
+  trackTokenUsage.mockResolvedValue(undefined);
+  checkDailyBudget.mockReset();
+  checkDailyBudget.mockResolvedValue({ ok: true, used: 0, cap: 100 });
   guardLLM.mockReset();
   guardLLM.mockResolvedValue({ ok: true });
 
@@ -179,7 +193,7 @@ describe("POST /api/analyze — rate-limit e billing gates", () => {
     guardLLM.mockResolvedValueOnce({ ok: false, retryAfter: 30 });
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend" }));
     expect(r.status).toBe(429);
-    expect(completeJSON).not.toHaveBeenCalled();
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
   });
 
   it("402 LIMIT_REACHED quando enforceUsage nega (so logado)", async () => {
@@ -198,12 +212,12 @@ describe("POST /api/analyze — rate-limit e billing gates", () => {
     expect(data.feature).toBe("analyze");
     expect(data.plan).toBe("free");
     // Nao chega a chamar LLM.
-    expect(completeJSON).not.toHaveBeenCalled();
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
   });
 
   it("anonimo NAO chama enforceUsage (so rate-limit aplica)", async () => {
     auth.mockResolvedValue(null);
-    completeJSON.mockResolvedValue(VALID_DIAG);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_DIAG, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend" }));
     expect(r.status).toBe(200);
     expect(enforceUsage).not.toHaveBeenCalled();
@@ -213,7 +227,7 @@ describe("POST /api/analyze — rate-limit e billing gates", () => {
 describe("POST /api/analyze — defesas LLM", () => {
   it("502 LLM_INVALID quando shape invalido", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockResolvedValue({ perfil: {}, gaps: "string-bad" });
+    completeJSONWithUsage.mockResolvedValue({ result: { perfil: {}, gaps: "string-bad" }, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend" }));
     expect(r.status).toBe(502);
     const data = await r.json();
@@ -225,7 +239,7 @@ describe("POST /api/analyze — defesas LLM", () => {
 
   it("502 LLM_FAILED quando completeJSON lanca", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockRejectedValue(new Error("upstream timeout"));
+    completeJSONWithUsage.mockRejectedValue(new Error("upstream timeout"));
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend" }));
     expect(r.status).toBe(502);
     const data = await r.json();
@@ -238,7 +252,7 @@ describe("POST /api/analyze — defesas LLM", () => {
 describe("POST /api/analyze — happy path autenticado", () => {
   function setupOk({ snapshotId = "snap-1", prevCount = 0 } = {}) {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockResolvedValue(VALID_DIAG);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_DIAG, usage: { inputTokens: 100, outputTokens: 50 } });
     prisma.profile.upsert.mockResolvedValue({ userId: "u1" });
     prisma.scoreSnapshot.create.mockResolvedValue({
       id: snapshotId,
@@ -338,7 +352,7 @@ describe("POST /api/analyze — happy path autenticado", () => {
 describe("POST /api/analyze — efemero (anonimo)", () => {
   it("200 retorna efemero:true sem persistir", async () => {
     auth.mockResolvedValue(null);
-    completeJSON.mockResolvedValue(VALID_DIAG);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_DIAG, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend" }));
     expect(r.status).toBe(200);
     const data = await r.json();
@@ -354,7 +368,7 @@ describe("POST /api/analyze — efemero (anonimo)", () => {
 describe("POST /api/analyze — DB failure no persist", () => {
   it("500 PERSIST_FAILED se profile.upsert lanca", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSON.mockResolvedValue(VALID_DIAG);
+    completeJSONWithUsage.mockResolvedValue({ result: VALID_DIAG, usage: { inputTokens: 100, outputTokens: 50 } });
     prisma.profile.upsert.mockRejectedValue(new Error("DB pool exhausted"));
     const r = await POST(makeReq({ cv: VALID_CV, role: "Backend" }));
     expect(r.status).toBe(500);

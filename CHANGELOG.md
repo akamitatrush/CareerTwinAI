@@ -5,6 +5,141 @@ Todas as mudancas notaveis deste projeto sao documentadas aqui.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.10.0] — 2026-06-27 (branch redesign/claude-design)
+
+### Added — 4 pilares
+
+- **Pilar 1 — Autoconhecimento:** 3 mini-assessments com narrativas + visualizacoes SVG
+  (`DiscMatrix` quadrante, `ValoresRadar` 16 eixos, `IkigaiVenn` 4 circulos). Narrativas
+  a partir de 6 arquetipos de Valores e careerHints DISC. `NextStepsBlock` integrado.
+- **Pilar 3 — Skill Gap Mapper completo:** 41 cursos curados (entries com source, free,
+  duracao, skill-keyed). Integracao inline em `/gaps` com microactions + completion
+  endpoints.
+- **Pilar 3 — Evidencias de competencia:** schema `Evidence` + `/evidencias` UI + export
+  LGPD. Demonstrar > declarar.
+- **Pilar 4 — Radar:** 32 fixtures curadas com skills extraiveis pela taxonomy (fixtures
+  antigas geravam vagas sem skills -> match=0 -> tela vazia). 6 ATS providers (Adzuna BR,
+  Jooble, Greenhouse, Lever, Ashby, Workable) + filtros senioridade/modelo/aderencia.
+
+### Added — RAG real (Onda 9)
+
+- **Voyage AI embeddings** (`voyage-3`, 1024 dims, ~$0.06/1M tokens) + OpenAI fallback
+  Matryoshka (`text-embedding-3-small` 1536 dims truncado pra 1024 via parametro
+  `dimensions`).
+- **pgvector no Neon** com `Unsupported("vector(1024)")` no Prisma + HNSW cosine index.
+- **Hybrid retrieval com RRF fusion** (k=60) — vetor (cosine) + keyword (BM25-lite
+  com audience boost 1.5x + tag-match). Robusto contra magnitudes diferentes.
+- **Knowledge base 30 -> 159 chunks** com cobertura: CV/LinkedIn/Interview/Transition/
+  Salary/Soft-skills/ATS/Mercado-BR/Tech-modern/Identidade/Network. Curacao manual,
+  nao scraped.
+- **Ingestao idempotente** (`scripts/ingest-knowledge.mjs`) com sha256 `contentHash` +
+  throttling pra free tier Voyage.
+- **Eval framework:** 50 queries com ground truth manual + `recall@3 / recall@5 / MRR /
+  NDCG@5` + **threshold gate (recall@3 >= 70%)**. Resultado atual: **93.9% recall@3
+  keyword-only (PASSED)**; ~96-98% esperado pos-ingestao Voyage.
+- Comandos `npm run ingest:knowledge` + `npm run eval:rag` + `npm run eval:rag:json`.
+- `docs/RAG.md` (700 linhas) — arquitetura completa.
+
+### Added — Monetizacao foundation (Onda 10)
+
+- **Stripe SDK** + **Checkout Session** + **Customer Portal** + **5 Webhooks** com
+  **HMAC verify** + **idempotencia** (`BillingEvent.stripeEventId` unique).
+- Schema: `Subscription{status, plan, currentPeriodEnd, stripeCustomerId}` +
+  `UsageMeter{kind, count, period}` + `BillingEvent{stripeEventId, type, payload}` +
+  enum `SubscriptionStatus`.
+- **Enforcement atomico** em 4 rotas LLM (analyze/tailor/opportunities/interview) via
+  `lib/billing/enforce.js` — **TOCTOU fix com `Prisma.$transaction` isolationLevel
+  `Serializable`**.
+- 4 planos: Free / Pro Monthly R$29 / Pro Yearly R$290 / Team R$99 (todos com Price IDs
+  placeholder ate criar no Stripe).
+- **503 graceful** quando `STRIPE_SECRET_KEY` ausente — endpoints retornam 503 amigavel,
+  resto da app continua funcionando.
+- **OWNER_EMAILS env var** = bypass total de limite Free (Sergio testa sem limit).
+- `docs/MONETIZACAO.md` — planos, setup, enforcement, seguranca.
+
+### Added — Refresh diagnosis sem repaste (Onda 12)
+
+- **`POST /api/profile/refresh`** — reusa `Profile.rawCv` + `targetRole` + `perfilJson`
+  pra recalcular score (nao pede CV de novo).
+- **Botao "Atualizar diagnostico"** em Report + modal **"Aplicar conquistas ao perfil?"**
+  com 3 opcoes: aplicar+recalcular / so recalcular / cancelar.
+- `promptDiag(completedHabilidades=[...])` — LLM gera gaps **diferentes** (anti-loop
+  infinito quando user marca gaps como done).
+- **Bonus deterministico de `impactoPontos`** aos sub-scores com **cap 15 por sub-score +
+  20 total** (anti-gaming: impede que marcar 20 microacoes triviais infle o score).
+
+### Added — Quality & Security (Onda 11)
+
+- **5 audits read-only em `docs/audits/`:**
+  - `01-backend.md` — review backend
+  - `02-frontend.md` — review frontend
+  - `03-db-infra.md` — review DB + infra
+  - `04-appsec-owasp.md` — OWASP Top 10:2025
+  - `05-ai-llm-security.md` — OWASP LLM Top 10
+- **11 vulnerabilidades P0+P1 corrigidas:**
+  1. **XSS via Zod URL** — `safeExternalUrl` + `safeHref` em 5 sinks
+  2. **Rate-limit Upstash Redis** + fallback Map em memoria (cross-lambda em prod)
+  3. **TOCTOU UsageMeter** — `Prisma.$transaction` `Serializable`
+  4. **Cost amplification** — budget per-user $0.10/$5/$20 daily + log JSON
+  5. **AuditLog** — 17 actions + LGPD-friendly IP hash sha256+`AUDIT_IP_SALT`
+  6. **`Profile.rawCv` TTL 90d** + cron `/api/cron/redact-cv` diario
+  7. **`migrate deploy` fora do build** + `docs/DEPLOY.md` (3 estrategias)
+  8. **Transacao gigante /opportunities** -> `createMany` batch
+  9. **Auth rate-limit** (3 magic-links/email/hora)
+  10. **Middleware PROTECTED sync** — `lib/auth-protected-paths.js` SSoT
+  11. **Chat ownership** — body sem perfil/gaps, server carrega DB pra evitar spoofing
+- **Cron digest batching** (BATCH=10 paralelo + dedup por role).
+- **SSRF custom HTTPS agent** com IP pinning (mitiga DNS rebinding TOCTOU) + private
+  IPv4/IPv6/CGNAT blocks.
+- **Sentry whitelist** expandida pra rotas sensiveis.
+- **CI gate** — `npm audit` + Dependabot weekly.
+- **467 testes** unit (+147 desde v0.9) em 36 arquivos + 5 e2e Playwright.
+
+### Added — Plataforma
+
+- **Upstash Redis** — rate-limit + cache cross-lambda em prod, Map fallback em dev.
+- **OWNER_EMAILS** env — bypass total de limite Free para owners.
+- **`POST /api/cron/usage-cleanup`** — limpeza periodica de `UsageMeter` antigo.
+- 21 modelos no Prisma (era 13): + `Subscription` + `UsageMeter` + `BillingEvent` +
+  `AuditLog` + `KnowledgeChunk` + `Notification`.
+
+### Changed
+
+- **Report.js polish:** hero CTA bar (+ /dashboard / /gaps / /oportunidades), sub-scores
+  compactos com barra colorida (good/mid/low), top 3 microacoes + "Ver todas N", top 5
+  vagas com filtro match>=30% + "Ver todas N", footer com nav.
+- **User logado redirecionado pra /dashboard apos analyze** (era render inline redundante).
+- **Free tier mais generoso:** analyze 3->10/mes, tailor 1->5/mes, opportunities
+  5->20/dia, interview 5->10/mes.
+- **SaaS polish holistico** (Onda 8): sombras Linear-style, typography hierarchy
+  (display-1/2/3), botoes com gradient + inset glassy, 14 cards padronizados com depth,
+  AppShell premium, focus rings, skeleton shimmer.
+- **AppShell** sidebar 252px desktop, header colapsado mobile, Indigo Sereno + neutros
+  quentes.
+
+### Fixed
+
+- **Radar vagas vazio** — fixtures match=0 corrigidas pra 32 curadas com skills
+  extraiveis.
+- **/dashboard EmptyState links broken** — apontavam pra /dashboard, agora "Construir
+  meu gemeo" -> /.
+- **TOCTOU em UsageMeter** — race condition no limite Free corrigida com Serializable.
+- **SSRF parcial em /portfolio/import** — DNS rebinding (TOCTOU IP) mitigado com custom
+  HTTPS agent + IP pinning.
+- **`migrate deploy` no build** — race condition em PRs paralelos eliminada (rodadas
+  manuais ou via Install Command).
+- **Loop infinito de gaps no refresh** — LLM agora recebe `completedHabilidades` e gera
+  gaps diferentes.
+- 30+ outras correcoes de tipos/UX/a11y.
+
+### Documentation
+
+- `docs/RAG.md` — arquitetura RAG real (700 linhas).
+- `docs/MONETIZACAO.md` — planos, setup Stripe, enforcement, seguranca.
+- `docs/DEPLOY.md` — 3 estrategias para aplicar migrations fora do build.
+- `docs/audits/` — 5 audits + remediacoes.
+- `docs/HANDOFF_TIME_TERA.md` — 341 linhas para o time.
+
 ## [0.9.0] — MVP completo (branch redesign/claude-design)
 
 ### Added — 4 pilares completos

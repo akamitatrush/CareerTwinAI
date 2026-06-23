@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import NotificationsBell from "@/components/NotificationsBell";
+import CopilotWidget from "@/components/CopilotWidget";
 
 const NAV = [
   {
@@ -272,6 +273,12 @@ export default function AppShell({ children, user }) {
 
         {children}
       </div>
+
+      {/* Career Copilot — widget flutuante sempre visivel pra users logados.
+          Renderizado aqui (no AppShell), entao so aparece dentro do (app)
+          group, que e auth-gated no layout.js. Public pages (/, /entrar)
+          nao usam AppShell, logo nao mostram o copilot. */}
+      <CopilotWidget user={user} />
     </div>
   );
 }

@@ -347,8 +347,9 @@ export default async function ContaPage({ searchParams }) {
                 Preferências de notificação
               </h2>
               <p className="ct-conta-card-sub">
-                Toda segunda 9h BRT enviamos vagas novas que dão match. Desligue
-                quando quiser.
+                Briefings por email: <b>diários</b> (terça a domingo, 8h BRT)
+                com 3 vagas novas + 1 ação concreta, e <b>retrospectiva semanal</b>{" "}
+                às segundas 9h BRT. Um toggle só, desliga ambos quando quiser.
               </p>
             </div>
           </div>
@@ -373,7 +374,7 @@ export default async function ContaPage({ searchParams }) {
                 style={{ width: 16, height: 16, accentColor: "var(--primary)" }}
               />
               <span style={{ fontSize: 13.5, color: "var(--text)" }}>
-                Receber digest semanal por email
+                Receber briefings e digest por email
               </span>
             </label>
             <button className="ct-conta-btn" type="submit">

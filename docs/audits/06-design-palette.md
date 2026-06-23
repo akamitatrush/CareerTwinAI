@@ -83,7 +83,7 @@ Light: `--text-soft: #797585` (luma ~47%), `--text-faint: #6B6679` (luma ~41%). 
 ## 6. Opções de paleta (sem implementar)
 
 ### Opção A — Índigo Sereno refinada
-*Mantém DNA "calmo, editorial, índigo + bege". Conserta dark mode + cromaticidade.*
+*Mantém DNA "calmo, editorial, índigo". Conserta dark mode + cromaticidade.*
 
 | Token | Light | Dark |
 |---|---|---|
@@ -99,7 +99,7 @@ Light: `--text-soft: #797585` (luma ~47%), `--text-faint: #6B6679` (luma ~41%). 
 | `--text` | `#1F1D33` | `#EAE8F2` |
 | `--text-soft` | `#8A8694` | `#A8A2BC` |
 
-**Feel:** profissional sereno, editorial, índigo. WCAG AA pass em todos pares texto/surface.
+**Feel:** profissional sereno editorial. WCAG AA pass.
 
 ### Opção B — Slate & Lime
 *Estética Vercel/Linear/Resend — slate cool + accent vibrante.*
@@ -116,7 +116,7 @@ Light: `--text-soft: #797585` (luma ~47%), `--text-faint: #6B6679` (luma ~41%). 
 | `--text` | `#0F172A` | `#F1F5F9` |
 | `--text-soft` | `#64748B` | `#94A3B8` |
 
-**Feel:** tech/dev/futuro. WCAG AA pass; lime-600 sobre branco passa AA pra UI components (3:1) mas texto large only. *Atenção:* lime + slate fora do mood "career counseling humano".
+**Feel:** tech/dev/futuro. Lime-600 sobre branco passa AA UI components (3:1), texto large only. *Risco:* lime+slate fora do mood "career counseling humano".
 
 ### Opção C — Warm Sand
 *Estética Stripe Atlas / Substack — paleta bege quente + terracotta.*
@@ -133,7 +133,7 @@ Light: `--text-soft: #797585` (luma ~47%), `--text-faint: #6B6679` (luma ~41%). 
 | `--text` | `#1C1917` | `#FAFAF9` |
 | `--text-soft` | `#78716C` | `#A8A29E` |
 
-**Feel:** acolhedor, humano, "feito por gente". WCAG AA pass. *Atenção:* orange-700 muito quente pode parecer "marca de cafeteria".
+**Feel:** acolhedor, humano. WCAG AA pass. *Risco:* orange-700 muito quente — pode parecer "marca de cafeteria".
 
 ---
 
@@ -141,9 +141,9 @@ Light: `--text-soft: #797585` (luma ~47%), `--text-faint: #6B6679` (luma ~41%). 
 
 | Wave | Escopo | Esforço |
 |---|---|---|
-| **A — Refinar tokens atuais** | Adicionar overrides dark pra `--primary*`, `--positive*`, `--attention*` (~12 tokens). Ajustar `--text-faint` no light (corrige hierarquia). Subir cromaticidade `--positive` e `--attention` em 8-10 pp. | **5-6h** (CSS + smoke test light/dark em 5 telas). |
-| **B — Theme selector** | Componente `<ThemePicker>` em `/conta` salvando `localStorage.ct_palette` (`indigo` / `slate-lime` / `warm-sand`). Cada paleta vira um bloco `:root[data-palette="..."]` adicional. | **8-10h** (CSS triplicado pros 3 sets + UI picker + testes). |
-| **C — Theme builder (futuro)** | UI custom: user escolhe primary/positive/attention via color picker, sistema gera tints/softs via OKLCH lightness shift, persiste no servidor. | **20-30h** (complexidade real: validação contrast, persistência, preview live). |
+| **A — Refinar tokens atuais** | Overrides dark pra `--primary*`, `--positive*`, `--attention*` (~12 tokens). Ajustar `--text-faint` light. Subir C de positive/attention. | **5-6h** |
+| **B — Theme selector** | `<ThemePicker>` em `/conta` salva `localStorage.ct_palette`. Cada paleta vira bloco `:root[data-palette="..."]`. | **8-10h** |
+| **C — Theme builder** | User customiza primary/positive/attention via color picker; sistema gera tints/softs via OKLCH shift. | **20-30h** |
 
 ## 8. Conformidade WCAG (resumo)
 
@@ -158,11 +158,9 @@ Light: `--text-soft: #797585` (luma ~47%), `--text-faint: #6B6679` (luma ~41%). 
 
 | Opção | Status |
 |---|---|
-| **A — Índigo Sereno refinada** | 🟢 **Recomendado primeiro.** Risco baixo (sem migração de identidade), conserta o bug crítico do dark mode, mantém os 146 chips/badges existentes. |
-| **B — Slate & Lime** | 🟡 Considerar depois. Pode ressoar com audience tech, mas muda mood completamente — exige decisão estratégica de produto. |
-| **C — Warm Sand** | 🟡 Considerar depois. Ressoa bem com tom de "career counseling humano", mas orange-700 pesa visualmente em telas densas (`/relatorio`, `/oportunidades`). |
-| **Theme selector (Wave B)** | 🟢 Recomendado depois da Wave A. Atende literalmente o pedido do user *"opção de escolher a paleta"*. Esforço razoável. |
+| **A — Índigo Sereno refinada** | 🟢 **Primeiro.** Risco baixo, conserta bug crítico dark, mantém 146 chips/badges. |
+| **B — Slate & Lime** | 🟡 Depois. Ressoa tech mas muda mood — decisão estratégica de produto. |
+| **C — Warm Sand** | 🟡 Depois. Tom "career counseling humano", mas orange pesa em telas densas (`/relatorio`, `/oportunidades`). |
+| **Wave B (theme selector)** | 🟢 Depois da Wave A. Atende literalmente o pedido do user. |
 
----
-
-**Nota final:** Wave A pode rodar antes de qualquer redesign maior. É hotfix de paleta, não redesign — mantém os 146 chips/badges/status atuais, só conserta os tokens. Risco mínimo, ganho percebido alto.
+**Nota:** Wave A é hotfix de paleta, não redesign — mantém todos componentes, só conserta tokens. Risco mínimo, ganho alto.
