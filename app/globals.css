@@ -2021,7 +2021,24 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 .ct-action-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-soft); border-radius: 7px; padding: 4px 9px; }
 .ct-action-cta { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--primary); text-decoration: none; }
 
-.ct-empty-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; font-size: 13px; color: var(--text-muted); }
+.ct-empty-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+.ct-empty-card ol { color: var(--text); }
+.ct-empty-card strong { color: var(--text); }
+
+.ct-link-inline { color: var(--primary); font-weight: 700; text-decoration: none; border-bottom: 1px dashed var(--primary-tint); transition: border-color 160ms var(--ease-standard); }
+.ct-link-inline:hover { border-bottom-color: var(--primary); }
+
+/* Projecao de score apos microacoes concluidas */
+.ct-score-projection { margin-top: 8px; padding: 10px 14px; background: var(--positive-soft); border: 1px solid var(--positive-tint); border-radius: var(--radius-md); font-size: 12.5px; color: var(--positive-deep); display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; max-width: 280px; }
+.ct-score-proj-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--positive); margin-top: 6px; flex-shrink: 0; box-shadow: 0 0 0 3px var(--positive-soft); }
+.ct-score-projection strong { color: var(--positive-deep); font-weight: 800; }
+.ct-score-proj-help { color: var(--text-muted); font-weight: 500; }
+
+/* Sub-score projetado: barra fantasma verde atras da real */
+.ct-ss-bar { position: relative; }
+.ct-ss-bar-fill.projected { position: absolute; inset: 0; background: var(--positive-soft); border-right: 2px solid var(--positive); border-radius: inherit; z-index: 0; }
+.ct-ss-bar-fill:not(.projected) { position: relative; z-index: 1; }
+.ct-ss-gain { font-size: 11px; color: var(--positive-deep); font-weight: 700; margin-left: 4px; }
 
 .ct-profile-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; gap: 12px; }
 .ct-profile-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -.3px; color: var(--text); margin: 0; }

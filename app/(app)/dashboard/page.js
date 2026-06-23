@@ -66,6 +66,29 @@ export default async function DashboardPage() {
       )
     : null;
 
+  // Score projetado: soma impactoPontos das microacoes concluidas em cima do
+  // overall do snapshot atual. snapshot.overall NAO recalcula sozinho — e
+  // baseado no estado do CV no momento do diagnostico. Pra cristalizar o
+  // ganho projetado, user precisa atualizar o CV e refazer o diagnostico.
+  const completedGaps = Array.isArray(latest?.gaps)
+    ? latest.gaps.filter((g) => g.completedAt)
+    : [];
+  const totalGaps = Array.isArray(latest?.gaps) ? latest.gaps.length : 0;
+  const allGapsDone = totalGaps > 0 && completedGaps.length === totalGaps;
+  const projectedGain = completedGaps.reduce(
+    (acc, g) => acc + (g.impactoPontos || 0),
+    0,
+  );
+  const currentScore = Number(latest?.overall) || 0;
+  const projectedScore = Math.min(100, currentScore + projectedGain);
+  // Soma impactoPontos por dimensao -> projecao dos sub-scores.
+  const projectedByDimension = completedGaps.reduce((acc, g) => {
+    if (g.impactoDimensao && g.impactoPontos) {
+      acc[g.impactoDimensao] = (acc[g.impactoDimensao] || 0) + g.impactoPontos;
+    }
+    return acc;
+  }, {});
+
   const completeness = computeCompleteness(profile);
   const firstName =
     (profile?.nome || session.user.name || "").split(" ")[0] || "você";
@@ -122,15 +145,19 @@ export default async function DashboardPage() {
             deltaFromFirst={deltaFromFirst}
             monthsSinceFirst={monthsSinceFirst}
             firstName={firstName}
+            currentScore={currentScore}
+            projectedScore={projectedScore}
+            projectedGain={projectedGain}
+            completedCount={completedGaps.length}
           />
-          <SubScoresCol latest={latest} />
+          <SubScoresCol latest={latest} projectedByDimension={projectedByDimension} />
         </div>
       )}
 
       {/* 2-col: actions + profile snapshot */}
       {latest && (
         <div className="ct-dash-cols">
-          <NextActionsCol latest={latest} />
+          <NextActionsCol latest={latest} allGapsDone={allGapsDone} projectedGain={projectedGain} />
           <ProfileSnapshotCol
             profile={profile}
             completeness={completeness}
@@ -191,7 +218,7 @@ function WelcomeBanner({ profile, onDismiss }) {
         <p className="ct-welcome-banner-text">
           {isFirstTime
             ? "Cole seu currículo na home (/) ou clique em “Construir meu gêmeo” pra começar. Tudo fica salvo aqui."
-            : "Seu primeiro diagnóstico chegou. Confira o score abaixo e marque as microações conforme conclui — o score recalcula sozinho."}
+            : "Seu diagnóstico está abaixo. Conforme você conclui microações, mostramos o ganho projetado — pra cristalizar no score, atualize seu CV e refaça o diagnóstico."}
         </p>
         <div className="ct-welcome-banner-actions">
           {isFirstTime ? (
@@ -214,13 +241,22 @@ function WelcomeBanner({ profile, onDismiss }) {
   );
 }
 
-function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
-  const rawScore = Number(latest?.overall);
-  const score = Number.isFinite(rawScore)
-    ? Math.max(0, Math.min(100, rawScore))
-    : 0;
+function ScoreRingCol({
+  latest,
+  deltaFromFirst,
+  monthsSinceFirst,
+  firstName,
+  currentScore,
+  projectedScore,
+  projectedGain,
+  completedCount,
+}) {
+  const score = Math.max(0, Math.min(100, currentScore));
+  const projScore = Math.max(0, Math.min(100, projectedScore));
   const CIRC = 2 * Math.PI * 74; // r=74
-  const offset = CIRC * (1 - score / 100);
+  const offsetCurrent = CIRC * (1 - score / 100);
+  const offsetProjected = CIRC * (1 - projScore / 100);
+  const hasProjection = projectedGain > 0;
 
   return (
     <div className="ct-score-col">
@@ -230,7 +266,11 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
           height="172"
           viewBox="0 0 172 172"
           role="img"
-          aria-label={`Saúde da carreira: ${score} de 100`}
+          aria-label={
+            hasProjection
+              ? `Score atual: ${score} de 100. Projetado com microacoes feitas: ${projScore} de 100.`
+              : `Saúde da carreira: ${score} de 100`
+          }
         >
           <circle
             cx="86"
@@ -240,6 +280,27 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
             stroke="var(--primary-soft)"
             strokeWidth="13"
           />
+          {/* Anel pontilhado da projecao — atras do principal, fica visivel
+              alem dele quando projScore > score. */}
+          {hasProjection && projScore > score && (
+            <circle
+              cx="86"
+              cy="86"
+              r="74"
+              fill="none"
+              stroke="var(--positive)"
+              strokeWidth="13"
+              strokeLinecap="round"
+              strokeDasharray="6 5"
+              strokeDashoffset={offsetProjected.toFixed(1)}
+              transform="rotate(-90 86 86)"
+              opacity="0.55"
+              style={{
+                strokeDasharray: `${CIRC.toFixed(1)}`,
+                strokeDashoffset: offsetProjected.toFixed(1),
+              }}
+            />
+          )}
           <circle
             cx="86"
             cy="86"
@@ -249,7 +310,7 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
             strokeWidth="13"
             strokeLinecap="round"
             strokeDasharray={CIRC.toFixed(1)}
-            strokeDashoffset={offset.toFixed(1)}
+            strokeDashoffset={offsetCurrent.toFixed(1)}
             transform="rotate(-90 86 86)"
           />
           <defs>
@@ -259,14 +320,24 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
             </linearGradient>
           </defs>
         </svg>
-        {/* Texto duplicado do SVG: aria-hidden pra evitar leitura dupla
-            (SVG ja anuncia "Saúde da carreira: X de 100"). */}
         <div className="ct-score-num" aria-hidden="true">
           <div className="ct-score-big">{score}</div>
           <div className="ct-score-of">de 100</div>
         </div>
       </div>
       <div className="ct-score-label">Saúde da carreira</div>
+      {hasProjection && (
+        <div className="ct-score-projection" role="note">
+          <span className="ct-score-proj-dot" aria-hidden="true" />
+          <span>
+            <strong>+{projectedGain} pts projetados</strong> com{" "}
+            {completedCount} {completedCount === 1 ? "ação concluída" : "ações concluídas"}
+            <span className="ct-score-proj-help">
+              {" "}— atualize o CV e refaça o diagnóstico pra cristalizar.
+            </span>
+          </span>
+        </div>
+      )}
       {deltaFromFirst > 0 && monthsSinceFirst > 0 && (
         <div className="ct-score-delta">
           <svg
@@ -319,7 +390,7 @@ function ScoreRingCol({ latest, deltaFromFirst, monthsSinceFirst, firstName }) {
   );
 }
 
-function SubScoresCol({ latest }) {
+function SubScoresCol({ latest, projectedByDimension = {} }) {
   const ss =
     latest && typeof latest.subScores === "object" && latest.subScores !== null
       ? latest.subScores
@@ -352,6 +423,8 @@ function SubScoresCol({ latest }) {
           const v = Number.isFinite(rawV)
             ? Math.max(0, Math.min(100, rawV))
             : 0;
+          const proj = Math.min(100, v + (projectedByDimension[k] || 0));
+          const gain = proj - v;
           const why = typeof entry?.explicacao === "string"
             ? entry.explicacao
             : "";
@@ -362,9 +435,21 @@ function SubScoresCol({ latest }) {
             <div className="ct-ss-row" key={k}>
               <div className="ct-ss-head">
                 <span className="ct-ss-label">{meta.label}</span>
-                <span className="ct-ss-value">{v}</span>
+                <span className="ct-ss-value">
+                  {v}
+                  {gain > 0 && (
+                    <span className="ct-ss-gain"> · +{gain} proj.</span>
+                  )}
+                </span>
               </div>
               <div className="ct-ss-bar">
+                {gain > 0 && (
+                  <div
+                    className="ct-ss-bar-fill projected"
+                    style={{ width: proj + "%" }}
+                    aria-hidden="true"
+                  />
+                )}
                 <div
                   className="ct-ss-bar-fill"
                   style={{ width: v + "%" }}
@@ -382,7 +467,7 @@ function SubScoresCol({ latest }) {
   );
 }
 
-function NextActionsCol({ latest }) {
+function NextActionsCol({ latest, allGapsDone, projectedGain }) {
   // Pega 3 microactions a partir de gaps ordenados por impacto.
   // Filtra completados; o re-render apos POST /complete recalcula e some.
   const gaps = (Array.isArray(latest?.gaps) ? latest.gaps : [])
@@ -401,8 +486,31 @@ function NextActionsCol({ latest }) {
       <div className="ct-actions-list">
         {gaps.length === 0 ? (
           <div className="ct-empty-card">
-            <strong>Tudo em dia.</strong> Refaça o diagnóstico no{" "}
-            <Link href="/dashboard">seu dashboard</Link> pra ver novas microações.
+            {allGapsDone ? (
+              <>
+                <strong>Você concluiu todas as ações.</strong> O score acima
+                ainda mostra o estado do CV que você analisou. Pra cristalizar
+                os <strong>+{projectedGain} pontos projetados</strong>:{" "}
+                <ol style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
+                  <li>Atualize seu CV adicionando as novas conquistas</li>
+                  <li>
+                    Refaça o diagnóstico em{" "}
+                    <Link href="/" className="ct-link-inline">
+                      a home (com novo CV) →
+                    </Link>
+                  </li>
+                </ol>
+              </>
+            ) : (
+              <>
+                <strong>Sem microações pendentes neste snapshot.</strong>{" "}
+                Refaça o diagnóstico em{" "}
+                <Link href="/" className="ct-link-inline">
+                  a home →
+                </Link>{" "}
+                pra gerar novas a partir do seu CV atualizado.
+              </>
+            )}
           </div>
         ) : (
           gaps.map((g, i) => (
