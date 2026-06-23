@@ -4,26 +4,55 @@ Plataforma de gestao de carreira em pt-BR. MVP funcional sobre Next.js 14 (App R
 organizado em 4 pilares: **Autoconhecimento, Diagnostico, Acao e Oportunidade**. Da
 identidade ate a contratacao, com auditabilidade radical e LGPD por construcao.
 
+## Decisoes arquiteturais (ADRs)
+
+Resumo das escolhas estruturais ainda validas:
+
+| Decisao | Por que | Trade-off |
+|---|---|---|
+| **Prisma (vs Drizzle)** | Mature client + Auth.js v5 adapter + Studio + migration history | Build/bundle maior, geracao precisa rodar (`postinstall`) |
+| **Auth.js v5 (vs Clerk)** | Self-host, zero-cost, magic link nativo, LinkedIn OIDC opcional | Sem dashboard hosted, magic-link UX precisa caprichar |
+| **Anthropic (vs OpenAI)** | Sonnet 4.6 melhor em pt-BR + estrutura. Haiku 4.5 com cost/latencia melhor pra rotas leves. | Provider unico — env permite trocar pra OpenAI |
+| **Score determ em codigo (vs LLM)** | Numero auditavel, reproducivel, defende contra hallucination | LLM so explica — perde fluidez generativa |
+| **JS puro (vs TS)** | Velocidade de iteracao MVP, sem build complexo | Sem refactor-safety, types em JSDoc onde dor pesa |
+| **App Router (vs Pages)** | RSC, layouts aninhados, streaming nativo (SSE em analyze) | Stack mais nova, alguns hooks 3rd-party ainda no Pages |
+| **Upstash Redis (vs hosted)** | Free tier 10k/dia, REST API, zero infra | Por-request latency; Map fallback pra dev |
+| **Modo experimentar anonimo** | Reduz friccao — user testa antes de criar conta | Rate-limit por IP mais apertado, sem persistencia |
+| **`withApiGuard` em 9 rotas LLM** | JSON sempre, mesmo em Prisma drift/throw inesperado | Wrapper extra em cada rota — manual, nao centralizado |
+
 ## Stack
 
 - **App**: Next.js 14 (App Router, RSC), React 18, JS puro. Claude Design System (Plus
   Jakarta Sans + Spectral, paleta Indigo Sereno).
 - **Banco**: PostgreSQL via Prisma 6 + extensao **pgvector** (RAG real).
 - **Auth**: Auth.js v5 (magic link Email + LinkedIn OIDC opcional; CredentialsProvider em dev).
-- **LLM**: Anthropic Claude Sonnet 4.6 (saidas estruturadas validadas com Zod). LLM gera
-  apenas explicacoes — valores sao calculados deterministicamente em codigo.
+- **LLM**: Anthropic Claude **Sonnet 4.6** (rotas criticas: analyze, chat, tailor,
+  profile/refresh, interview evaluate) + **Haiku 4.5** (rotas leves: linkedin/parse,
+  portfolio/import, cv/analyze-bullets, interview question — 3-5x mais rapido, 1/4 do
+  custo). Saidas estruturadas validadas com Zod. LLM gera apenas explicacoes — valores
+  sao calculados deterministicamente em codigo. Provider trocavel pra OpenAI por env
+  (`LLM_PROVIDER=openai`).
+- **LLM cache**: `lib/llm-cache.js` com chave `sha256(model|system|user)`, TTL 1h,
+  Upstash Redis primary + Map fallback. Habilitado em parsing/perguntas (entrada
+  idempotente); desabilitado em rotas user-specific.
 - **Embeddings**: Voyage AI `voyage-3` (1024 dims) + OpenAI Matryoshka fallback.
 - **Vagas**: agregador 6 providers — Adzuna BR + Jooble + Greenhouse + Lever + Ashby +
   Workable (fallback em fixtures).
-- **Email**: Resend (prod) com fallback SMTP / Mailpit (dev) via Nodemailer.
+- **Email**: **Resend** (prod, via `AUTH_RESEND_KEY` ou `EMAIL_SERVER`) com fallback
+  SMTP / Mailpit (dev) via Nodemailer.
 - **Parsing**: pdf-parse (CV em PDF), mammoth (DOCX), Zod (entrada e saida).
 - **Knowledge**: RAG hybrid (Voyage + pgvector + RRF fusion) com 159 chunks curados em
   `lib/knowledge/`; fontes curadas pra cursos sugeridos.
 - **Billing**: Stripe SDK + Checkout + Customer Portal + Webhooks com HMAC + idempotencia.
-- **Cache / Rate-limit**: Upstash Redis (prod, cross-lambda) com fallback Map em memoria.
+- **Cache / Rate-limit**: **Upstash Redis** (prod, cross-lambda) com fallback Map em
+  memoria. **4 sistemas** compartilham: rate-limit, LLM response cache, jobs cache
+  (Adzuna/Jooble), magic-link anti-spam (3/email/hora).
 - **Observabilidade**: Sentry (errors), PostHog (eventos), UptimeRobot (`/api/health`),
   **AuditLog** (17 actions com IP hash sha256+salt).
-- **Testes**: Vitest (unit, 467 casos em 36 arquivos) + Playwright (e2e, 5 specs) +
+- **Resiliencia**: `lib/api-handler.js` (`withApiGuard`) envolve 9 rotas LLM — garante
+  JSON em qualquer erro (P2021/P2022/P1001/etc Prisma -> 503 amigavel; throw inesperado
+  -> 500 SERVER_ERROR). Antes podia voltar HTML `<!DOCTYPE>`.
+- **Testes**: Vitest (unit, **878 casos em 69 arquivos**) + Playwright (e2e, 5 specs) +
   Eval RAG (50 queries com gate `recall@3 >= 70%`).
 
 ## Diagrama (alto nivel)
@@ -32,9 +61,12 @@ identidade ate a contratacao, com auditabilidade radical e LGPD por construcao.
                 +----------------------+
    Browser  --> |  Next.js App Router  |
    (pt-BR)     |  - Server Components  |
-                |  - API routes        |
+                |  - API routes (49)   |
                 |  - middleware (auth) |
+                |  - SSE em analyze    |
                 +----------+-----------+
+                           |
+                  withApiGuard (9 rotas LLM)
                            |
    +-----+-----+----+----+----+----+-----+----+-----+
    |     |     |    |    |    |    |     |    |     |
@@ -43,8 +75,57 @@ identidade ate a contratacao, com auditabilidade radical e LGPD por construcao.
 |LLM | |Emb | |DB | |ATS| |Mail| |Up | |Stri | |Sen| |Post |
 |Anth| |Voy | |Pg | |6  | |Res | |sh | |pe   | |try| |Hog  |
 |opic| |age | |+  | |Pro| |Send| |Red| |Check| |   | |     |
-|    | |    | |Vec| |vs | |    | |is | |out  | |   | |     |
+|S46 | |    | |Vec| |vs | |    | |is | |out  | |   | |     |
+|H45 | |    | |   | |   | |    | |   | |     | |   | |     |
 +----+ +----+ +---+ +---+ +----+ +---+ +-----+ +---+ +-----+
+   |                                  |
+   |     cache: sha256(model|sys|user)|
+   |     TTL 1h, rate-limit, jobs cache,
+   |     magic-link anti-spam (4 sistemas)
+   +----------- llm-cache.js ---------+
+
+S46 = Sonnet 4.6 (rotas criticas)  H45 = Haiku 4.5 (rotas leves)
+```
+
+### Diagrama detalhado — `/api/analyze` (Wave 17)
+
+```
+  POST /api/analyze[?stream=1]
+        |
+        +-- withApiGuard wrapper (lib/api-handler.js)
+        |     catches P2021/P2022/P1001 + throw inesperado -> JSON sempre
+        |
+        +-- core() emite steps via `emit()` (no-op em JSON, SSE em stream)
+        |
+        +-- 1) auth() + guardLLM (Upstash Redis cross-lambda)
+        |     emit({step: "validating"})
+        +-- 2) enforceUsage atomico (Prisma.$transaction Serializable)
+        |     pre-check checkDailyBudget (cost amplification defense)
+        +-- 3) zod AnalyzeBody.safeParse
+        |
+        +-- 4) Promise.allSettled em PARALELO:
+        |     emit({step: "llm_jobs_parallel"})
+        |     +-- completeJSONWithUsage (Sonnet 4.6, cache: false)
+        |     +-- searchJobs(role, location, limit=50)
+        |             (6 providers Promise.allSettled)
+        |     >>> economiza 3-5s vs serial <<<
+        |
+        +-- 5) DiagShape.safeParse no output do LLM
+        |     trackTokenUsage atomico (independente de persist OK)
+        |     emit({step: "computing"})
+        |
+        +-- 6) computeAllSubScores (lib/scoring/subscores.js)
+        |     determ deterministico, LLM nao toca os numeros
+        |
+        +-- 7) Persist (se userId):
+        |     emit({step: "persisting"})
+        |     Profile.upsert + ScoreSnapshot.create(+gaps)
+        |     notify scoreUpdated + welcome flow + achievements
+        |     audit CV_UPLOADED + DataSource + Consent
+        |
+        +-- 8) Retorno:
+              JSON: NextResponse.json(payload)
+              SSE:  emit({type:"result", payload}); emit({type:"done"})
 ```
 
 ## 4 Pilares
@@ -72,13 +153,18 @@ app/                                  rotas (RSC + API) — 12 telas auth + 5 pu
     evidencias, transparencia, conta
   candidaturas/                       kanban + funil de conversao
   entrar/, meus-dados/                login + LGPD self-service
-  api/                                39 route handlers
-    analyze, opportunities, assessments/[kind], evidence, tailored-cvs, gaps,
-    profile/refresh, profile/onboarding, profile/completeness, score, plan-items,
-    linkedin/parse, portfolio/import, tailor, interview, chat, applications,
-    history/actions, cv/upload, me/export, notifications, health,
+  api/                                49 route handlers
+    analyze (com SSE em ?stream=1), opportunities, assessments/[kind],
+    evidence, tailored-cvs, gaps/{summary, requirements, courses, [id]/complete},
+    profile/{refresh, onboarding, completeness},
+    score/latest-with-history, plan-items/[id]/complete,
+    linkedin/parse, portfolio/import, tailor, interview, chat,
+    cv/{upload, analyze-bullets}, applications, history/{actions, score},
+    me/{export, daily-quest, outcome, preferences},
+    notifications/{read-all, [id]/read}, health, _track, metrics/median,
     billing/{checkout, portal, webhook, plan},
-    cron/{digest, redact-cv, usage-cleanup},
+    cron/{digest, daily-briefing, outcome-survey, redact-cv, redact-billing,
+          usage-cleanup},
     auth/[...nextauth]
 components/                           UI compartilhada (AppShell, Report,
                                       visualizations/{DiscMatrix, ValoresRadar,
@@ -91,45 +177,58 @@ lib/
                                       diversity, completude, year-range)
   metrics/                            completeness.js (weighted field-presence)
   billing/                            stripe.js + plans.js + enforce.js (TOCTOU-safe)
+  assessments/                        DISC/Valores/Ikigai logic + arquetipos
+  analytics/                          PostHog server-side helpers
+  achievements/                       (se aplicavel) — atualmente lib/achievements.js root
   validators.js                       Zod schemas (60+ schemas; body + shape de LLM)
   llm.js                              wrapper Anthropic/OpenAI (retry, sanitizacao,
-                                      cost log + budget per-user)
+                                      cost log + budget per-user, completeJSONFast helpers)
+  llm-cache.js                        cache resposta LLM sha256(model|sys|user), TTL 1h,
+                                      Upstash Redis + Map fallback
+  llm-stream.js                       streaming helpers (chat/SSE)
+  api-handler.js                      withApiGuard — JSON garantido em qualquer erro
   embeddings.js                       Voyage AI + OpenAI Matryoshka fallback
   audit.js                            AuditLog 17 actions (IP hash sha256+salt)
   safe-fetch.js                       Anti-SSRF custom HTTPS agent (IP pinning,
                                       mitiga DNS rebinding)
   url-safe.js                         safeExternalUrl + safeHref (Zod URL)
-  email.js                            digest semanal (Resend ou SMTP)
+  email.js                            digest semanal + daily briefing (Resend ou SMTP)
   rate-limit.js                       Upstash Redis (prod) ou Map (dev/fallback)
   auth-protected-paths.js             SSoT do middleware (PROTECTED sync)
   env.js                              boot guards (AUTH_DEV_CREDENTIALS bloqueado em prod)
+  achievements.js                     9 conquistas idempotentes (FIRST_DIAGNOSIS,
+                                      SCORE_70/80/90, FIRST_REFRESH, etc)
+  daily-quest-templates.js            templates de quest diaria
+  career-paths.js, retry.js, logger.js, sample.js
   score.js, pdf.js, docx.js, prompts.js, db.js, auth.js, data-export.js,
-  notifications.js
+  notifications.js, skills-taxonomy.js
 prisma/
-  schema.prisma                       21 modelos
+  schema.prisma                       24 modelos
   migrations/                         migrations versionadas (rodam fora do build)
 scripts/
   ingest-knowledge.mjs                ingestao idempotente pgvector (sha256 contentHash)
 tests/
-  unit/                               Vitest (467 testes em 36 arquivos)
+  unit/                               Vitest (878 testes em 69 arquivos)
   e2e/                                Playwright (5 specs)
   eval/rag/                           50 queries · recall@3 / MRR / NDCG
 docs/
   PRODUTO.md, ALGORITHMS.md, API.md, RAG.md (700 linhas), MONETIZACAO.md, DEPLOY.md,
   OBSERVABILITY.md, HANDOFF_TIME_TERA.md (341 linhas), audits/ (5 read-only)
-middleware.js                         CSP + NextAuth gate + PROTECTED paths
+middleware.js                         CSP + NextAuth gate + PROTECTED paths +
+                                      NEVER_BLOCK_PREFIXES (defense-in-depth)
 next.config.mjs                       headers + Sentry source maps gatekeeper
-vercel.json                           cron (digest weekly · redact-cv daily ·
-                                      usage-cleanup)
+vercel.json                           6 crons (digest weekly · daily-briefing · outcome-survey
+                                      · redact-cv daily · redact-billing · usage-cleanup)
 docker-compose.yml                    Postgres + Mailpit pra dev
 ```
 
-Numeros atuais: **39 route handlers** em `app/api/`, **12 telas autenticadas + 5 publicas**,
-**21 modelos Prisma**, **467 testes unit em 36 arquivos**, **5 e2e specs**.
+Numeros atuais: **49 route handlers** em `app/api/`, **12 telas autenticadas + 5 publicas**,
+**24 modelos Prisma**, **878 testes unit em 69 arquivos**, **5 e2e specs**, **6 crons**.
 
 ## Modelos Prisma principais
 
-21 modelos no total. Destacando os principais (era 13 em v0.9, +8 em v0.10):
+**24 modelos** no total (era 13 em v0.9, +8 em v0.10, +3 pos-v0.10:
+`Outcome`, `Achievement`, `DailyQuest`). Destacando os principais:
 
 **Core User & Auth**
 - **User** — conta Auth.js, contem flags de digest (`digestEnabled`, `lastDigestAt`).
@@ -174,18 +273,31 @@ Numeros atuais: **39 route handlers** em `app/api/`, **12 telas autenticadas + 5
   `interview`). `period` (`YYYY-MM` ou `YYYY-MM-DD`). Incremento atomic via Serializable.
 - **BillingEvent** — eventos Stripe persistidos com `stripeEventId` unique (idempotency).
 
+**Gamificacao & Outcomes (pos-v0.10)**
+- **Achievement** — conquista desbloqueada (`userId` + `kind` unique). 9 tipos atualmente
+  (FIRST_DIAGNOSIS, SCORE_70/80/90, FIRST_REFRESH, FIRST_EVIDENCE, COURSE_COMPLETED, etc).
+  `grantAchievement(userId, kind, meta)` idempotente.
+- **DailyQuest** — quest do dia rotacionada por template (`lib/daily-quest-templates.js`).
+- **Outcome** — registro de outcomes do user (entrevistas marcadas, ofertas) — alimenta
+  cron de outcome-survey e metrica do pitch.
+
 ## Fluxos-chave
 
 1. **Diagnostico** — usuario cola CV ou faz upload de PDF; rota `/api/analyze` valida com
-   Zod (`AnalyzeBody`), faz **retrieval RAG hybrid** (Voyage + pgvector + RRF), chama o
-   LLM, valida o shape de volta (`DiagShape`); **sub-scores sao calculados em codigo
-   deterministico** (`lib/scoring/subscores.js`), nao pelo LLM. Persiste `ScoreSnapshot` +
-   `Gap[]` + `PlanItem[]` se logado (+ `AuditLog`), ou retorna apenas em memoria se anonimo.
-2. **Refresh sem repaste (NOVO)** — `POST /api/profile/refresh` reusa `Profile.rawCv` +
+   Zod (`AnalyzeBody`), faz **retrieval RAG hybrid** (Voyage + pgvector + RRF), chama
+   LLM (Sonnet 4.6) **em paralelo com `searchJobs`** via `Promise.allSettled` (Wave 17,
+   economiza 3-5s), valida o shape de volta (`DiagShape`); **sub-scores sao calculados em
+   codigo deterministico** (`lib/scoring/subscores.js`), nao pelo LLM. Persiste
+   `ScoreSnapshot` + `Gap[]` + `PlanItem[]` se logado (+ `AuditLog`), ou retorna apenas em
+   memoria se anonimo. **SSE em `?stream=1`** emite 6 etapas progressivas (back-compat
+   total — sem param, JSON one-shot).
+2. **Refresh sem repaste** — `POST /api/profile/refresh` reusa `Profile.rawCv` +
    `targetRole` + `perfilJson` (nao pede CV de novo). Calcula `projectedGains`
-   deterministico com cap 15/sub + 20 total (anti-gaming). LLM recebe
+   deterministico com cap 15/sub + 25 total (anti-gaming). LLM recebe
    `completedHabilidades` e gera gaps **diferentes** (anti-loop). Aplica bonus +
-   `computeAllSubScores` -> novo `ScoreSnapshot`.
+   `computeAllSubScores` -> novo `ScoreSnapshot`. Com `applyCompletedSkills=true` usa
+   `previousSnapshot.subScores` como **baseline** — score nunca cai apos marcar microacao
+   (LLM nao-deterministico podia fazer score oscilar pra baixo antes do fix).
 3. **Autoconhecimento** — `/api/assessments/[kind]` (GET retorna progresso, POST persiste
    respostas + resultado). 3 kinds: `DISC_LITE`, `VALUES`, `IKIGAI`. Disclaimer etico em
    todas as telas. Visualizacoes SVG (`DiscMatrix`, `ValoresRadar`, `IkigaiVenn`) +
@@ -213,6 +325,56 @@ Numeros atuais: **39 route handlers** em `app/api/`, **12 telas autenticadas + 5
     - `/api/cron/redact-cv` (diario): redaciona `Profile.rawCv` com >90d (TTL LGPD).
     - `/api/cron/usage-cleanup` (periodico): limpa `UsageMeter` antigo.
 11. **Health check** — `GET /api/health` retorna `{status, db, time}` pra UptimeRobot.
+
+## LLM tier-by-route + cache (Wave 17)
+
+A partir da Wave 17, **rotas leves rodam em Haiku 4.5** (3-5x mais rapido +
+1/4 do custo) via helpers `completeJSONFast` / `completeJSONFastWithUsage`
+em `lib/llm.js`. Rotas criticas seguem em Sonnet 4.6.
+
+| Rota | Modelo | Cache LLM | Por que |
+|---|---|---|---|
+| `/api/analyze` | Sonnet 4.6 | OFF | user-specific, snapshot novo |
+| `/api/profile/refresh` | Sonnet 4.6 | OFF | user-specific |
+| `/api/chat` | Sonnet 4.6 | OFF | history sempre muda |
+| `/api/tailor` | Sonnet 4.6 | OFF | adaptacao por vaga deve ser fresca |
+| `/api/interview` action=evaluate | Sonnet 4.6 | OFF | feedback de resposta unica |
+| `/api/linkedin/parse` | Haiku 4.5 | **ON** | texto idempotente |
+| `/api/portfolio/import` | Haiku 4.5 | **ON** | github user idempotente |
+| `/api/cv/analyze-bullets` | Haiku 4.5 | **ON** | bullets identicos |
+| `/api/interview` action=question | Haiku 4.5 | **ON** | perguntas se repetem |
+
+**Cache key** = `sha256(model|system|user)` truncado em 32 hex chars
+(2^128 search space, col-resist pratico). **TTL 1h**. **Upstash Redis
+primary** (cross-lambda), **fallback Map em-memoria** (LRU pobre, cap 500
+entries). Hit retorna `{tokensIn:0, tokensOut:0, costUsd:0, cached:true}` —
+sem token cost em hit. **Erros nao sao cacheados** (proxima tentativa
+sai limpa).
+
+**Helpers em `lib/llm.js`:**
+- `completeJSON(input, meta)` — back-compat (descarta usage)
+- `completeJSONWithUsage(input, meta)` — Sonnet 4.6 + usage
+- `completeJSONFast(input, meta)` — Haiku 4.5 + cache default ON
+- `completeJSONFastWithUsage(input, meta)` — Haiku 4.5 + usage + cache
+
+`meta.cache: false` desabilita cache na chamada.
+
+## Upstash Redis — 4 sistemas compartilhados
+
+Em prod, **4 sistemas usam Upstash Redis** pra estado cross-lambda
+(Vercel serverless multi-instancia). Sem `UPSTASH_REDIS_REST_URL` +
+`UPSTASH_REDIS_REST_TOKEN`, cada um cai pra Map em-memoria (defesa fraca
+em multi-lambda — bypass trivial).
+
+1. **`lib/rate-limit.js`** — token bucket por `route:userId` ou `route:ip`,
+   60s window. Endpoints LLM + auth (3 magic-links/email/hora).
+2. **`lib/llm-cache.js`** — cache resposta LLM, TTL 1h.
+3. **`lib/jobs/*`** — cache de busca Adzuna/Jooble, TTL 10min.
+4. **Magic-link anti-spam** — Auth.js rate-limit.
+
+Setup gratuito: 10k commands/dia no free tier Upstash. Console -> Redis ->
+Create Database -> tab REST API -> copia URL + token -> Vercel env
+(Production + Preview).
 
 ## RAG architecture
 
@@ -430,7 +592,7 @@ recomendadas:
 
 GitHub Actions roda dois workflows em `.github/workflows/`:
 
-- **`ci.yml`** — `npm ci` + `npx prisma generate` + `npm test` (vitest, 467 testes) +
+- **`ci.yml`** — `npm ci` + `npx prisma generate` + `npm test` (vitest, **878 testes**) +
   `npm audit` (gate) a cada push em `main` e em todo PR pra `main`. Bloqueante.
 - **`e2e.yml`** — Playwright contra Postgres em service container. Roda em push pra `main`
   e em PRs *com a label `e2e`* (opt-in pra nao gastar minutos do Actions). Requer secret

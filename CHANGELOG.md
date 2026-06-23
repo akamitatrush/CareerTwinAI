@@ -5,6 +5,106 @@ Todas as mudancas notaveis deste projeto sao documentadas aqui.
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 
+## [Unreleased]
+
+> Acumula Waves 16 e 17 ainda nao tagueadas. Subsections abaixo agrupam por wave.
+
+### Wave 17 — latencia + custo
+
+#### Added
+
+- **Streaming SSE em `/api/analyze`** — adicionando `?stream=1` na rota, ela
+  passa a responder com `text/event-stream` emitindo 6 etapas progressivas:
+  `validating`, `llm_jobs_parallel`, `computing`, `persisting`, `result`,
+  `done`. Sem o query param, mantem JSON one-shot tradicional (back-compat
+  total — testes existentes nao quebram). Pipeline interno (auth, rate-limit,
+  validacao, billing, persist) e identico nos dois modos — so o transporte
+  muda. Em erro estruturado emite `{type:"error", status, error, code}`.
+- **Helpers `completeJSONFast` + `completeJSONFastWithUsage`** em `lib/llm.js`
+  — wrappers em volta de `completeJSON*` que forcam `meta.model = FAST_MODEL`
+  (Haiku 4.5). Sintaxe identica, swap por linha em 4 rotas leves.
+- **LLM response cache (`lib/llm-cache.js`)** — chave
+  `sha256(model|system|user)` truncada em 32 hex chars, TTL 1h. **Upstash
+  Redis primary** (cross-lambda em Vercel) com **fallback Map em-memoria**
+  (LRU pobre, cap 500 entries) quando sem Redis. Cache opt-out via
+  `meta.cache: false` — habilitado em parsing/perguntas (`linkedin/parse`,
+  `portfolio/import`, `cv/analyze-bullets`, `interview` action=question);
+  desabilitado em rotas user-specific (`analyze`, `chat`, `tailor`,
+  `profile/refresh`, `interview` action=evaluate). Hit retorna
+  `{tokensIn:0, tokensOut:0, costUsd:0, cached:true}` (sem track de tokens em
+  cache hit). Erros (LLM/parse) NAO sao cacheados.
+- **`lib/api-handler.js` + `withApiGuard`** — wrapper aplicado em **9 rotas
+  LLM** (`analyze`, `opportunities`, `interview`, `tailor`, `chat`,
+  `cv/analyze-bullets`, `linkedin/parse`, `portfolio/import`,
+  `profile/refresh`). Garante **JSON em qualquer erro** mesmo em throw
+  inesperado: captura `P2021` (tabela faltando) -> 503 DB_TABLE_MISSING,
+  `P2022/P2025` (drift) -> 503 DB_SCHEMA_DRIFT, `P1001/P1008/P1017`
+  (DB indisponivel) -> 503 DB_UNAVAILABLE, fallback -> 500 SERVER_ERROR.
+  Antes podia voltar HTML `<!DOCTYPE>` e quebrar parse no cliente
+  (`Unexpected token '<'`).
+- **Defense-in-depth no `middleware.js`** — constante `NEVER_BLOCK_PREFIXES`
+  hardcoded como whitelist absoluta de rotas LLM que suportam modo
+  experimentar anonimo (`/api/analyze`, `/api/opportunities`, `/api/interview`,
+  `/api/tailor`, `/api/chat`, `/api/cv/`, `/api/linkedin/`, `/api/portfolio/`).
+  Mesmo se algum agente regredir e re-adicionar essas rotas em
+  `PROTECTED_PREFIXES`, esse whitelist garante que continuam acessiveis.
+
+#### Changed
+
+- **Paralelizacao LLM + searchJobs em `/api/analyze`** — antes eram serial
+  (LLM primeiro, depois jobs); agora rodam via `Promise.allSettled`. `jobs`
+  so precisa do `role` (nao do output do LLM). **-3 a -5s** de latencia
+  percebida. Falha de jobs nao mata o diagnostico (degrada gracioso, score de
+  aderencia computa com array vazio).
+- **Haiku 4.5 em 4 rotas leves** — `/api/linkedin/parse`, `/api/portfolio/import`,
+  `/api/cv/analyze-bullets`, `/api/interview` (action=question) migradas de
+  Sonnet 4.6 para Haiku 4.5 via `completeJSONFastWithUsage`. **~3-5x mais
+  rapido + 1/4 do custo**. Rotas criticas (`analyze`, `chat`, `tailor`,
+  `profile/refresh`, `interview` action=evaluate) seguem em Sonnet 4.6.
+
+#### Tests
+
+- **+31 testes** (cumulativo agora **878 passing em 69 files**): SSE/streaming
+  do analyze (`api-analyze-streaming.test.js`), cache LLM
+  (`llm-cache.test.js`), helpers fast (`llm-fast.test.js`).
+
+#### Performance
+
+- `/api/analyze` (Sonnet): ~18s -> ~13-15s (paralelizacao economiza 3-5s).
+- `/api/linkedin/parse` (Haiku + cache hit): 8-12s -> ~2-3s (ou 0s em hit).
+- Custo medio por user mensal (Free tier): -30% estimado (cache + Haiku).
+
+### Wave 16 — score-baseline + crons
+
+#### Changed
+
+- **`/api/profile/refresh` preserva sub-scores anteriores como baseline**
+  quando `applyCompletedSkills=true`. LLM e nao-deterministico — mesmo CV gera
+  perfil ligeiramente diferente a cada call e isso fazia score CAIR depois de
+  marcar tarefa (re-extracao -9 + bonus +5 = liquido -4). Fix: quando user
+  aplica conquistas explicitamente, usa `previousSnapshot.subScores` como
+  floor; bonus aplicado em cima do baseline. **Score nunca cai apos marcar
+  microacao concluida**.
+- **`RefreshDiagnosisButton` aparece quando QUALQUER tarefa marcada** (antes
+  era so quando todas as 3 estavam done — empty state). Agora aparece como
+  hint em cima da lista assim que `completedCount > 0`. UX: user marca 1 ->
+  ja ve "Atualizar diagnostico" -> recalcula sem esperar terminar todas.
+
+#### Fixed
+
+- **Vercel cron `/api/cron/daily-briefing`** — schedule `0 11 * * 2-7`
+  (intervalo de day-of-week invalido pra Vercel — range 1-7) corrigido pra
+  `0 11 * * 0,2,3,4,5,6` (dom + ter-sab, day-of-week semantica 0-6,
+  pulando segunda). Vercel/cron usa convencao Unix (0 = domingo).
+- **`AchievementToast.js` usa `createPortal` pra `document.body`** — antes
+  renderizava inline e herdava `overflow:auto` da sidebar
+  (`appshell-sidebar`); em alguns engines `position:fixed` era clipado e o
+  toast aparecia "embaixo" do dashboard. Portal escapa do stacking ancestor.
+  Texto do achievement `FIRST_REFRESH`: "Diagnostico atualizado" / "Voce
+  recalculou seu Career Health depois de evoluir".
+
+---
+
 ## [0.10.0] — 2026-06-27 (branch redesign/claude-design)
 
 ### Added — 4 pilares

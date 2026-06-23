@@ -8,59 +8,124 @@
 
 # CareerTwin AI
 
-**Plataforma de gestão de carreira com IA, em pt-BR.**
-Da identidade até a contratação — auditável, sem caixa-preta, LGPD por construção.
+### O gêmeo de carreira que cresce com você
+*Copiloto de carreira em **pt-BR** — da identidade até a contratação, auditável, sem caixa-preta, LGPD por construção.*
 
-[Quickstart](#rodar-localmente) · [Algoritmos](#algoritmos--cálculos) · [Arquitetura](#arquitetura) · [Roadmap](#roadmap) · [Documentação](#documentação)
+<br/>
 
-![status](https://img.shields.io/badge/status-MVP%20funcional-1f1f1f) ![tests](https://img.shields.io/badge/tests-467%20passing-2F7D5B) ![next](https://img.shields.io/badge/Next.js-14-1f1f1f) ![lgpd](https://img.shields.io/badge/LGPD-by%20design-B9D90C) ![rag](https://img.shields.io/badge/RAG-Voyage%20%2B%20pgvector-1f1f1f) ![billing](https://img.shields.io/badge/Stripe-foundation-635BFF)
+[![Version](https://img.shields.io/badge/version-0.3.0-1f1f1f?style=for-the-badge)](./package.json)
+[![Status](https://img.shields.io/badge/status-MVP%20funcional-2F7D5B?style=for-the-badge)](#)
+[![Tests](https://img.shields.io/badge/tests-878%20passing-2F7D5B?style=for-the-badge&logo=vitest&logoColor=white)](#testes)
+[![Node](https://img.shields.io/badge/node-%E2%89%A518.18-339933?style=for-the-badge&logo=node.js&logoColor=white)](#)
+[![License](https://img.shields.io/badge/license-private-grey?style=for-the-badge)](./package.json)
+[![Made in BR](https://img.shields.io/badge/made%20in-Brasil-009C3B?style=for-the-badge)](#)
+
+<br/>
+
+![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React%2018-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Prisma](https://img.shields.io/badge/Prisma%206-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL%20%2B%20pgvector-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Anthropic](https://img.shields.io/badge/Claude%20Sonnet%204.6-D97757?style=for-the-badge&logo=anthropic&logoColor=white)
+![Voyage AI](https://img.shields.io/badge/Voyage%20AI-1024d-7F5AF0?style=for-the-badge)
+![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)
+![Resend](https://img.shields.io/badge/Resend-000000?style=for-the-badge&logo=resend&logoColor=white)
+![Upstash Redis](https://img.shields.io/badge/Upstash%20Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Sentry](https://img.shields.io/badge/Sentry-362D59?style=for-the-badge&logo=sentry&logoColor=white)
+![PostHog](https://img.shields.io/badge/PostHog-1D4AFF?style=for-the-badge&logo=posthog&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
+
+<br/>
+
+[**O que é**](#-o-que-é) ·
+[**Highlights**](#-highlights) ·
+[**Arquitetura**](#%EF%B8%8F-arquitetura) ·
+[**Quick start**](#-quick-start) ·
+[**Stack**](#-stack) ·
+[**Algoritmos**](#-algoritmos--cálculos) ·
+[**Segurança**](#-segurança) ·
+[**Roadmap**](#%EF%B8%8F-roadmap) ·
+[**Docs**](#-documentação)
 
 </div>
 
 ---
 
-## O que é
+## ✨ O que é
 
-CareerTwin AI cria um **gêmeo digital de carreira** a partir do CV, LinkedIn e GitHub do usuário, e organiza a jornada em 4 pilares — da identidade até a contratação.
+CareerTwin AI cria um **gêmeo digital de carreira** a partir de CV, LinkedIn e GitHub do usuário, e organiza a jornada em **quatro pilares** — da identidade até a contratação. Toda métrica é calculada em código **determinístico**; o LLM **explica** e **prioriza**, mas **não inventa números**.
 
 | Pilar | O que faz | Como é calculado |
 |---|---|---|
-| **◇ Autoconhecimento** | 3 mini-assessments com visualizações SVG (DiscMatrix, ValoresRadar, IkigaiVenn) + narrativas a partir de 6 arquétipos de Valores e careerHints DISC. | Mapping determinístico em JS · LLM só polish |
-| **◆ Diagnóstico** | Career Health Score (0-100) com 4 sub-scores ponderados, mediana comparativa, refresh sem repaste. | 100% código (TF-IDF, set theory, regex) · LLM só explica |
-| **▸ Ação** | Skill Gap Mapper com 41 cursos curados, evidências de competência, CVs adaptados com diff. | Skill-keyed lookup + RAG hybrid · LLM gera microações |
-| **● Oportunidade** | Radar de vagas com 6 providers + filtros + match breakdown matemático + kanban de candidaturas. | Set intersection normalizada · LLM justifica em 1 frase |
+| ◇ **Autoconhecimento** | 3 mini-assessments com visualizações SVG (DISC, Valores, Ikigai) + 6 arquétipos. | Mapping determinístico em JS · LLM só polish |
+| ◆ **Diagnóstico** | Career Health Score (0-100) com 4 sub-scores ponderados + mediana comparativa + refresh sem repaste. | 100% código (TF-IDF, set theory, regex) · LLM só explica |
+| ▸ **Ação** | Skill Gap Mapper com 41 cursos curados, evidências de competência, CVs adaptados com diff. | Skill-keyed lookup + RAG híbrido · LLM gera microações |
+| ● **Oportunidade** | Radar de vagas com 6 providers + filtros + match breakdown matemático + kanban de candidaturas. | Set intersection normalizada · LLM justifica em 1 frase |
 
-**Plataforma:**
-- **▸ RAG real** com Voyage AI embeddings (1024 dims) + pgvector no Neon + RRF fusion · 159 chunks curados · recall@3 ≥ 70%.
-- **▸ Monetização foundation** (Stripe Phase 1+2): Checkout + Customer Portal + Webhooks com HMAC + idempotência · 4 planos (Free / Pro M / Pro Y / Team) com Price IDs placeholder · 503 amigável sem `STRIPE_SECRET_KEY`.
-- **▸ Refresh sem repaste** — `POST /api/profile/refresh` reusa `Profile.rawCv` + `targetRole` + `perfilJson`. Modal "Aplicar conquistas" com 3 opções (aplicar+recalcular, só recalcular, cancelar).
-- **▸ OWNER_EMAILS** — bypass total de limite Free para owners (testing/operação).
-- **▸ LGPD avançado** — AuditLog 17 actions com IP hash sha256+salt, `Profile.rawCv` com TTL 90d e cron diário de redação.
-
-**Princípio editorial:** número = cálculo auditável, texto = explicação com fonte. Sem caixa-preta. Sem promessa de aprovação garantida. LGPD por construção.
-
-**Paleta e experiência (Claude Design System):** Indigo Sereno como cor primária, neutros quentes para fundo (não cinza azulado-frio), tipografia Plus Jakarta Sans (UI) + Spectral (cabeçalhos editoriais). AppShell sidebar 252px no desktop, header colapsado no mobile, sombras Linear-style com camadas suaves, botões com gradiente e inset glassy, focus rings visíveis para a11y AA, skeleton loaders com shimmer. Light theme default, toggle persistente.
+> [!NOTE]
+> **Princípio editorial:** número = cálculo auditável, texto = explicação com fonte. Sem caixa-preta. Sem promessa de aprovação garantida. **LGPD por construção.**
 
 ---
 
-## Como funciona
+## 🚀 Highlights
 
-Vista de alto nível — quatro pilares, integrações em paralelo, persistência só após login.
+> [!TIP]
+> Os destaques abaixo são o que diferencia o CareerTwin de "mais um wrapper de LLM".
+
+- **🧠 RAG híbrido real** — 159 chunks curados BR · Voyage AI 1024-dim · pgvector HNSW cosine · BM25-lite · Reciprocal Rank Fusion (k=60) · **recall@3 = 93.9%**.
+- **⚡ Streaming SSE progressivo** em `/api/analyze?stream=1` com **6 etapas** visíveis (`validating → llm_jobs_parallel → computing → persisting → result → done`). O usuário **vê o trabalho rolando**, não fica olhando spinner.
+- **🔀 Paralelização agressiva** — LLM call + `searchJobs` via `Promise.allSettled`. Ganho típico: **−3 a −5 segundos** por análise.
+- **🪶 Claude Haiku 4.5** em 4 rotas leves (parser LinkedIn, portfolio, bullets, perguntas de entrevista) — **3-5× mais rápido** e **¼ do custo** vs Sonnet.
+- **💾 LLM response cache** — chave SHA-256 do prompt, TTL 1h, Upstash Redis primary, fallback Map em memória.
+- **🛡️ LGPD-by-construction** — `AuditLog` com **17 actions**, IP via **sha256+salt** (anti-rainbow), `Profile.rawCv` com **TTL 90 dias**, exportação JSON completa, cron diário de redação.
+- **🧪 Modo "experimentar" anônimo** — home e `/analyze` funcionam sem login; dados efêmeros (zero persistência).
+- **🏆 17 conquistas (achievements)** com toast + confetti CSS — gamificação sem peso de bundle.
+- **⏰ 6 cron jobs** — digest semanal, daily briefing, usage cleanup, redact CV, outcome survey, redact billing.
+- **🧱 Defense-in-depth** — `NEVER_BLOCK_PREFIXES` whitelist + `PROTECTED_PREFIXES` SSoT (middleware + Auth.js) + Zod `.strict()` em **todos** os bodies.
+
+---
+
+## 📊 Métricas-vivas
+
+<div align="center">
+
+| Métrica | Valor | Onde |
+|:---:|:---:|:---:|
+| **Testes unitários (Vitest)** | `878 ✅` | 69 arquivos |
+| **API routes** | `49` | `app/api/**/route.js` |
+| **Chunks na knowledge base** | `159` | curados manualmente BR |
+| **RAG · recall@3 (gate)** | `93.9 %` | threshold ≥ 70% |
+| **Sub-scores determinísticos** | `4` | TF-IDF + set theory + regex |
+| **Vulnerabilidades P0+P1 corrigidas** | `11` | Onda 11 (5 audits) |
+| **ATS providers** | `6` | Adzuna · Jooble · Greenhouse · Lever · Ashby · Workable |
+| **Audit actions (LGPD)** | `17` | IP hash sha256+salt |
+| **Cron jobs** | `6` | Vercel cron + header `x-cron-secret` |
+| **Models Prisma** | `21` | cascade delete em tudo |
+
+</div>
+
+---
+
+## 🏗️ Arquitetura
+
+Vista de alto nível: quatro pilares, integrações em paralelo, persistência só após login.
 
 ```mermaid
 flowchart LR
-    subgraph Inputs
-      CV["CV PDF/DOCX/texto"]
+    subgraph Inputs["Entradas"]
+      CV["CV PDF/DOCX"]
       LI["LinkedIn paste"]
-      GH["GitHub user/URL"]
+      GH["GitHub user"]
       ROLE["Cargo-alvo"]
     end
 
     subgraph Core["Pipeline deterministico"]
-      ANA["api/analyze - LLM extrai perfil"]
-      RAG["RAG hybrid - Voyage + pgvector + RRF"]
-      SCORE["computeAllSubScores - codigo"]
-      OPP["api/opportunities - 6 ATS providers"]
+      ANA["/api/analyze"]
+      RAG["RAG hibrido"]
+      SCORE["computeAllSubScores"]
+      OPP["6 ATS providers"]
     end
 
     subgraph Persist["Persistencia LGPD"]
@@ -69,7 +134,7 @@ flowchart LR
       AUD["AuditLog 17 actions"]
     end
 
-    subgraph UI
+    subgraph UI["UI autenticada"]
       DASH["dashboard"]
       GAPS["gaps + cursos"]
       OPS["oportunidades"]
@@ -93,34 +158,41 @@ flowchart LR
     AUTO --> DASH
 ```
 
-### Fluxo 1 — Diagnóstico inicial
+<details>
+<summary><b>🔬 Fluxo 1 — Diagnóstico inicial (com streaming SSE)</b></summary>
 
 ```mermaid
 sequenceDiagram
     participant U as Usuario
     participant N as Next.js
-    participant RAG as RAG hybrid
+    participant RAG as RAG hibrido
     participant LLM as Claude Sonnet 4.6
     participant DB as Postgres
 
-    U->>N: POST api/analyze com CV + cargo-alvo
+    U->>N: POST /api/analyze?stream=1
     N->>N: Zod strict + rate-limit + sanitiza prompt
+    N-->>U: SSE event validating
     N->>RAG: retrieve query k=3
-    RAG-->>N: top 3 chunks via RRF fusion
-    N->>LLM: prompt diag system + user + context
-    LLM-->>N: JSON com perfil, gaps, explicacoes
-    N->>N: computeAllSubScores deterministico (0.40 + 0.30 + 0.20 + 0.10)
+    RAG-->>N: top 3 chunks via RRF
+    par paralelo
+      N->>LLM: prompt diag system+user+context
+      N->>N: searchJobs 6 providers Promise.allSettled
+    end
+    N-->>U: SSE event llm_jobs_parallel
+    LLM-->>N: JSON perfil+gaps+explicacoes
+    N->>N: computeAllSubScores deterministico
+    N-->>U: SSE event computing
     alt logado
       N->>DB: upsert Profile + ScoreSnapshot + Gap + Consent + AuditLog
+      N-->>U: SSE event persisting
     end
-    par paralelo
-      N->>N: searchJobs 6 providers Promise.allSettled
-      N->>LLM: plano + cursos sugeridos
-    end
-    N-->>U: diagnostico + vagas + plano
+    N-->>U: SSE event result + done
 ```
 
-### Fluxo 2 — Refresh sem repaste de CV
+</details>
+
+<details>
+<summary><b>🔁 Fluxo 2 — Refresh sem repaste (anti-loop, anti-gaming)</b></summary>
 
 ```mermaid
 sequenceDiagram
@@ -129,20 +201,41 @@ sequenceDiagram
     participant LLM as Claude Sonnet 4.6
     participant DB as Postgres
 
-    U->>N: marca microacao concluida em gaps
+    U->>N: marca microacao concluida em /gaps
     U->>N: clica Atualizar diagnostico
     N->>U: modal Aplicar conquistas com 3 opcoes
-    U->>N: POST api/profile/refresh com completedGapIds
+    U->>N: POST /api/profile/refresh
     N->>DB: le Profile.rawCv + targetRole + perfilJson
-    N->>N: projectedGains deterministico cap 15 por sub + 20 total
-    N->>LLM: promptDiag com completedHabilidades evita loop
+    N->>N: projectedGains deterministico (cap 15/sub + 20 total)
+    N->>LLM: promptDiag com completedHabilidades
     LLM-->>N: novo perfil + gaps DIFERENTES
-    N->>N: computeAllSubScores + bonus deterministico
+    N->>N: computeAllSubScores + bonus
     N->>DB: create ScoreSnapshot + Gap + AuditLog
     N-->>U: novo score + delta vs anterior
 ```
 
-### Fluxo 3 — Billing (Stripe Phase 1+2)
+</details>
+
+<details>
+<summary><b>🔎 Fluxo 3 — RAG híbrido (Voyage + pgvector + RRF)</b></summary>
+
+```mermaid
+flowchart LR
+    Q["Query do prompt"]
+    Q -->|"Voyage AI 1024d"| E["Embedding"]
+    Q -->|"tokenize NFD"| T["Keyword tokens"]
+    E -->|"pgvector cosine HNSW"| V["Vector top-K"]
+    T -->|"BM25-lite + boosts"| K["Keyword top-K"]
+    V --> R["RRF k=60"]
+    K --> R
+    R -->|"top 3"| C["Context chunks"]
+    C -->|"formatAsContext"| P["Prompt LLM com fontes"]
+```
+
+</details>
+
+<details>
+<summary><b>💳 Fluxo 4 — Billing Stripe (HMAC + idempotency)</b></summary>
 
 ```mermaid
 sequenceDiagram
@@ -151,125 +244,177 @@ sequenceDiagram
     participant S as Stripe
     participant DB as Postgres
 
-    U->>N: POST api/billing/checkout com planId
-    N->>S: Stripe Checkout Session com metadata.userId
-    S-->>U: redirect pra Stripe Checkout
-    U->>S: paga com cartao BR
-    S->>N: POST api/billing/webhook checkout.session.completed
-    N->>N: HMAC verify + BillingEvent idempotency check
-    N->>DB: upsert Subscription ACTIVE + plan + currentPeriodEnd
+    U->>N: POST /api/billing/checkout
+    N->>S: Checkout Session com metadata.userId
+    S-->>U: redirect Stripe Checkout
+    U->>S: paga (cartao BR)
+    S->>N: POST /api/billing/webhook
+    N->>N: HMAC verify + BillingEvent idempotency
+    N->>DB: upsert Subscription ACTIVE
     N->>DB: create BillingEvent + AuditLog
     Note over U,N: Proximas chamadas LLM
-    U->>N: POST api/analyze
-    N->>DB: enforceQuota Serializable + OWNER_EMAILS bypass + UsageMeter increment
-    N-->>U: 200 OK dentro do limite
+    U->>N: POST /api/analyze
+    N->>DB: enforceQuota Serializable + OWNER bypass
+    N-->>U: 200 OK (ou 429 amigavel)
 ```
 
-### Fluxo 4 — RAG hybrid retrieval
-
-```mermaid
-flowchart LR
-    Q["Query do prompt"]
-    Q -->|"Voyage AI embeddings"| E["1024-dim vector"]
-    Q -->|"tokenize + NFD"| T["Keyword tokens"]
-    E -->|"pgvector cosine HNSW"| V["Vector top-K"]
-    T -->|"BM25-lite + boosts"| K["Keyword top-K"]
-    V --> R["RRF fusion k=60"]
-    K --> R
-    R -->|"top 3"| C["Context chunks"]
-    C -->|"formatAsContext"| P["Prompt LLM com fontes"]
-```
+</details>
 
 ---
 
-## Stack
+## 🚀 Quick start
 
-| Camada | Tecnologia |
+> [!IMPORTANT]
+> Requisitos: **Node.js ≥ 18.18**, **Docker + docker-compose** (Postgres + Mailpit), e uma chave Anthropic ([console.anthropic.com](https://console.anthropic.com)).
+
+```bash
+# 1️⃣ Instalar
+npm install
+
+# 2️⃣ Subir Postgres + Mailpit (UI em http://localhost:8025)
+docker compose up -d postgres mailpit
+
+# 3️⃣ Configurar env
+cp .env.example .env
+# Mínimos obrigatórios:
+#   ANTHROPIC_API_KEY=sk-ant-...
+#   AUTH_SECRET=$(openssl rand -base64 32)
+#   DATABASE_URL já vem apontando pro Postgres do compose
+
+# 4️⃣ Aplicar schema (não roda no build — ver docs/DEPLOY.md)
+npx prisma migrate deploy
+
+# 5️⃣ Subir
+npm run dev
+```
+
+Acesse **http://localhost:3000**. Em dev, `AUTH_DEV_CREDENTIALS=true` libera login com qualquer e-mail (sem SMTP).
+
+### Comandos úteis
+
+| Comando | O que faz |
 |---|---|
-| Frontend | Next.js 14 (App Router) · React 18 · Plus Jakarta Sans + Spectral (Claude Design) |
-| Backend | Next.js Route Handlers (Node runtime) |
-| Banco | Postgres 16 · Prisma 6 |
-| Auth | Auth.js v5 (Email magic link via Resend, LinkedIn OIDC, Credentials dev) |
-| LLM | Anthropic Claude Sonnet 4.6 (default) · OpenAI GPT-4o (opcional) |
-| Embeddings | Voyage AI `voyage-3` (1024 dims) · OpenAI `text-embedding-3-small` fallback (Matryoshka) |
-| Vector store | pgvector (Postgres) + HNSW cosine index |
-| Vagas | Adzuna BR · Jooble · Greenhouse · Lever · Ashby · Workable |
-| Email | Resend (prod) · Nodemailer/Mailpit (dev) |
-| PDF / DOCX | pdf-parse + mammoth (com magic-bytes check) |
-| Validação | Zod estrito (.strict() em todos os bodies) |
-| Billing | Stripe (Checkout + Customer Portal + Webhooks com HMAC + idempotência) |
-| Cache / Rate-limit | Upstash Redis (prod, cross-lambda) · Map em memória (dev/fallback) |
-| Testes | Vitest (unit, 467 casos em 36 arquivos) · Playwright (e2e, 5 specs) |
-| Observabilidade | Sentry (errors) · PostHog (eventos) · UptimeRobot (`/api/health`) · AuditLog (17 actions) |
-| Deploy | Vercel + Postgres externo (Neon recomendado) |
+| `npm run dev` | Dev server com hot reload |
+| `npm run build` | Build de produção (sem `prisma migrate`) |
+| `npm test` | Vitest unit · **878 testes** em 69 arquivos |
+| `npm run test:watch` | Vitest em modo watch |
+| `npm run test:e2e` | Playwright (requer dev rodando) |
+| `npm run ingest:knowledge` | Ingerir 159 chunks no pgvector |
+| `npm run eval:rag` | Eval 50 queries · gate `recall@3 ≥ 70%` |
+| `npm run eval:rag:json` | Eval em JSON pra CI |
+| `npx prisma studio` | GUI do banco em `:5555` |
+| `npx prisma migrate dev --name <x>` | Criar nova migration |
 
 ---
 
-## Algoritmos & Cálculos
+## 🧰 Stack
 
-CareerTwin é **explicável por construção.** Toda métrica que vira "número" é calculada em código determinístico — o LLM só explica o que esses cálculos significam para o usuário. Isso é o que viabiliza `/transparencia` (a fórmula é literalmente exibida na UI).
+<table>
+  <thead>
+    <tr><th align="left">Camada</th><th align="left">Tecnologias</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><b>Frontend</b></td>
+      <td>Next.js 14 (App Router) · React 18 · <b>CSS puro</b> (sem Tailwind) · Plus Jakarta Sans + Spectral</td>
+    </tr>
+    <tr>
+      <td><b>Backend</b></td>
+      <td>Next.js Route Handlers (Node runtime + alguns Edge)</td>
+    </tr>
+    <tr>
+      <td><b>Banco</b></td>
+      <td>Postgres 16 (Neon) · <b>pgvector</b> com índice HNSW cosine · Prisma 6</td>
+    </tr>
+    <tr>
+      <td><b>Auth</b></td>
+      <td>Auth.js v5 — magic link (Resend) + LinkedIn OIDC + dev credentials local</td>
+    </tr>
+    <tr>
+      <td><b>LLM</b></td>
+      <td>Anthropic <b>Claude Sonnet 4.6</b> (default) + <b>Haiku 4.5</b> (rotas leves) · OpenAI fallback opcional</td>
+    </tr>
+    <tr>
+      <td><b>Embeddings</b></td>
+      <td>Voyage AI <code>voyage-3-large</code> (1024 dims) · OpenAI Matryoshka fallback</td>
+    </tr>
+    <tr>
+      <td><b>Vagas</b></td>
+      <td>Adzuna BR · Jooble · Greenhouse · Lever · Ashby · Workable · fixtures fallback</td>
+    </tr>
+    <tr>
+      <td><b>Email</b></td>
+      <td>Resend (prod) · Nodemailer/Mailpit (dev)</td>
+    </tr>
+    <tr>
+      <td><b>Pagamentos</b></td>
+      <td>Stripe (Checkout + Customer Portal + Webhooks HMAC + idempotency)</td>
+    </tr>
+    <tr>
+      <td><b>Cache + Rate-limit</b></td>
+      <td>Upstash Redis (prod, cross-lambda) · Map em memória (dev/fallback)</td>
+    </tr>
+    <tr>
+      <td><b>Parsers</b></td>
+      <td>pdf-parse (magic-bytes check) + mammoth (DOCX)</td>
+    </tr>
+    <tr>
+      <td><b>Validação</b></td>
+      <td>Zod 4 · <code>.strict()</code> em todos os bodies + limites de tamanho</td>
+    </tr>
+    <tr>
+      <td><b>Observabilidade</b></td>
+      <td>Sentry (errors) · PostHog (eventos) · UptimeRobot (<code>/api/health</code>) · AuditLog 17 actions</td>
+    </tr>
+    <tr>
+      <td><b>Testes</b></td>
+      <td>Vitest <b>(878 passing)</b> · Playwright e2e · 50-query RAG eval</td>
+    </tr>
+    <tr>
+      <td><b>CI/CD</b></td>
+      <td>GitHub Actions (Dependabot weekly + npm audit gate) · Vercel</td>
+    </tr>
+    <tr>
+      <td><b>Deploy</b></td>
+      <td>Vercel + Neon (recomendado) — Supabase/Railway também OK</td>
+    </tr>
+  </tbody>
+</table>
 
-### Career Health Score (determinístico)
+---
+
+## 📐 Algoritmos & Cálculos
+
+CareerTwin é **explicável por construção.** Toda métrica que vira "número" é calculada em código determinístico — o LLM só explica o que esses cálculos significam. Isso é o que viabiliza `/transparencia` (a fórmula é literalmente exibida na UI).
+
+### Career Health Score
 
 ```
 Score = (Aderência × 0.40) + (Habilidades × 0.30) + (Perfil × 0.20) + (Experiência × 0.10)
 ```
 
-| # | Sub-score | Peso | Como é calculado |
-|---|---|---|---|
-| 1 | **Aderência a vagas** | 40% | **TF-IDF simplificado.** Extrai skills da vaga via taxonomy normalizada (NFD + lowercase), compara com `Profile.skills`, retorna `\|comuns\| / max(\|perfil\|, \|vaga\|) × 100`. Implementação em `lib/scoring/subscores.js#computeAderenciaVagas`. |
-| 2 | **Relevância das habilidades** | 30% | **Score composto:** `count` (quantas declarou, cap 12) + `validity` (% reconhecidas pela taxonomy) + `diversity` (entropia simplificada de categorias: tech / soft / tool / method). `lib/scoring/subscores.js#computeRelevanciaHabilidades`. |
-| 3 | **Otimização do perfil** | 20% | **Weighted field-presence.** rawCv=20, targetRole=15, skills=15, LinkedIn=15, GitHub=10, etc, soma=100. `lib/metrics/completeness.js`. |
-| 4 | **Experiência de mercado** | 10% | **Year-range parsing do rawCv + senioridade alignment.** Anos extraídos via regex de datas. Senioridade declarada vs cargo-alvo via aliases (`junior / jr / trainee = junior`, `sr / senior / lead = senior`). `lib/scoring/subscores.js#computeExperienciaMercado`. |
+| # | Sub-score | Peso | Algoritmo |
+|:---:|---|:---:|---|
+| 1 | **Aderência a vagas** | `40 %` | TF-IDF simplificado. Extrai skills da vaga via taxonomy normalizada (NFD + lowercase), compara com `Profile.skills`. `lib/scoring/subscores.js` |
+| 2 | **Relevância das habilidades** | `30 %` | Score composto: `count` (cap 12) + `validity` (% reconhecidas) + `diversity` (entropia simplificada de categorias). |
+| 3 | **Otimização do perfil** | `20 %` | Weighted field-presence: rawCv=20, targetRole=15, skills=15, LinkedIn=15, GitHub=10... soma=100. `lib/metrics/completeness.js` |
+| 4 | **Experiência de mercado** | `10 %` | Year-range parsing via regex + senioridade alignment (`jr/junior/trainee = junior`, `sr/senior/lead = senior`). |
 
-**Os pesos vivem em `lib/score.js#WEIGHTS`** e são exibidos publicamente em `/transparencia` — qualquer mudança aparece para o usuário.
+Pesos vivem em `lib/score.js#WEIGHTS` e são **exibidos publicamente** em `/transparencia`.
 
-### RAG hybrid retrieval
-
-```
-Query → [Voyage embedding] → pgvector top-K ─┐
-                                              ├→ RRF fusion (k=60) → top 3 → context no prompt
-Query → [tokenize NFD]    → BM25-lite top-K ─┘
-```
+### RAG híbrido — recall@3 = 93.9%
 
 | Componente | O que é | Detalhe |
 |---|---|---|
-| **Embeddings** | Voyage AI `voyage-3` (1024 dims, ~$0.06/1M tokens) | **Modelo pré-treinado** — não treinamos modelo, apenas usamos a API. Fallback: OpenAI `text-embedding-3-small` (1536 nativos, truncado pra 1024 via Matryoshka usando o parâmetro `dimensions`). |
-| **Storage** | pgvector no Neon (extensão Postgres) | HNSW index com cosine distance. Schema `KnowledgeChunk` usa `Unsupported("vector(1024)")` no Prisma — queries vector via raw SQL. |
-| **Lane 1 — semântico** | Embedding da query + `ORDER BY embedding <=> $vec` | Top-K candidatos por similaridade de cosine. |
-| **Lane 2 — keyword** | BM25-lite com NFD + audience boost 1.5x + tag-match boost | Top-K candidatos por overlap. |
-| **Fusion — RRF** | Reciprocal Rank Fusion `score = Σ 1/(k + rank)`, k=60 | **Combina por posição, não por score absoluto.** Robusto contra magnitudes diferentes (cosine 0..1 vs overlap inteiro). |
-| **Knowledge base** | 159 chunks curados **manualmente** | Cobertura: CV / LinkedIn / Interview / Transition / Salary / Soft-skills / ATS / Mercado-BR / Tech-modern / Identidade / Network. NÃO é scraped automaticamente. |
-| **Ingestão** | `scripts/ingest-knowledge.mjs` (`npm run ingest:knowledge`) | Idempotente: hash sha256 do conteúdo evita reingest desnecessário; throttling pra free tier Voyage. |
-| **Eval framework** | 50 queries com ground truth manual (`npm run eval:rag`) | Mede `recall@3`, `recall@5`, `MRR`, `NDCG@5`. **Threshold gate: recall@3 ≥ 70%**. Resultado atual: **93.9% keyword-only (PASSED)**; ~96-98% esperado pós-ingestão Voyage. |
+| **Embeddings** | Voyage AI `voyage-3-large` (1024 dims) | ~$0.06/1M tokens · fallback OpenAI `text-embedding-3-small` truncado via Matryoshka |
+| **Storage** | pgvector no Neon | HNSW index com cosine distance · raw SQL via `Unsupported("vector(1024)")` |
+| **Lane semântica** | Embedding + `ORDER BY embedding <=> $vec` | Top-K por similaridade cosine |
+| **Lane keyword** | BM25-lite + NFD + audience boost 1.5× + tag-match | Top-K por overlap |
+| **Fusion** | Reciprocal Rank Fusion `score = Σ 1/(k + rank)`, k=60 | Robusto contra magnitudes diferentes |
+| **Knowledge base** | **159 chunks curados manualmente** BR | CV / Interview / Salary / Soft-skills / ATS / Mercado-BR / Identidade / Network |
+| **Eval framework** | 50 queries com ground truth | `recall@3`, `recall@5`, `MRR`, `NDCG@5` · gate `recall@3 ≥ 70%` |
 
 Detalhes profundos em [docs/RAG.md](./docs/RAG.md) (700 linhas).
-
-### Match de vagas (job ↔ profile)
-
-`lib/skills-taxonomy.js#matchScore({ profileSkills, jobSkills })`. Set intersection normalizada (NFD + lowercase). Retorna `{ match: |∩| / max(|A|, |B|) × 100, comuns: [...], falta: [...] }`. **Em código, não LLM.** O LLM apenas justifica o porquê em frase curta, com fonte `[Currículo]` ou `[Base de Vagas]`. Nunca inventa número.
-
-### Refresh score (não-gaming)
-
-`POST /api/profile/refresh`. Quando o usuário marca microações concluídas, o backend:
-
-1. Reusa `Profile.rawCv` + `targetRole` + `perfilJson` (não pede CV de novo).
-2. Calcula `projectedGains` **determinístico** somando `impactoPontos` do gap por sub-score, com **cap 15 por sub + 20 total** (anti-gaming — impede que marcar 20 microações triviais infle o score).
-3. Chama LLM com `promptDiag(completedHabilidades=[...])` — o LLM gera gaps **diferentes** (anti-loop infinito).
-4. `computeAllSubScores` + bonus determinístico → novo `ScoreSnapshot` com delta vs anterior.
-
-### Billing enforce (TOCTOU-safe)
-
-`lib/billing/enforce.js`. Antes de cada chamada LLM cara:
-
-1. **OWNER_EMAILS bypass** — env `OWNER_EMAILS=sergio@x,daniel@y` libera totalmente.
-2. **Plan lookup** — busca `Subscription{status, plan}` do usuário. Sem subscription = Free.
-3. **UsageMeter increment** — dentro de **`Prisma.$transaction` com isolationLevel `Serializable`** (fix do TOCTOU original). Free tier: analyze 10/mês, tailor 5/mês, opportunities 20/dia, interview 10/mês.
-4. Sem `STRIPE_SECRET_KEY` setado, todos os endpoints de billing retornam **503 amigável** (não 500) — a app continua usável.
-
-### Cost cap (anti-amplification)
-
-`lib/llm.js`. Cada chamada LLM loga `{ tokens, custo_usd, latência, route, userId }` em JSON-line. Budget per-user diário: **$0.10 (Free) / $5 (Pro) / $20 (Team)**. Excedeu → 429 com mensagem amigável. Mitigação OWASP LLM10 (custo de inferência amplificável).
 
 ### O que **NÃO** é Machine Learning
 
@@ -278,81 +423,35 @@ Detalhes profundos em [docs/RAG.md](./docs/RAG.md) (700 linhas).
 | Career Health Score | TF-IDF + set theory + regex. Determinístico. |
 | Job match | Set intersection. Determinístico. |
 | Skill extraction | Regex + taxonomy lookup. Determinístico. |
-| LLM Claude Sonnet 4.6 | Modelo **pré-treinado** da Anthropic. Usamos via API. **Não treinamos.** |
-| Embeddings Voyage AI | Modelo **pré-treinado** da Voyage. Usamos via API. **Não treinamos.** |
+| Claude Sonnet 4.6 | Modelo **pré-treinado** Anthropic. Usamos via API. **Não treinamos.** |
+| Embeddings Voyage AI | Modelo **pré-treinado** Voyage. Usamos via API. **Não treinamos.** |
 
-### O que **poderia** virar ML no futuro (precisa dataset)
+### Outras camadas
 
-| Possibilidade | Dataset necessário |
+| Camada | Implementação |
 |---|---|
-| **Score calibration** — aprender pesos (0.40/0.30/0.20/0.10) a partir de outcome | `Outcome{snapshotId, status: HIRED\|REJECTED\|...}` — não temos ainda |
-| **Course recommendations** — ranking aprendido por outcome | `CourseCompletion{userId, courseId, completedAt, gainedScore}` — não temos ainda |
-| **Salary prediction** — regression a partir de skills + senioridade + região | Dataset salarial brasileiro consistente — não temos ainda |
+| Auth IDOR-safe | 2-step query pattern (busca IDs da sessão, depois `IN`) — `app/api/history/actions/route.js` |
+| Anti-SSRF | DNS lookup + IP pinning + bloqueio IPv4/IPv6 privados + CGNAT — `lib/safe-fetch.js` |
+| URL safety | `safeExternalUrl` + `safeHref` (Zod URL bloqueando `javascript:` / `data:`) |
+| LGPD cascade | Prisma `onDelete: Cascade` + Consent `payloadHash` SHA256 |
+| LGPD TTL | `Profile.rawCv` redacted após 90d (cron diário `/api/cron/redact-cv`) |
+| Audit trail | 17 actions · IP hash sha256+`AUDIT_IP_SALT` (LGPD-friendly) |
+| Cost cap LLM | Budget per-user diário: `$0.10` Free / `$5` Pro / `$20` Team |
 
-Hoje, todo cálculo é **publicado em `/transparencia`** e o LLM nunca "inventa" um número.
-
-### Outras camadas relevantes
-
-| Camada | Algoritmo | Implementação |
-|---|---|---|
-| Skill extraction | Token-level matching + NFD normalization | `lib/skills-taxonomy.js#extractSkills` |
-| Course suggestion | Skill-keyed lookup + boost para cursos grátis | `lib/knowledge/course-retrieval.js` |
-| LLM extraction | Zod strict + `.strip` + prompt isolation | `lib/prompts.js`, `lib/llm.js` |
-| Auth IDOR-safe | 2-step query pattern (busca IDs da sessão, depois `IN`) | `app/api/history/actions/route.js` |
-| Anti-SSRF | DNS lookup + IP pinning + bloqueio IPv4/IPv6 privados + CGNAT | `lib/safe-fetch.js` |
-| URL safety | `safeExternalUrl` + `safeHref` (Zod URL bloqueando `javascript:` / `data:`) | `lib/url-safe.js` |
-| LGPD cascade | Prisma `onDelete: Cascade` + Consent `payloadHash` SHA256 | `prisma/schema.prisma` |
-| LGPD TTL | `Profile.rawCv` redacted após 90d (cron diário `/api/cron/redact-cv`) | `app/api/cron/redact-cv/route.js` |
-| Audit trail | 17 actions com IP hash sha256+`AUDIT_IP_SALT` (LGPD-friendly) | `lib/audit.js` |
-| Cost cap LLM | Budget per-user diário + log estruturado JSON | `lib/llm.js` |
-
-Detalhes completos em [docs/ALGORITHMS.md](./docs/ALGORITHMS.md).
+Documentação completa em [docs/ALGORITHMS.md](./docs/ALGORITHMS.md).
 
 ---
 
-## Funcionalidades
-
-### Autenticadas (após login)
-- `/dashboard` — Career Health Score + sub-scores + 3 próximas ações + perfil snapshot + mediana comparativa
-- `/autoconhecimento` — 3 assessments (DISC-lite, Valores, Ikigai) com visualizações SVG + narrativas
-- `/gaps` — KPI strip + requirements list + microactions com completion + cursos sugeridos inline
-- `/oportunidades` — Radar de vagas com filtros + match breakdown explicado
-- `/plano` — Histórico de score + timeline de ações
-- `/cvs-adaptados` — Histórico de CVs adaptados por vaga
-- `/evidencias` — Documentação de evidências de competência (projetos, cases, métricas)
-- `/candidaturas` — Funil kanban (SAVED → APPLIED → INTERVIEW → OFFER)
-- `/transparencia` — Fórmula auditável + data sources + LGPD
-- `/conta` — Perfil + cargo-alvo + stats + LGPD
-- `/meus-dados` — Export JSON + apagar tudo
-
-### Endpoints internos relevantes
-- `POST /api/profile/refresh` — recalcula score reusando `Profile.rawCv` + `targetRole` + `perfilJson`. Modal "Aplicar conquistas" oferece 3 ações: aplicar+recalcular, só recalcular, cancelar.
-- `POST /api/billing/checkout` · `POST /api/billing/portal` · `POST /api/billing/webhook` · `GET /api/billing/plan` — Stripe Phase 1+2. Sem `STRIPE_SECRET_KEY` setado, retorna 503 amigável.
-- `POST /api/cron/redact-cv` — TTL LGPD: redaciona `Profile.rawCv` após 90 dias (cron diário, header `x-cron-secret`).
-- `POST /api/cron/usage-cleanup` — limpeza periódica de `UsageMeter` de períodos antigos.
-- `POST /api/cron/digest` — digest semanal Resend (batching de 10 paralelo + dedup por role).
-- AuditLog interno em `lib/audit.js` — 17 actions logadas (login, magic-link, analyze, tailor, export, delete, billing events…) com IP hash sha256+salt (anti-rainbow LGPD).
-
-### Públicas
-- `/` — Split-panel onboarding (modo experimentar sem login)
-- `/entrar` — Login (magic link + LinkedIn opcional + dev creds em preview)
-- `/auth/verify-request` — Estado pós-envio do magic link
-- `/privacidade` — Política LGPD
-- `/termos` — Termos de uso
-- `/api/health` — Health check pro UptimeRobot
-
----
-
-## Arquitetura
+## 📁 Estrutura de pastas
 
 ```
 careertwin-ai/
 ├─ app/
-│  ├─ page.js                       Home — split-panel onboarding + modo experimentar
-│  ├─ (app)/                        Layout autenticado (AppShell sidebar)
+│  ├─ page.js                       Home — split-panel + modo experimentar
+│  ├─ (app)/                        Layout autenticado (AppShell sidebar 252px)
 │  │  ├─ dashboard/                 Career Health + sub-scores + próximas ações
-│  │  ├─ autoconhecimento/          3 assessments (DiscMatrix, ValoresRadar, IkigaiVenn)
-│  │  ├─ gaps/                      Skill Gap Mapper + microactions + cursos inline
+│  │  ├─ autoconhecimento/          3 assessments (DISC, Valores, Ikigai)
+│  │  ├─ gaps/                      Skill Gap Mapper + microactions + cursos
 │  │  ├─ oportunidades/             Radar de vagas + match breakdown
 │  │  ├─ plano/                     Histórico de score + timeline
 │  │  ├─ cvs-adaptados/             Histórico de CVs adaptados
@@ -362,435 +461,228 @@ careertwin-ai/
 │  ├─ candidaturas/                 Kanban + funil de conversão
 │  ├─ entrar/                       Login (magic link, LinkedIn, dev)
 │  ├─ meus-dados/                   LGPD (ver, baixar JSON, apagar tudo)
-│  └─ api/
-│     ├─ analyze/                   POST: CV + cargo → diagnóstico
+│  └─ api/                          49 route handlers
+│     ├─ analyze/                   POST: CV + cargo → diagnóstico (SSE stream)
 │     ├─ opportunities/             POST: perfil → vagas (6 providers) + plano
 │     ├─ assessments/[kind]/        GET/POST: DISC-lite, valores, Ikigai
-│     ├─ evidence/                  CRUD evidências
-│     ├─ tailored-cvs/              CRUD CVs adaptados (com diff)
-│     ├─ gaps/                      GET summary + microactions + completion
 │     ├─ profile/refresh/           POST: refresh score sem repaste de CV
-│     ├─ profile/onboarding/        GET/POST: estado X/3 sources
-│     ├─ profile/completeness/      GET: % completude
-│     ├─ score/                     GET histórico
-│     ├─ plan-items/                CRUD plano de ação
-│     ├─ linkedin/parse/            POST: texto LinkedIn → estrutura
-│     ├─ portfolio/import/          POST: github/url → projetos (anti-SSRF)
 │     ├─ tailor/                    POST: CV + vaga → CV adaptado (enforce billing)
 │     ├─ interview/                 POST: simulador STAR/CAR (enforce billing)
-│     ├─ chat/                      POST: conversar com o "gêmeo" (server carrega DB)
-│     ├─ applications/              CRUD do funil
-│     ├─ history/actions/           Timeline com IDOR-safe pattern
-│     ├─ cv/upload/                 Upload PDF (magic-bytes + sanitização)
-│     ├─ me/export/                 Export LGPD (JSON com tudo)
-│     ├─ notifications/             In-app notifications
-│     ├─ billing/
-│     │  ├─ checkout/               POST: Stripe Checkout Session
-│     │  ├─ portal/                 POST: Stripe Customer Portal
-│     │  ├─ webhook/                POST: Stripe webhooks (HMAC + idempotency)
-│     │  └─ plan/                   GET: plano + uso atual
-│     ├─ cron/
-│     │  ├─ digest/                 Cron semanal (Resend digest, batching)
-│     │  ├─ redact-cv/              Cron diário (TTL LGPD 90d)
-│     │  └─ usage-cleanup/          Cron de limpeza de UsageMeter antigo
-│     ├─ health/                    Health check (UptimeRobot)
-│     └─ auth/[...nextauth]/        Handler NextAuth v5
+│     ├─ chat/                      POST: conversar com o "gêmeo"
+│     ├─ billing/                   checkout · portal · webhook · plan
+│     ├─ cron/                      digest · redact-cv · usage-cleanup
+│     └─ ...
 ├─ components/
-│  ├─ AppShell.js                   Sidebar 252px desktop + header mobile (Linear-style shadows)
-│  ├─ Report.js                     Saída do diagnóstico (hero CTA bar, sub-scores compactos)
-│  ├─ NotificationBell.js           Notifications in-app
-│  ├─ Modal.js                      Modal acessível (role=dialog + ARIA + ESC)
-│  ├─ InterviewModal.js             Simulador STAR/CAR
-│  ├─ ChatModal.js                  Chat com o gêmeo
-│  ├─ TailorModal.js                Adaptador de currículo
+│  ├─ AppShell.js                   Sidebar 252px desktop + header mobile
+│  ├─ Report.js                     Saída do diagnóstico (sub-scores compactos)
 │  ├─ visualizations/
 │  │  ├─ DiscMatrix.js              SVG quadrante DISC
 │  │  ├─ ValoresRadar.js            SVG radar 16 eixos
 │  │  └─ IkigaiVenn.js              SVG 4 círculos
-│  └─ NextStepsBlock.js             3 microações próximas
+│  └─ ...
 ├─ lib/
-│  ├─ llm.js                        Anthropic/OpenAI (retry + timeout + cost log + budget cap)
+│  ├─ llm.js                        Anthropic/OpenAI (retry + timeout + budget cap)
 │  ├─ embeddings.js                 Voyage AI + OpenAI fallback (1024 dims)
-│  ├─ prompts.js                    Prompts (system + user separados, sanitização """)
+│  ├─ prompts.js                    Prompts (system + user separados)
 │  ├─ validators.js                 Zod strict em tudo
 │  ├─ score.js                      Career Health Score (4 sub-scores · WEIGHTS)
 │  ├─ scoring/subscores.js          Sub-scores 100% determinísticos
 │  ├─ knowledge/                    RAG hybrid (retrieval + courses + base curada)
 │  ├─ jobs/                         6 providers + fixtures fallback
 │  ├─ skills-taxonomy.js            Extração + match
-│  ├─ metrics/completeness.js       Weighted field-presence
 │  ├─ rate-limit.js                 Upstash Redis (prod) ou Map (dev/fallback)
-│  ├─ billing/
-│  │  ├─ stripe.js                  SDK + 503 graceful
-│  │  ├─ plans.js                   Free / Pro M / Pro Y / Team
-│  │  └─ enforce.js                 OWNER_EMAILS bypass + TOCTOU-safe UsageMeter
+│  ├─ billing/                      Stripe SDK + plans + enforce TOCTOU-safe
 │  ├─ audit.js                      AuditLog 17 actions (IP hash sha256+salt)
 │  ├─ safe-fetch.js                 Anti-SSRF (DNS + IP pinning + private blocks)
-│  ├─ url-safe.js                   safeExternalUrl + safeHref (Zod URL)
-│  ├─ email.js                      Digest HTML (Resend ou Nodemailer)
-│  ├─ pdf.js                        Parser PDF defensivo (magic-bytes)
-│  ├─ docx.js                       Parser DOCX (mammoth)
-│  ├─ data-export.js                Export LGPD
-│  ├─ auth.js                       NextAuth config + rate-limit magic-link
-│  ├─ auth-protected-paths.js       SSoT do middleware (PROTECTED sync)
-│  ├─ env.js                        Boot guards (AUTH_DEV_CREDENTIALS bloqueado em prod)
-│  └─ notifications.js              In-app notifications
+│  └─ ...
 ├─ prisma/
 │  ├─ schema.prisma                 21 modelos
-│  └─ migrations/                   Migrations versionadas (rodam fora do build)
+│  └─ migrations/                   Migrations versionadas
 ├─ scripts/
-│  └─ ingest-knowledge.mjs          Ingestão idempotente pgvector (sha256 contentHash)
+│  └─ ingest-knowledge.mjs          Ingestão idempotente (sha256 contentHash)
 ├─ tests/
-│  ├─ unit/                         Vitest (467 testes em 36 arquivos)
+│  ├─ unit/                         Vitest (878 testes em 69 arquivos)
 │  ├─ e2e/                          Playwright (5 specs)
 │  └─ eval/rag/                     50 queries · recall@3/MRR/NDCG
-├─ docs/
-│  ├─ PRODUTO.md · ALGORITHMS.md · API.md
-│  ├─ RAG.md · MONETIZACAO.md · DEPLOY.md
-│  ├─ OBSERVABILITY.md · HANDOFF_TIME_TERA.md
-│  └─ audits/                       5 audits read-only
+├─ docs/                            PRODUTO · ALGORITHMS · API · RAG · ...
 ├─ middleware.js                    CSP + NextAuth gate + PROTECTED paths
-├─ next.config.mjs                  Headers + Sentry source maps gatekeeper
-├─ vercel.json                      Cron (digest weekly · redact-cv daily · usage-cleanup)
+├─ vercel.json                      6 crons configurados
 └─ docker-compose.yml               Postgres + Mailpit pra dev
 ```
 
-### Modelos de dados principais
-
-21 modelos no Prisma — destacando os principais:
+### Modelos de dados — `prisma/schema.prisma`
 
 ```mermaid
 erDiagram
     User ||--o| Profile : tem
     User ||--o| Subscription : "billing Stripe"
-    User ||--o{ UsageMeter : "quota mensal/diária"
-    User ||--o{ BillingEvent : "webhooks Stripe (idempotency)"
-    User ||--o{ ScoreSnapshot : "histórico de score"
+    User ||--o{ UsageMeter : "quota mensal/diaria"
+    User ||--o{ BillingEvent : "webhooks idempotency"
+    User ||--o{ ScoreSnapshot : "historico de score"
     User ||--o{ Application : "kanban candidaturas"
     User ||--o{ Consent : "LGPD por fonte"
-    User ||--o{ DataSource : "rastreio de origem"
     User ||--o{ AssessmentResult : "autoconhecimento"
-    User ||--o{ Evidence : "evidências"
+    User ||--o{ Evidence : "evidencias"
     User ||--o{ TailoredCv : "CVs adaptados"
     User ||--o{ Notification : "in-app"
     User ||--o{ AuditLog : "17 actions LGPD"
     ScoreSnapshot ||--o{ Gap : "lacunas priorizadas"
-    ScoreSnapshot ||--o{ PlanItem : "plano de ação"
-    Application ||--o{ ApplicationEvent : "timeline auditável"
-
-    User {
-        string id
-        string email
-    }
-    Profile {
-        string targetRole
-        json perfilJson
-        string rawCv
-        datetime rawCvExpiresAt
-    }
-    Subscription {
-        enum status
-        enum plan
-        datetime currentPeriodEnd
-        string stripeCustomerId
-    }
-    UsageMeter {
-        string kind
-        int count
-        string period
-    }
-    BillingEvent {
-        string stripeEventId
-        string type
-        json payload
-    }
-    ScoreSnapshot {
-        int overall
-        json subScores
-        datetime createdAt
-    }
-    KnowledgeChunk {
-        string contentHash
-        text content
-        json metadata
-        vector embedding
-    }
-    AuditLog {
-        string action
-        string userIdHash
-        string ipHash
-        datetime createdAt
-    }
+    ScoreSnapshot ||--o{ PlanItem : "plano de acao"
+    Application ||--o{ ApplicationEvent : "timeline auditavel"
 ```
 
 ---
 
-## Rodar localmente
+## 🔑 Variáveis de ambiente
 
-**Pré-requisitos:**
-- Node.js 18.18+
-- Docker + docker-compose (para Postgres e Mailpit em dev)
-- Uma chave Anthropic ([console.anthropic.com](https://console.anthropic.com))
+> [!NOTE]
+> Toda integração tem **flag off** com graceful degradation. Sem `STRIPE_SECRET_KEY` → billing retorna `503` amigável e o resto da app funciona. Sem `VOYAGE_API_KEY` → RAG cai em keyword-only.
 
-```bash
-# 1. Instalar (inclui stripe, @upstash/redis, voyage client + pgvector setup)
-npm install
-
-# 2. Subir Postgres + Mailpit (captura emails locais em http://localhost:8025)
-docker compose up -d postgres mailpit
-
-# 3. Configurar env
-cp .env.example .env
-# Preencha pelo menos:
-#   ANTHROPIC_API_KEY=sk-ant-...
-#   AUTH_SECRET=$(openssl rand -base64 32)
-#   DATABASE_URL ja vem apontando pro Postgres do compose
-# Opcionais (toda integracao com flag off e no-op):
-#   OWNER_EMAILS=sergio@lognullsec.com         # bypass Free tier pra testar
-#   STRIPE_SECRET_KEY=sk_test_...              # sem isso, billing retorna 503
-#   UPSTASH_REDIS_REST_URL / _TOKEN            # sem isso, rate-limit usa Map
-#   VOYAGE_API_KEY=pa-...                      # sem isso, RAG fica em keyword-only
-#   AUDIT_IP_SALT=$(openssl rand -hex 32)      # salt do hash de IP no AuditLog
-
-# 4. Aplicar schema no banco (NAO roda mais no build — ver docs/DEPLOY.md)
-npx prisma migrate deploy
-
-# 5. Subir
-npm run dev
-```
-
-Acesse **http://localhost:3000**. Em dev, `AUTH_DEV_CREDENTIALS=true` te deixa logar com qualquer e-mail (sem precisar de SMTP real).
-
-### Comandos úteis
-
-```bash
-npm run dev                                    # dev server (hot reload)
-npm run build                                  # build de produção (sem prisma migrate)
-npm run start                                  # serve o build
-npm test                                       # vitest unit (467 testes)
-npm run test:watch                             # vitest em watch
-npm run test:e2e                               # playwright (requer dev rodando)
-npx prisma studio                              # GUI do banco em :5555
-npx prisma migrate dev --name <nome>           # nova migration
-npm run db:migrate                             # prisma migrate deploy (prod)
-npm run ingest:knowledge                       # ingerir knowledge base no pgvector
-npm run eval:rag                               # rodar 50-query eval (gate recall@3 >= 70%)
-npm run eval:rag:json                          # eval em JSON pra pipeline/CI
-```
-
----
-
-## Variáveis de ambiente
+<details>
+<summary><b>📋 Tabela completa de env vars (clique pra expandir)</b></summary>
 
 | Variável | Obrigatória | Descrição |
-|---|---|---|
-| `LLM_PROVIDER` | não | `anthropic` (default) ou `openai` |
-| `LLM_MODEL` | não | `claude-sonnet-4-6` (default), `claude-haiku-4-5-20251001`, `gpt-4o`… |
-| `ANTHROPIC_API_KEY` | sim* | * se `LLM_PROVIDER=anthropic` |
-| `OPENAI_API_KEY` | sim* | * se `LLM_PROVIDER=openai` |
-| `DATABASE_URL` | sim | Postgres connection string (Neon recomendado, com `?sslmode=require`) |
-| `AUTH_SECRET` | sim | `openssl rand -base64 32` |
+|---|:---:|---|
+| `LLM_PROVIDER` | ❌ | `anthropic` (default) ou `openai` |
+| `LLM_MODEL` | ❌ | `claude-sonnet-4-6` (default) ou outro |
+| `LLM_MODEL_FAST` | ❌ | `claude-haiku-4-5-20251001` — rotas leves 3-5× mais rápidas |
+| `ANTHROPIC_API_KEY` | ✅* | `*` se `LLM_PROVIDER=anthropic` |
+| `OPENAI_API_KEY` | ✅* | `*` se `LLM_PROVIDER=openai` |
+| `DATABASE_URL` | ✅ | Postgres connection string (Neon com `?sslmode=require`) |
+| `AUTH_SECRET` | ✅ | `openssl rand -base64 32` |
 | `AUTH_URL` | prod | URL pública (ex.: `https://careertwin.app`) |
-| `EMAIL_FROM` | sim | `"CareerTwin <no-reply@seu-dominio>"` |
-| `AUTH_RESEND_KEY` | prod | Chave do Resend para magic link e digest |
+| `EMAIL_FROM` | ✅ | `"CareerTwin <no-reply@seu-dominio>"` |
+| `AUTH_RESEND_KEY` | prod | Chave Resend pra magic link + digest |
 | `EMAIL_SERVER` | dev | `smtp://localhost:1025` (Mailpit) |
-| `AUTH_LINKEDIN_ID` / `_SECRET` | opcional | LinkedIn OIDC |
-| `AUTH_DEV_CREDENTIALS` | dev | `true` libera login dev — **proibido em prod** (guarda dupla no código) |
-| `ADZUNA_APP_ID` / `_KEY` | opcional | Vagas reais BR ([developer.adzuna.com](https://developer.adzuna.com)) |
-| `JOOBLE_API_KEY` | opcional | Vagas agregadas |
-| `GREENHOUSE_BOARDS` | opcional | Slugs separados por vírgula: `nubank,stone` |
-| `LEVER_SITES` | opcional | Slugs Lever |
-| `ASHBY_ORGS` | opcional | Slugs Ashby |
-| `WORKABLE_ACCOUNTS` | opcional | Subdomínios Workable |
-| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | opcional | Sentry server + client |
-| `NEXT_PUBLIC_POSTHOG_KEY` | opcional | PostHog product analytics |
-| `CRON_SECRET` | prod | `openssl rand -hex 32` — header `x-cron-secret` no cron |
-| `OWNER_EMAILS` | opcional | Lista CSV de e-mails com bypass total de limite Free (`sergio@x,daniel@y`) |
-| `AUDIT_IP_SALT` | prod | `openssl rand -hex 32` — salt do hash sha256 de IP no AuditLog (anti-rainbow) |
-| `STRIPE_SECRET_KEY` | opcional | Sem isso, billing retorna 503 amigável e o resto da app funciona |
-| `STRIPE_WEBHOOK_SECRET` | opcional* | * obrigatória se Stripe estiver ativo (HMAC verification em `/api/billing/webhook`) |
-| `STRIPE_PRICE_PRO_MONTHLY` | opcional* | * Price ID do plano Pro Mensal R$29 (placeholder até criar no Stripe) |
-| `STRIPE_PRICE_PRO_YEARLY` | opcional* | * Price ID do plano Pro Anual R$290 |
-| `STRIPE_PRICE_TEAM_MONTHLY` | opcional* | * Price ID do plano Team R$99/seat |
-| `UPSTASH_REDIS_REST_URL` | opcional | Cache + rate-limit cross-lambda em prod. Sem isso, usa `Map` em memória |
-| `UPSTASH_REDIS_REST_TOKEN` | opcional | Token REST do Upstash |
-| `VOYAGE_API_KEY` | opcional | Embeddings Voyage AI (1024 dims). Sem isso, fallback Matryoshka OpenAI; sem nenhum dos dois, RAG fica em keyword-only |
+| `AUTH_LINKEDIN_ID` / `_SECRET` | ❌ | LinkedIn OIDC |
+| `AUTH_DEV_CREDENTIALS` | dev | `true` libera login dev — **proibido em prod** (guarda dupla) |
+| `ADZUNA_APP_ID` / `_KEY` | ❌ | Vagas reais BR |
+| `JOOBLE_API_KEY` | ❌ | Vagas agregadas |
+| `GREENHOUSE_BOARDS` | ❌ | CSV de slugs: `nubank,stone` |
+| `LEVER_BOARDS` | ❌ | CSV de slugs Lever |
+| `ASHBY_BOARDS` | ❌ | CSV de orgSlugs Ashby |
+| `WORKABLE_BOARDS` | ❌ | CSV de accounts Workable |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | ❌ | Sentry server + client |
+| `NEXT_PUBLIC_POSTHOG_KEY` | ❌ | PostHog product analytics |
+| `CRON_SECRET` | prod | `openssl rand -hex 32` — header `x-cron-secret` |
+| `OWNER_EMAILS` | ❌ | CSV bypass Free (`sergio@x,daniel@y`) |
+| `AUDIT_IP_SALT` | prod | `openssl rand -hex 32` — salt do hash IP (anti-rainbow) |
+| `STRIPE_SECRET_KEY` | ❌ | Sem isso → billing 503 amigável |
+| `STRIPE_WEBHOOK_SECRET` | ✅* | `*` obrigatória se Stripe ativo (HMAC) |
+| `STRIPE_PRICE_PRO_MONTHLY` | ❌ | Price ID Pro Mensal R$29 |
+| `STRIPE_PRICE_PRO_YEARLY` | ❌ | Price ID Pro Anual R$290 |
+| `STRIPE_PRICE_TEAM_MONTHLY` | ❌ | Price ID Team R$99/seat |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | ❌ | Cache + rate-limit cross-lambda |
+| `VOYAGE_API_KEY` | ❌ | Embeddings 1024-dim · sem isso → keyword-only |
 
-Sem chaves de vagas → fallback de vagas ilustrativas (etiquetadas como tal na UI). Sem `STRIPE_SECRET_KEY` → endpoints de billing retornam 503 e o resto da app funciona normalmente.
+</details>
 
 ---
 
-## Deploy no Vercel
+## 🚢 Deploy no Vercel
 
-### Passo 1 — Postgres gerenciado
+<details>
+<summary><b>Passo a passo completo</b></summary>
 
-Vercel não hospeda Postgres direto (mais). Use um dos:
+### 1️⃣ Postgres gerenciado (com pgvector)
+- **[Neon](https://neon.tech)** — recomendado (free tier generoso, pgvector nativo: `CREATE EXTENSION vector`)
+- Supabase, Railway também OK
 
-- **Neon** ([neon.tech](https://neon.tech)) — free tier generoso, recomendado (suporta pgvector nativo)
-- **Supabase** ([supabase.com](https://supabase.com)) — também OK
-- **Railway** ([railway.app](https://railway.app)) — também OK
+### 2️⃣ Resend com domínio verificado
+1. [resend.com/domains](https://resend.com/domains) → Add Domain
+2. DNS records (SPF + DKIM)
+3. API key com escopo "Sending access"
 
-Crie o banco e copie a connection string (formato `postgresql://user:pass@host:5432/db?sslmode=require`). **Para RAG**, habilite a extensão `pgvector` (no Neon já vem disponível, basta `CREATE EXTENSION vector`).
-
-### Passo 2 — Resend com domínio verificado
-
-1. [resend.com/domains](https://resend.com/domains) → Add Domain.
-2. Adicione os DNS records (SPF + DKIM) no seu provedor de domínio.
-3. Aguarde a verificação (5-30min).
-4. Gere uma API key em [resend.com/api-keys](https://resend.com/api-keys) com escopo "Sending access".
-
-### Passo 3 — Push pro GitHub
-
+### 3️⃣ Push pro GitHub e importar no Vercel
 ```bash
 git remote add origin git@github.com:SEU_USER/careertwin-ai.git
 git push -u origin main
 ```
 
-### Passo 4 — Importar no Vercel
+[vercel.com/new](https://vercel.com/new) → importe o repo. Framework: **Next.js** (auto). Adicione env vars. **NÃO** defina `AUTH_DEV_CREDENTIALS=true` em prod (a guarda dupla aborta o boot).
 
-1. [vercel.com/new](https://vercel.com/new) → importe o repositório.
-2. Framework: **Next.js** (detectado automaticamente).
-3. Em **Environment Variables**, adicione **todas as obrigatórias** da tabela acima.
-4. **NÃO** defina `AUTH_DEV_CREDENTIALS` em prod (a guarda dupla aborta o boot).
-5. Deploy.
-
-### Passo 5 — Rodar a migration em prod
-
-A migration **não** roda mais no `build` (evita race em PRs paralelos e mantém deploys atômicos). Três estratégias suportadas — escolha uma em [docs/DEPLOY.md](./docs/DEPLOY.md):
+### 4️⃣ Rodar migration em prod (não roda no build)
 
 ```bash
-# Opção A — manual, antes de promover deploy:
+# Opção A — manual:
 DATABASE_URL="..." npx prisma migrate deploy
 
-# Opção B — Vercel "Install Command":
+# Opção B — Vercel Install Command:
 #   npm ci && npx prisma migrate deploy
 
-# Opção C — GitHub Action dedicada (workflow_dispatch) com `DATABASE_URL` secret.
+# Opção C — GitHub Action dedicada (workflow_dispatch).
 ```
 
-### Passo 6 — Vercel Cron (digest semanal, redact-cv, usage-cleanup)
+Detalhes em [docs/DEPLOY.md](./docs/DEPLOY.md).
 
-O `vercel.json` já tem os crons configurados. Como o Vercel não passa headers customizados, configure em **Project → Settings → Cron Jobs**:
+### 5️⃣ Vercel Cron com header `x-cron-secret`
 
+Project → Settings → Cron Jobs:
 ```
 x-cron-secret: <valor do CRON_SECRET>
 ```
 
-Pra testar um cron manualmente em prod:
+Pra testar:
 ```bash
-curl -X POST -H "x-cron-secret: <SEU_SECRET>" https://seu-app.vercel.app/api/cron/digest
-curl -X POST -H "x-cron-secret: <SEU_SECRET>" https://seu-app.vercel.app/api/cron/redact-cv
+curl -X POST -H "x-cron-secret: <SECRET>" https://seu-app.vercel.app/api/cron/digest
+curl -X POST -H "x-cron-secret: <SECRET>" https://seu-app.vercel.app/api/cron/redact-cv
 ```
 
-### Passo 7 — RAG ingestion (opcional)
-
-Pra ativar o lane vetorial do RAG:
+### 6️⃣ Ingestão RAG (opcional, ativa o lane vetorial)
 
 ```bash
-# Localmente, apontando pro Postgres de prod (com VOYAGE_API_KEY setado):
 DATABASE_URL="..." VOYAGE_API_KEY="pa-..." npm run ingest:knowledge
-
-# Validar com eval gate:
 DATABASE_URL="..." npm run eval:rag
 ```
 
-Sem ingestão, o RAG cai no lane keyword-only (recall@3 ainda ≥ 70%).
+Sem ingestão → keyword-only lane (recall@3 ainda passa o gate).
+
+</details>
 
 ---
 
-## Segurança
+## 🛡️ Segurança
 
-Implementado (11 vulnerabilidades P0+P1 já remediadas na Onda 11):
+> [!IMPORTANT]
+> **11 vulnerabilidades P0+P1 já remediadas** (Onda 11). Auditoria em 5 read-only audits cobrindo **OWASP Top 10:2025** + **OWASP Top 10 LLM Apps 2025**.
 
-- **Auth.js v5** com JWT + adapter Prisma. Guarda dupla impede `AUTH_DEV_CREDENTIALS=true` em prod (aborta boot). Rate-limit anti-enumeração no magic-link (3/email/hora).
-- **Zod estrito** (`.strict()`) em todos os bodies + limites de tamanho contra DoS de custo.
-- **Escopo por `session.user.id`** em toda query Prisma — zero IDOR (2-step query pattern).
-- **Rate limit** em **Upstash Redis** (prod, cross-lambda) com fallback Map em memória. Rotas LLM, jobs, billing.
-- **Prompt injection mitigado**: system prompt isolado, sanitização de `"""`, null bytes removidos.
-- **LLM com retry + backoff exponencial + AbortController** (45s timeout, 2 tentativas, jitter) + **budget per-user** ($0.10 Free / $5 Pro / $20 Team daily).
-- **TOCTOU em UsageMeter** corrigido com `Prisma.$transaction` isolationLevel `Serializable`.
-- **CSP** via middleware (script-src `self` + `unsafe-inline`, frame-ancestors `none`).
-- **Headers de segurança**: HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy.
-- **Upload PDF/DOCX defensivo**: magic-bytes + content-length antes do parse.
-- **Anti-SSRF custom HTTPS agent** com **IP pinning** + bloqueio IPv4/IPv6 privados, CGNAT, link-local (metadata cloud), `.local`/`.internal`. Mitiga DNS rebinding (TOCTOU).
-- **Cron protegido** por header `x-cron-secret` com comparação constante-tempo (sem query string).
-- **Email HTML escapado** + validação de protocolo no `<a href>` (bloqueia `javascript:`, `data:`). `safeExternalUrl` + `safeHref` via Zod URL aplicados em 5 sinks.
-- **Stripe Webhook**: HMAC verify + `BillingEvent.stripeEventId` unique pra idempotency.
-- **Chat ownership**: body sem perfil/gaps — server carrega do DB pra evitar spoofing.
-- **LGPD**:
-  - Consent registrado por fonte com `payloadHash` SHA256.
-  - Cascade delete em tudo que pende de `User`.
-  - Export em JSON inclui assessments + evidence + tailoredCvs.
-  - **`Profile.rawCv` TTL 90d** (cron diário `/api/cron/redact-cv`).
-  - **AuditLog** com 17 actions + IP hash sha256+`AUDIT_IP_SALT` (anti-rainbow).
-- **Observabilidade de custo LLM**: log estruturado (JSON line) com tokens, custo USD, latência, route, userId.
-- **CI gate**: `npm audit` + Dependabot weekly.
-- **Sentry** whitelist expandida pra rotas sensíveis.
+| Camada | Defesa implementada |
+|---|---|
+| **Auth** | Auth.js v5 + JWT + adapter Prisma · guarda dupla `AUTH_DEV_CREDENTIALS` em prod (aborta boot) · rate-limit magic-link 3/email/hora |
+| **Validação** | Zod `.strict()` em **todos** os bodies + limites de tamanho contra DoS de custo |
+| **IDOR** | Escopo por `session.user.id` em toda query Prisma · 2-step query pattern |
+| **Rate limit** | Upstash Redis (cross-lambda) · fallback Map · rotas LLM, jobs, billing |
+| **Prompt injection** | System prompt isolado · sanitização de `"""` · null bytes removidos |
+| **LLM** | Retry + backoff exponencial + jitter · AbortController 45s · budget per-user diário · cost log JSON-line |
+| **TOCTOU** | UsageMeter via `Prisma.$transaction` isolationLevel `Serializable` |
+| **CSP** | Middleware com `script-src 'self' 'unsafe-inline'` · `frame-ancestors 'none'` |
+| **Headers** | HSTS · X-Frame-Options DENY · nosniff · Referrer-Policy · Permissions-Policy |
+| **Upload** | Magic-bytes + content-length antes do parse (PDF/DOCX) |
+| **SSRF** | Custom HTTPS agent · IP pinning · bloqueio IPv4/IPv6 privados, CGNAT, link-local, `.local`/`.internal` |
+| **Cron** | Header `x-cron-secret` com comparação constante-tempo |
+| **Email** | HTML escapado · `safeExternalUrl` + `safeHref` (Zod URL bloqueando `javascript:`/`data:`) |
+| **Stripe** | Webhook HMAC verify · `BillingEvent.stripeEventId` unique pra idempotency |
+| **Chat ownership** | Body sem perfil/gaps — server carrega do DB pra evitar spoofing |
+| **LGPD** | Consent SHA256 · cascade delete · export JSON · `Profile.rawCv` TTL 90d · AuditLog 17 actions IP hash sha256+salt |
+| **CI gate** | `npm audit` + Dependabot weekly |
 
-Auditoria completa em **5 read-only audits** em `docs/audits/`:
-- `01-backend.md` · `02-frontend.md` · `03-db-infra.md` · `04-appsec-owasp.md` · `05-ai-llm-security.md`.
-
-Cobre OWASP Top 10:2025 + OWASP Top 10 LLM Apps 2025.
+Auditorias em [docs/audits/](./docs/audits/):
+`01-backend.md` · `02-frontend.md` · `03-db-infra.md` · `04-appsec-owasp.md` · `05-ai-llm-security.md`
 
 ---
 
-## Roadmap
-
-**v0.9 (atual) — MVP completo + RAG real + Stripe foundation (branch `redesign/claude-design`)**
-- 4 pilares (Autoconhecimento, Diagnóstico, Ação, Oportunidade) implementados
-- RAG real: Voyage AI + pgvector + RRF fusion · 159 chunks · recall@3 ≥ 70% gate
-- Stripe Phase 1+2: Checkout + Portal + Webhooks com HMAC + idempotência (Price IDs placeholder)
-- 6 ATS providers
-- LGPD by construction + AuditLog 17 actions + Profile.rawCv TTL 90d
-- 11 vulnerabilidades P0+P1 corrigidas (XSS Zod URL, TOCTOU UsageMeter, SSRF DNS rebinding, cost cap, rate-limit Upstash…)
-- 5 audits read-only (Backend, Frontend, DB+Infra, OWASP Top 10:2025, OWASP LLM Top 10)
-- 467 testes unit + 5 e2e Playwright
-
-**v1.0 — Validação com usuários (próximo)**
-- User testing com 5-10 candidatos
-- Entrevistas B2B com universidades + RHs
-- Decisão de ICP (B2C primário ou B2B primário)
-- Refinamento baseado em feedback real
-
-**v1.1 — Production hardening**
-- Vercel Install Command pra `prisma migrate deploy` (manual hoje)
-- Neon branch isolation (DB separado preview/prod)
-- PITR drill (restore exercitado a cada 3 meses)
-- Sentry + PostHog validados com tráfego real
-- Lighthouse > 90 em todas as rotas
-- Status page
-
-**v1.2 — Monetização ativa**
-- Criar Stripe Price IDs reais (placeholders hoje)
-- NFe BR (integração com emissora)
-- Pricing page + paywall UI nas rotas LLM
-- Affiliate de cursos com tracking
-
-**v2.0 — B2B**
-- Modelo `Organization` + seats (universidades, consultorias)
-- SAML/SSO
-- White-label
-- API pública
-- Dataset proprietário anonimizado (defensibilidade)
-
-**Futuro (não roteado ainda)**
-- Mediana de contratados real (dataset)
-- Mobile nativo
-- i18n (en/es)
-- Análise psicométrica clínica validada
-
----
-
-## Testes
+## 🧪 Testes
 
 ```bash
-npm test                # 467 testes unit (vitest) em 36 arquivos
+npm test                # 878 testes unit (vitest) em 69 arquivos
 npm run test:e2e        # 5 specs playwright (skipped em CI por padrão)
 npm run eval:rag        # 50 queries · gate recall@3 >= 70%
 ```
 
-Cobertura:
-- Validators Zod (60+ schemas: Analyze, Opp, Interview, Tailor, Chat, Linkedin, Portfolio, Application, Assessment, Evidence, TailoredCv, Refresh, Billing…)
+<details>
+<summary><b>O que está coberto</b></summary>
+
+- Validators Zod (60+ schemas: Analyze, Opp, Interview, Tailor, Chat, LinkedIn, Portfolio, Application, Assessment, Evidence, TailoredCv, Refresh, Billing...)
 - Email digest HTML (escape XSS, singular/plural, validação de protocolo)
 - Score determinístico (sub-scores 100% em código + bonus refresh capado)
 - RAG hybrid (retrieval + course suggestion + RRF fusion)
@@ -798,49 +690,137 @@ Cobertura:
 - Anti-SSRF (DNS pinning + private IPv4/IPv6/CGNAT)
 - URL safety (`safeExternalUrl` / `safeHref` Zod URL)
 - AuditLog (17 actions + IP hash)
+- Streaming SSE (6 etapas, ordering, persistência só se logado)
+- Achievements (17 conquistas, idempotência, payloads)
 - E2E Playwright: login → diagnóstico → persistência → "apagar tudo"
 
----
-
-## Documentação
-
-### Produto
-- [PRODUTO.md](./docs/PRODUTO.md) — visão de produto, personas, princípios
-- [ALGORITHMS.md](./docs/ALGORITHMS.md) — algoritmos, fórmulas, diagramas
-- [API.md](./docs/API.md) — referência de rotas
-
-### Engenharia
-- [RAG.md](./docs/RAG.md) — arquitetura RAG real (Voyage + pgvector + RRF + eval) · 700 linhas
-- [MONETIZACAO.md](./docs/MONETIZACAO.md) — planos, setup Stripe, enforcement, segurança
-- [DEPLOY.md](./docs/DEPLOY.md) — 3 estratégias para aplicar migrations fora do build
-
-### Arquitetura (redesign branch)
-- [Master Plan](./docs/redesign/00-MASTER_PLAN.md) — plano de migração
-- [Frontend](./docs/redesign/01-FRONTEND.md) — arquitetura frontend
-- [Backend](./docs/redesign/02-BACKEND.md) — arquitetura backend
-- [Production](./docs/redesign/03-PRODUCTION.md) — DevOps + QA + Security
-
-### Auditorias (read-only)
-- [01-backend.md](./docs/audits/01-backend.md) — review backend
-- [02-frontend.md](./docs/audits/02-frontend.md) — review frontend
-- [03-db-infra.md](./docs/audits/03-db-infra.md) — review DB + infra
-- [04-appsec-owasp.md](./docs/audits/04-appsec-owasp.md) — OWASP Top 10:2025
-- [05-ai-llm-security.md](./docs/audits/05-ai-llm-security.md) — OWASP LLM Top 10
-
-### Operações
-- [OBSERVABILITY.md](./docs/OBSERVABILITY.md) — Sentry + PostHog + UptimeRobot + AuditLog
-
-### Pesquisa
-- [UX_AUDIT.md](./docs/UX_AUDIT.md) — audit UX + referências internacionais
-- [REBRAND_CANDIDATES.md](./docs/REBRAND_CANDIDATES.md) — 22 nomes alternativos verificados
-- [A11Y_AUDIT.md](./docs/redesign/A11Y_AUDIT.md) — auditoria de acessibilidade
-
-### Time
-- [HANDOFF_TIME_TERA.md](./docs/HANDOFF_TIME_TERA.md) — documento de transparência pro time (341 linhas)
+</details>
 
 ---
 
-## Time
+## 🗺️ Roadmap
+
+### ✅ v0.9 — atual: MVP completo + RAG real + Stripe foundation
+- 4 pilares (Autoconhecimento · Diagnóstico · Ação · Oportunidade)
+- RAG real: Voyage AI + pgvector + RRF · 159 chunks · `recall@3 = 93.9%`
+- Stripe Phase 1+2: Checkout + Portal + Webhooks HMAC + idempotência
+- 6 ATS providers · LGPD by construction · AuditLog 17 actions
+- 11 vulnerabilidades P0+P1 corrigidas · 5 audits read-only
+- 878 testes unit + 5 e2e Playwright
+
+### 🎯 v1.0 — validação com usuários (próximo)
+- User testing com 5-10 candidatos
+- Entrevistas B2B com universidades + RHs
+- Decisão de ICP (B2C primário ou B2B primário)
+- Refinamento baseado em feedback real
+
+### 🔧 v1.1 — production hardening
+- Vercel Install Command pra `prisma migrate deploy`
+- Neon branch isolation (preview/prod separados)
+- PITR drill (restore exercitado a cada 3 meses)
+- Sentry + PostHog validados com tráfego real
+- Lighthouse > 90 em todas as rotas · status page
+
+### 💰 v1.2 — monetização ativa
+- Criar Stripe Price IDs reais (placeholders hoje)
+- NFe BR (integração com emissora)
+- Pricing page + paywall UI nas rotas LLM
+- Affiliate de cursos com tracking
+
+### 🏢 v2.0 — B2B
+- Modelo `Organization` + seats (universidades, consultorias)
+- SAML/SSO · white-label · API pública
+- Dataset proprietário anonimizado (defensibilidade)
+
+### 🔮 futuro
+- Mediana de contratados real (dataset)
+- Mobile nativo · i18n (en/es)
+- Análise psicométrica clínica validada
+
+---
+
+## 🤝 Como contribuir
+
+> [!TIP]
+> Branch principal: `main`. Branch de redesign atual: `redesign/claude-design`.
+
+1. **Fork** o repo e crie um branch a partir de `main` (`feat/sua-feature` ou `fix/bug-x`).
+2. Mantenha **Zod `.strict()`** em qualquer novo body de API. Sem exceção.
+3. Use **`session.user.id`** em qualquer query Prisma que tocar dados de usuário. **Nunca confie em IDs no body.**
+4. Rodadas obrigatórias antes de PR:
+   ```bash
+   npm test            # vitest deve passar (878+)
+   npm run eval:rag    # gate recall@3 >= 70%
+   ```
+5. Para mudanças em LLM/auth/billing/upload/PII, consulte a skill `seguranca-careertwin` (OWASP + LLM Top 10).
+6. PR description deve ter: **o que muda**, **por que**, **screenshots** (se UI) e **testes que cobrem**.
+
+---
+
+## 📚 Documentação
+
+<table>
+  <tr>
+    <td valign="top" width="33%">
+      <h4>🧭 Produto</h4>
+      <ul>
+        <li><a href="./docs/PRODUTO.md">PRODUTO.md</a> — visão, personas, princípios</li>
+        <li><a href="./docs/ALGORITHMS.md">ALGORITHMS.md</a> — fórmulas + diagramas</li>
+        <li><a href="./docs/API.md">API.md</a> — referência de rotas</li>
+        <li><a href="./docs/STRATEGY_ROADMAP.md">STRATEGY_ROADMAP.md</a> — visão estratégica</li>
+      </ul>
+    </td>
+    <td valign="top" width="33%">
+      <h4>⚙️ Engenharia</h4>
+      <ul>
+        <li><a href="./docs/RAG.md">RAG.md</a> — Voyage + pgvector + RRF + eval</li>
+        <li><a href="./docs/MONETIZACAO.md">MONETIZACAO.md</a> — Stripe + planos + enforcement</li>
+        <li><a href="./docs/DEPLOY.md">DEPLOY.md</a> — 3 estratégias de migration</li>
+        <li><a href="./docs/RELIABILITY.md">RELIABILITY.md</a> — SLOs + erros</li>
+      </ul>
+    </td>
+    <td valign="top" width="33%">
+      <h4>🔍 Auditorias</h4>
+      <ul>
+        <li><a href="./docs/audits/01-backend.md">01 · Backend</a></li>
+        <li><a href="./docs/audits/02-frontend.md">02 · Frontend</a></li>
+        <li><a href="./docs/audits/03-db-infra.md">03 · DB + Infra</a></li>
+        <li><a href="./docs/audits/04-appsec-owasp.md">04 · OWASP Top 10:2025</a></li>
+        <li><a href="./docs/audits/05-ai-llm-security.md">05 · OWASP LLM Top 10</a></li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <h4>📊 Operações</h4>
+      <ul>
+        <li><a href="./docs/OBSERVABILITY.md">OBSERVABILITY.md</a> — Sentry + PostHog + UptimeRobot</li>
+        <li><a href="./docs/ANALYTICS.md">ANALYTICS.md</a> — eventos PostHog</li>
+        <li><a href="./docs/OUTCOMES.md">OUTCOMES.md</a> — survey + tracking</li>
+      </ul>
+    </td>
+    <td valign="top">
+      <h4>🎨 Design</h4>
+      <ul>
+        <li><a href="./docs/redesign/00-MASTER_PLAN.md">Master Plan</a></li>
+        <li><a href="./docs/redesign/01-FRONTEND.md">Frontend redesign</a></li>
+        <li><a href="./docs/UX_AUDIT.md">UX_AUDIT.md</a> — referências internacionais</li>
+        <li><a href="./docs/REBRAND_CANDIDATES.md">REBRAND_CANDIDATES.md</a> — 22 nomes</li>
+      </ul>
+    </td>
+    <td valign="top">
+      <h4>👥 Time</h4>
+      <ul>
+        <li><a href="./docs/HANDOFF_TIME_TERA.md">HANDOFF_TIME_TERA.md</a> — handoff 341 linhas</li>
+        <li><a href="./docs/PROVIDERS_RESEARCH.md">PROVIDERS_RESEARCH.md</a> — pesquisa ATS</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 👥 Time
 
 Fernanda Alves · Bianca Matos · Cicero Janiel · Caroline Guilmo · Jonatan Jamar · Daniel Scharf · **Sérgio Henrique**
 
@@ -848,7 +828,12 @@ Fernanda Alves · Bianca Matos · Cicero Janiel · Caroline Guilmo · Jonatan Ja
 
 <div align="center">
 
-**CareerTwin AI** — plataforma de gestão de carreira em pt-BR ·
-Built with `Next.js 14` + `Anthropic Claude` + `Voyage AI` + `pgvector` + `Postgres` + `Stripe`
+<sub>**CareerTwin AI** — copiloto de carreira em pt-BR · auditável · LGPD por construção</sub>
+
+<sub>Built with `Next.js 14` · `Anthropic Claude` · `Voyage AI` · `pgvector` · `Postgres` · `Stripe` · `Resend` · `Upstash`</sub>
+
+<br/>
+
+<sub>Se este projeto te ajudou, considere deixar uma ⭐ — feedback é combustível.</sub>
 
 </div>
