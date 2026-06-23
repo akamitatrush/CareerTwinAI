@@ -7,11 +7,12 @@ import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
 import { grantAchievement } from "@/lib/achievements";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req) {
+async function handler(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -175,3 +176,5 @@ export async function POST(req) {
     );
   }
 }
+
+export const POST = withApiGuard(handler);

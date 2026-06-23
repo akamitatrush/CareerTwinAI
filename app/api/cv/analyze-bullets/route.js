@@ -23,6 +23,7 @@ import { completeJSONWithUsage } from "@/lib/llm";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +47,7 @@ const MAX_LEN = 300;
 const MAX_BULLETS = 40;
 const MAX_SUGGESTIONS_RETURNED = 20;
 
-export async function POST(req) {
+async function handler(req) {
   // Auth obrigatorio: feature de IA premium, anonimos nao tem acesso.
   // userId vem SEMPRE de auth() server-side (nunca do body — anti IDOR).
   const session = await auth();
@@ -278,3 +279,5 @@ Regras estritas:
     );
   }
 }
+
+export const POST = withApiGuard(handler);

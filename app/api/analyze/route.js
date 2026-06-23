@@ -12,6 +12,7 @@ import { notify, NotificationTemplates } from "@/lib/notifications";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
 import { grantAchievement } from "@/lib/achievements";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,7 +39,7 @@ function pickExplicacao(llmText, key) {
   return s.length > 0 ? s : FALLBACK_EXPL[key];
 }
 
-export async function POST(req) {
+async function handler(req) {
   // Sessao opcional: logado → persiste com escopo de dono; anonimo → efemero.
   // Nao ha IDOR aqui: persistencia so acontece quando userId vem de auth().
   const session = await auth();
@@ -463,3 +464,5 @@ export async function POST(req) {
     );
   }
 }
+
+export const POST = withApiGuard(handler);

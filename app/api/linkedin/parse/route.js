@@ -8,11 +8,12 @@ import { LinkedinParseBody, LinkedinShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { trackTokenUsage, checkDailyBudget, getUserPlan } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req) {
+async function handler(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -196,3 +197,5 @@ export async function POST(req) {
     perfil: result.perfil,
   });
 }
+
+export const POST = withApiGuard(handler);

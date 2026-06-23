@@ -9,6 +9,7 @@ import { extractSkills, matchScore } from "@/lib/skills-taxonomy";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ const SOURCE_LABEL = {
   fixtures: "Ilustrativo",
 };
 
-export async function POST(req) {
+async function handler(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -382,3 +383,5 @@ export async function POST(req) {
     illustrative: allIllustrative,
   });
 }
+
+export const POST = withApiGuard(handler);

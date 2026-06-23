@@ -29,6 +29,7 @@ import { audit } from "@/lib/audit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { grantAchievement } from "@/lib/achievements";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ function pickExplicacao(llmText, key) {
   return s.length > 0 ? s : FALLBACK_EXPL[key];
 }
 
-export async function POST(req) {
+async function handler(req) {
   // 1) Sessao obrigatoria. userId NUNCA vem do body — anti IDOR.
   const session = await auth();
   if (!session?.user?.id) {
@@ -562,3 +563,5 @@ export async function POST(req) {
     appliedSkills,
   });
 }
+
+export const POST = withApiGuard(handler);

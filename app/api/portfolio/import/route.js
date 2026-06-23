@@ -8,6 +8,7 @@ import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { safeFetchExternal, isPrivateIp } from "@/lib/safe-fetch";
 import { trackTokenUsage, checkDailyBudget, getUserPlan } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -107,7 +108,7 @@ async function fetchSiteText(url) {
     .slice(0, 8000);
 }
 
-export async function POST(req) {
+async function handler(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -298,3 +299,5 @@ export async function POST(req) {
 
   return NextResponse.json({ portfolio, warnings });
 }
+
+export const POST = withApiGuard(handler);
