@@ -169,8 +169,8 @@ function NoTargetState() {
       <h2>Defina seu cargo-alvo primeiro</h2>
       <p>
         Sem cargo-alvo, não dá pra comparar você com o mercado. Configure em{" "}
-        <Link href="/conta">/conta</Link> ou rode um diagnóstico em{" "}
-        <Link href="/meu-gemeo">/meu-gemeo</Link>.
+        <Link href="/conta">/conta</Link> ou rode um diagnóstico no{" "}
+        <Link href="/dashboard">seu dashboard</Link>.
       </p>
     </div>
   );

@@ -155,8 +155,8 @@ export default async function PlanoPage() {
         {points.length === 0 ? (
           <div style={{ padding: 28, textAlign: "center" }}>
             <p style={{ color: "var(--text-muted)" }}>
-              Ainda sem snapshots. Faça seu primeiro diagnóstico em{" "}
-              <Link href="/meu-gemeo">/meu-gemeo</Link>.
+              Ainda sem snapshots. Faça seu primeiro diagnóstico no{" "}
+              <Link href="/dashboard">seu dashboard</Link>.
             </p>
           </div>
         ) : points.length === 1 ? (

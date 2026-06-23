@@ -257,7 +257,7 @@ export default function KanbanClient({ initialItems, columns }) {
         .kanban-x { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; cursor: pointer; color: var(--text-subtle); font-size: 11px; }
         .kanban-x:hover { color: var(--alert); border-color: var(--alert); }
         .kanban-empty-hero { margin-bottom: 20px; padding: 22px; border: 1px dashed var(--border-strong); border-radius: 12px; background: var(--surface-2); }
-        .kanban-empty-hero-inner h2 { margin: 0 0 8px; font-size: 20px; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; }
+        .kanban-empty-hero-inner h2 { margin: 0 0 8px; font-size: 20px; font-family: var(--font-display); font-weight: 700; }
         .kanban-empty-hero-inner p { margin: 0 0 14px; color: var(--text-muted); font-size: 14px; line-height: 1.55; max-width: 620px; }
         :global(.ks-input) { padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 13px; font-family: inherit; background: var(--surface); }
       `}</style>

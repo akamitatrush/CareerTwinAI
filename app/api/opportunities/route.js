@@ -176,6 +176,7 @@ export async function POST(req) {
       local: j.local || "",
       match: j.match,
       porque,
+      comuns: j.comuns || [],
       falta: j.falta || [],
       source: j.source,
       sourceLabel: SOURCE_LABEL[j.source] || j.source,

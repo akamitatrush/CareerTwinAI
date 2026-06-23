@@ -81,7 +81,7 @@ function FunnelStats({ items }) {
 function Stat({ n, label, sub }) {
   return (
     <div>
-      <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1, fontFamily: "Bricolage Grotesque, sans-serif" }}>{n}</div>
+      <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1, fontFamily: "var(--font-display)" }}>{n}</div>
       <div style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", marginTop: 4, color: "var(--text-muted)" }}>{label}</div>
       {sub && <div style={{ fontSize: 11, color: "var(--text-subtle)", marginTop: 2 }}>{sub}</div>}
     </div>

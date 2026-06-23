@@ -117,11 +117,11 @@ function EmptyState() {
       <h2>Seu gêmeo ainda está em branco.</h2>
       <p>
         Cole seu currículo e diga o cargo-alvo em{" "}
-        <Link href="/meu-gemeo">/meu-gemeo</Link> pra começar a ver o
+        <Link href="/dashboard">/dashboard</Link> pra começar a ver o
         diagnóstico aqui.
       </p>
       <Link
-        href="/meu-gemeo"
+        href="/dashboard"
         className="btn btn-primary"
         style={{ marginTop: 14, display: "inline-block" }}
       >
@@ -283,8 +283,8 @@ function NextActionsCol({ latest }) {
       <div className="ct-actions-list">
         {gaps.length === 0 ? (
           <div className="ct-empty-card">
-            Sem ações pendentes. Refaça o diagnóstico em{" "}
-            <Link href="/meu-gemeo">/meu-gemeo</Link> pra ver novas microações.
+            Sem ações pendentes. Refaça o diagnóstico no{" "}
+            <Link href="/dashboard">seu dashboard</Link> pra ver novas microações.
           </div>
         ) : (
           gaps.map((g, i) => (

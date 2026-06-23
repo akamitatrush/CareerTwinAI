@@ -223,7 +223,7 @@ export default async function ContaPage({ searchParams }) {
                 color: "var(--accent-text)",
                 display: "grid",
                 placeItems: "center",
-                fontFamily: "Bricolage Grotesque, sans-serif",
+                fontFamily: "var(--font-display)",
                 fontWeight: 800,
                 fontSize: 28,
                 flex: "none",
@@ -544,7 +544,7 @@ function StatCard({ n, label, sub }) {
     >
       <div
         style={{
-          fontFamily: "Bricolage Grotesque, sans-serif",
+          fontFamily: "var(--font-display)",
           fontSize: 36,
           fontWeight: 800,
           lineHeight: 1,

@@ -24,7 +24,7 @@ export default async function OportunidadesPage() {
   ]);
 
   // Sem cargo-alvo ou sem snapshot a busca nao tem o que ranquear. Mandamos
-  // pro /meu-gemeo em vez de chamar a API que retornaria PROFILE_REQUIRED.
+  // pro /dashboard em vez de chamar a API que retornaria PROFILE_REQUIRED.
   if (!profile?.targetRole || !latestSnapshot) {
     return (
       <div className="app-container">
@@ -39,7 +39,7 @@ export default async function OportunidadesPage() {
         <div className="ct-dash-empty">
           <h2>Sem diagnóstico ainda</h2>
           <p>
-            Faça um diagnóstico em <Link href="/meu-gemeo">/meu-gemeo</Link> pra
+            Faça um diagnóstico no <Link href="/dashboard">seu dashboard</Link> pra
             eu poder buscar vagas ranqueadas pelo seu perfil.
           </p>
         </div>

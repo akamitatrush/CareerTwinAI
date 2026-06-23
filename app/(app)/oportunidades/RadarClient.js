@@ -118,8 +118,8 @@ export default function RadarClient({ initial }) {
           <h2>Nenhuma vaga voltou pra esses filtros</h2>
           <p>
             Tente relaxar os filtros, ou volte daqui a algumas horas. Posso
-            também sugerir refazer o diagnóstico em{" "}
-            <Link href="/meu-gemeo">/meu-gemeo</Link> com cargo-alvo diferente.
+            também sugerir refazer o diagnóstico no{" "}
+            <Link href="/dashboard">seu dashboard</Link> com cargo-alvo diferente.
           </p>
         </div>
       ) : (

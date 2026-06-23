@@ -391,11 +391,11 @@ export default function Home() {
         .wizard-eyebrow { margin: 0 0 14px; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
         .wizard-steps { list-style: none; padding: 0; margin: 0 0 14px; display: flex; flex-direction: column; gap: 12px; }
         .wizard-steps li { display: flex; gap: 14px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: var(--text); }
-        .wizard-n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-weight: 800; font-family: "Bricolage Grotesque", sans-serif; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+        .wizard-n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-weight: 800; font-family: var(--font-body); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
         .wizard-foot { margin: 0; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
         .wizard-foot a { color: var(--text); font-weight: 600; }
         .proc-headline { margin: 18px 0 22px; max-width: 560px; }
-        .proc-title { font-size: 22px; font-weight: 700; line-height: 1.25; margin: 0 0 6px; font-family: "Bricolage Grotesque", sans-serif; }
+        .proc-title { font-size: 22px; font-weight: 700; line-height: 1.25; margin: 0 0 6px; font-family: var(--font-display); }
         .proc-sub { font-size: 14px; color: var(--text-muted); margin: 0 0 8px; line-height: 1.45; }
         .proc-meta { font-size: 12px; color: var(--text-subtle); font-family: "JetBrains Mono", monospace; letter-spacing: .04em; margin: 0; }
       `}</style>
