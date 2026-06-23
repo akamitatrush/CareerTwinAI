@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { SAMPLE_CV, SAMPLE_ROLE } from "@/lib/sample";
 import Report from "@/components/Report";
 import LinkedinImportButton from "@/components/LinkedinImportButton";
@@ -30,6 +31,7 @@ function SourceCard({ label, done }) {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [stage, setStage] = useState("input");
   const [cv, setCv] = useState("");
   const [role, setRole] = useState("");
@@ -121,7 +123,6 @@ export default function Home() {
       setDiag(d);
       setOpp(o);
       setSnapshotId(d?.snapshotId || null);
-      setStage("report");
       track("diagnosis_completed", {
         cv_chars: cv.trim().length,
         role_len: role.trim().length,
@@ -131,6 +132,15 @@ export default function Home() {
         jobs_illustrative: !!o?.illustrative,
         is_logged: isLogged,
       });
+      // User logado: redireciona pro dashboard (resultado ja foi salvo).
+      // Mostrar Report inline aqui seria redundante — dashboard tem o mesmo
+      // conteudo mais persistente (com refresh, gaps marcaveis, etc).
+      // User anonimo: continua vendo Report inline ("modo experimentar").
+      if (isLogged) {
+        router.push("/dashboard");
+        return;
+      }
+      setStage("report");
     } catch (e) {
       const msg = String(e?.message || "").toLowerCase();
       let friendly;

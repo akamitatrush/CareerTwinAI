@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { WEIGHTS, SS_META } from "@/lib/score";
 import InterviewModal from "@/components/InterviewModal";
@@ -10,6 +11,11 @@ import { safeHref } from "@/lib/url-safe";
 
 const CIRC = 2 * Math.PI * 52;
 const SS_KEYS = ["aderencia_vagas", "relevancia_habilidades", "otimizacao_perfil", "experiencia_mercado"];
+// Limites de exibição inline na home — listas completas vão pras telas /gaps e /oportunidades
+const MAX_GAPS_INLINE = 3;
+const MAX_JOBS_INLINE = 5;
+const JOB_MATCH_MIN = 30;     // filtro principal de relevância (esconde "lixo visual")
+const JOB_MATCH_FALLBACK = 20; // relaxa se quase nada passar no filtro
 
 function splitSrc(t) {
   const s = String(t || "");
@@ -23,13 +29,26 @@ function Src({ value, dark }) {
   if (!value) return null;
   return <span className={"src" + (dark ? " dark" : "")}>{value}</span>;
 }
+// Heurística pra quebrar a explicação do sub-score em "primeiras 2 linhas + resto".
+// Mantemos a frase 1 sempre; se houver mais de 1 frase, jogamos pro <details>.
+function splitWhy(text) {
+  const s = String(text || "").trim();
+  if (!s) return { head: "", rest: "" };
+  const sentences = s.split(/(?<=[.!?])\s+/);
+  if (sentences.length <= 1 || s.length < 140) return { head: s, rest: "" };
+  return { head: sentences[0], rest: sentences.slice(1).join(" ") };
+}
+function intensityClass(v) {
+  if (v >= 70) return "good";
+  if (v >= 50) return "mid";
+  return "low";
+}
 
 export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
   const p = diag.perfil || {};
   const ss = diag.sub_scores || {};
   const gaps = diag.gaps || [];
 
-  const [open, setOpen] = useState({});
   const [completed, setCompleted] = useState({});
   const [reveal, setReveal] = useState(0);
   const [showInterview, setShowInterview] = useState(false);
@@ -67,6 +86,16 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
   const gaugeOff = animated ? CIRC * (1 - liveOverall / 100) : CIRC;
   const gapNames = gaps.map((g) => g.habilidade);
 
+  // Top microações por impacto (já vêm ordenadas pela LLM; cortamos no MAX_GAPS_INLINE)
+  const topGaps = gaps.slice(0, MAX_GAPS_INLINE);
+
+  // Vagas: filtra match < JOB_MATCH_MIN. Se sobra menos que 3 (ex.: alvo nicho), relaxa pro fallback.
+  const allJobs = Array.isArray(opp?.vagas) ? opp.vagas : [];
+  const sortedJobs = [...allJobs].sort((a, b) => (Number(b.match) || 0) - (Number(a.match) || 0));
+  const strictJobs = sortedJobs.filter((v) => Number(v.match) >= JOB_MATCH_MIN);
+  const fallbackJobs = sortedJobs.filter((v) => Number(v.match) >= JOB_MATCH_FALLBACK);
+  const visibleJobs = (strictJobs.length >= 3 ? strictJobs : fallbackJobs).slice(0, MAX_JOBS_INLINE);
+
   return (
     <div className="report">
       <div className="mirror">
@@ -101,12 +130,13 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
         </button>
       </div>
 
-      <div className="sec">
+      <section className="ct-report-section">
         <div className="sec-head">
-          <span className="sec-no">01</span>
+          <span className="ct-report-section-num s1">01</span>
           <h2 className="sec-title">O número, por dentro</h2>
-          <p className="sec-sub">Nada de caixa-preta: o Career Health Score é a soma ponderada de quatro sub-scores. Conclua uma microação lá embaixo e veja ele subir aqui.</p>
+          <p className="sec-sub">Nada de caixa-preta: o Career Health Score é a soma ponderada de quatro sub-scores. Marque as microações conforme conclui — quando estiver pronto, clique em "Atualizar diagnóstico" no dashboard pra cristalizar o ganho.</p>
         </div>
+
         <div className="instrument">
           <div className="inst-top">
             <div className="gauge">
@@ -118,50 +148,67 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
             </div>
             <div className="inst-headline">
               <h3>Sua empregabilidade para “{role}”{delta > 0 && <span className="inst-delta"> ▲ +{delta} desde o diagnóstico</span>}</h3>
-              <p>Quanto mais alto, mais perto você está do que o mercado pede para esse alvo. O número recalcula sozinho conforme você conclui as microações.</p>
+              <p>Quanto mais alto, mais perto você está do que o mercado pede para esse alvo. Marque microações abaixo pra projetar o ganho — o número definitivo se cristaliza no dashboard.</p>
               <div className="formula">Score = (Aderência × <b>.40</b>) + (Habilidades × <b>.30</b>) + (Perfil × <b>.20</b>) + (Experiência × <b>.10</b>)</div>
             </div>
           </div>
-          <div className="subscores">
-            {SS_KEYS.map((k, idx) => {
-              const v = liveVals[k];
-              const meta = SS_META[k];
-              const contrib = (v * WEIGHTS[k]).toFixed(1);
-              const isOpen = !!open[k];
-              const { text, src } = splitSrc(ss[k]?.explicacao);
-              const boosted = v > baseVals[k];
-              const ssRevealed = reveal >= 2 + idx;
-              return (
-                <div className={"ss" + (ssRevealed ? " ss-revealed" : "")} key={k}>
-                  <button className="ss-head" aria-expanded={isOpen} onClick={() => setOpen((o) => ({ ...o, [k]: !o[k] }))}>
-                    <div className="ss-bar-wrap">
-                      <div className="ss-bar-top"><span className="ss-label">{meta.label}{boosted && <span className="ss-up"> ▲</span>}</span><span className="ss-weight">peso {meta.w}</span></div>
-                      <div className="ss-track"><div className="ss-fill" style={{ "--ss-target": v + "%" }} /></div>
-                    </div>
-                    <span className="ss-val">{v}</span>
-                    <svg className={"ss-chev" + (isOpen ? " open" : "")} width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  </button>
-                  {isOpen && (
-                    <div className="ss-body">
-                      <p>{text} <Src value={src} dark /></p>
-                      <div className="ss-calc">{v} × {meta.w} (peso) = {contrib} pts no score final</div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
         </div>
-      </div>
 
-      <div className="sec">
-        <div className="sec-head">
-          <span className="sec-no">02</span>
-          <h2 className="sec-title">O que separa você do alvo</h2>
-          <p className="sec-sub">Marque uma microação como concluída e o score lá em cima sobe na hora — o cálculo é transparente.</p>
+        <div className="ct-report-cta-bar" role="navigation" aria-label="Próximos passos">
+          <Link href="/meu-gemeo" className="ct-report-cta-primary">
+            Ir pro dashboard completo →
+          </Link>
+          <Link href="/meu-gemeo#gaps" className="ct-report-cta-secondary">
+            Ver todas as ações
+          </Link>
+          <Link href="/meu-gemeo#oportunidades" className="ct-report-cta-secondary">
+            Radar de vagas
+          </Link>
         </div>
-        <div className="gap-list">
-          {gaps.map((g, i) => {
+
+        <div className="ct-subscores-list">
+          {SS_KEYS.map((k, idx) => {
+            const v = liveVals[k];
+            const meta = SS_META[k];
+            const contrib = (v * WEIGHTS[k]).toFixed(1);
+            const { text, src } = splitSrc(ss[k]?.explicacao);
+            const { head, rest } = splitWhy(text);
+            const boosted = v > baseVals[k];
+            const ssRevealed = reveal >= 2 + idx;
+            const cls = intensityClass(v);
+            return (
+              <div className={"ct-subscore-compact" + (ssRevealed ? " ss-revealed" : "")} key={k}>
+                <div className="ct-ss-c-head">
+                  <span className="ct-ss-c-label">{meta.label}{boosted && <span className="ss-up"> ▲</span>}</span>
+                  <span className="ct-ss-c-weight">peso {meta.w}</span>
+                  <span className="ct-ss-c-value">{v}</span>
+                </div>
+                <div className="ct-ss-c-bar"><div className={"ct-ss-c-fill " + cls} style={{ width: (animated ? v : 0) + "%" }} /></div>
+                <p className="ct-ss-c-why">{head} <Src value={src} /></p>
+                {rest && (
+                  <details>
+                    <summary>ver detalhes do cálculo</summary>
+                    <p className="ct-ss-c-why" style={{ marginTop: 8 }}>{rest}</p>
+                    <p className="ct-ss-c-math">{v} × {meta.w} (peso) = {contrib} pts no score final</p>
+                  </details>
+                )}
+                {!rest && (
+                  <p className="ct-ss-c-math">{v} × {meta.w} = {contrib} pts</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="ct-report-section">
+        <div className="sec-head">
+          <span className="ct-report-section-num s2">02</span>
+          <h2 className="sec-title">O que separa você do alvo</h2>
+          <p className="sec-sub">As três microações com maior impacto no score. Marcar como concluída projeta o ganho aqui na hora — o número definitivo cristaliza quando você atualiza o diagnóstico.</p>
+        </div>
+        <div className="gap-list ct-report-microactions">
+          {topGaps.map((g, i) => {
             const { text, src } = splitSrc(g.porque);
             const pts = Number(g.impacto?.pontos) || 4;
             const done = !!completed[i];
@@ -182,12 +229,17 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
             );
           })}
         </div>
-      </div>
+        {gaps.length > MAX_GAPS_INLINE && (
+          <Link href="/meu-gemeo#gaps" className="ct-report-see-more">
+            Ver todas as {gaps.length} ações →
+          </Link>
+        )}
+      </section>
 
       {opp?.vagas && opp.vagas.length === 0 && opp?.sources != null && (
-        <div className="sec">
+        <section className="ct-report-section">
           <div className="sec-head">
-            <span className="sec-no">03</span>
+            <span className="ct-report-section-num s3">03</span>
             <h2 className="sec-title">Nenhuma vaga voltou agora pra esse cargo</h2>
             <p className="sec-sub">
               As três fontes que consultamos (Adzuna, Jooble, Greenhouse) não trouxeram resultado
@@ -200,21 +252,20 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
             <li>Voltar daqui a algumas horas — a base atualiza periodicamente</li>
             <li>Cadastrar candidaturas manualmente em <a href="/candidaturas" style={{ color: "var(--primary)" }}>/candidaturas</a> enquanto isso</li>
           </ul>
-        </div>
+        </section>
       )}
 
-      {opp?.vagas && opp.vagas.length > 0 && (
-        <div className="sec">
+      {visibleJobs.length > 0 && (
+        <section className="ct-report-section">
           <div className="sec-head">
-            <span className="sec-no">03</span>
+            <span className="ct-report-section-num s3">03</span>
             <h2 className="sec-title">Vagas onde você tem chance real</h2>
             <p className="sec-sub">
-              Ordenadas por aderência ao seu gêmeo. Cada vaga mostra a fonte;
-              clique em "Adaptar currículo" para alinhar seu CV a uma delas.
+              Top {visibleJobs.length} ordenadas por aderência ao seu gêmeo (esconde matches abaixo de {JOB_MATCH_MIN}%). Clique em "Adaptar currículo" para alinhar seu CV a uma delas.
             </p>
           </div>
           <div className="vaga-list">
-            {opp.vagas.map((v, i) => {
+            {visibleJobs.map((v, i) => {
               const { text, src } = splitSrc(v.porque);
               const sourceLabel = v.sourceLabel || v.source || "";
               const isReal = v.source && v.source !== "fixtures";
@@ -269,13 +320,18 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
               );
             })}
           </div>
-        </div>
+          {allJobs.length > visibleJobs.length && (
+            <Link href="/meu-gemeo#oportunidades" className="ct-report-see-more">
+              Ver todas as {allJobs.length} vagas no radar completo →
+            </Link>
+          )}
+        </section>
       )}
 
       {opp?.plano && opp.plano.length > 0 && (
-        <div className="sec">
+        <section className="ct-report-section">
           <div className="sec-head">
-            <span className="sec-no">04</span>
+            <span className="ct-report-section-num s2">04</span>
             <h2 className="sec-title">Seu plano das próximas 3 semanas</h2>
             <p className="sec-sub">Microações com impacto estimado no score e esforço — para aplicar melhor, não aplicar mais.</p>
           </div>
@@ -294,24 +350,29 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      <div className="rep-foot">
-        {onRestart && <button className="btn btn-ghost" onClick={onRestart}>← Construir outro gêmeo</button>}
-        <p className="transp">{footerNote || (
+      <footer className="ct-report-footer">
+        <div className="ct-report-footer-actions">
+          <Link href="/meu-gemeo" className="ct-report-footer-cta">Continuar pro dashboard →</Link>
+          {onRestart && (
+            <button className="ct-report-footer-text" onClick={onRestart}>← Construir outro gêmeo</button>
+          )}
+        </div>
+        <p className="ct-report-transparency">{footerNote || (
           <>
             <b>Transparência:</b> o score é um cálculo auditável (a fórmula acima);
             os textos são gerados por IA a partir do seu currículo
             {opp?.illustrative ? (
-              <> ; as vagas aqui são <b>ilustrativas</b> (sem provider real configurado)</>
+              <>; as vagas marcadas como <b>ilustrativas</b> são exemplos (configure Adzuna+Jooble pra vagas reais)</>
             ) : opp?.sources?.length ? (
-              <> ; vagas vieram de {opp.sources.join(", ")}</>
+              <>; vagas vieram de {opp.sources.join(", ")}</>
             ) : null}
             . Princípio do produto: número = cálculo, texto = explicação com fonte.
           </>
         )}</p>
-      </div>
+      </footer>
 
       {showInterview && <InterviewModal role={role} gaps={gapNames} onClose={() => setShowInterview(false)} />}
       {showChat && <ChatModal role={role} perfil={p} gaps={gapNames} onClose={() => setShowChat(false)} />}
