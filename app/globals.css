@@ -5399,3 +5399,318 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   flex-wrap: wrap;
 }
 
+/* ===========================================================
+   Career roadmap (/carreira) — feature #5 STRATEGY_ROADMAP MVP
+   ===========================================================
+   Visual: ol vertical com numero circular + linha conectora,
+   cada milestone em card com skills/acoes/evidencia. Cruza
+   Profile.skills com milestone.skills (have/missing) e mostra
+   progresso por milestone. Determistico, sem LLM.
+*/
+.ct-career-roadmap { margin-top: 24px; }
+.ct-career-roadmap-head {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface) 100%);
+  border: 1px solid var(--primary-tint);
+  border-radius: var(--radius-lg);
+}
+.ct-career-roadmap-head h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+.ct-career-roadmap-timeline {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 14px;
+}
+
+.ct-career-milestones {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ct-career-milestone {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  padding-bottom: 28px;
+}
+.ct-career-milestone-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.ct-career-milestone-num {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: var(--shadow-md);
+}
+.ct-career-milestone-line {
+  flex: 1;
+  width: 2px;
+  background: var(--border);
+  margin-top: 8px;
+  min-height: 30px;
+}
+
+.ct-career-milestone-content {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+.ct-career-milestone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ct-career-milestone-header h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+.ct-career-milestone-duration {
+  font-size: 12px;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.ct-career-milestone-progress { margin-bottom: 14px; }
+.ct-progress-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.ct-progress-bar {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.ct-progress-bar > div {
+  height: 100%;
+  background: var(--positive);
+  transition: width 280ms;
+}
+
+.ct-career-milestone-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.ct-career-skill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.ct-career-skill.have {
+  background: var(--positive-soft);
+  color: var(--positive-deep);
+}
+.ct-career-skill.missing {
+  background: var(--surface-2);
+  color: var(--text-soft);
+}
+
+.ct-career-milestone-actions { margin-bottom: 14px; }
+.ct-career-milestone-actions h4 {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
+  margin: 0 0 8px;
+}
+.ct-career-milestone-actions ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.ct-career-milestone-actions li { margin-bottom: 4px; }
+
+.ct-career-milestone-evidence {
+  background: var(--attention-soft);
+  border-left: 3px solid var(--attention);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.ct-career-paths-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.ct-career-paths-meta {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+/* ===========================================================
+ * MOBILE AUDIT — fixes consolidados (2026-06-22)
+ * Foco: WCAG 2.5.5 (touch target >=44px), iOS no-zoom no focus
+ * (font-size >=16px), overflow horizontal, modais com scroll
+ * interno. Breakpoint padrao: 720px. Refinamentos extras: 480px.
+ *
+ * NAO sobrescreve layout desktop. Cada regra esta sob @media —
+ * blocos existentes (linhas 1781, 1796, 2211, 2767, etc.) ficam
+ * intactos; aqui adicionamos *apenas o que falta* (touch sizes,
+ * font-size de input, kanban snap, modal max-height).
+ * =========================================================== */
+
+@media (max-width: 720px) {
+  /* --- iOS no-zoom-on-focus: requer font-size >= 16px em controles
+     que recebem teclado. Targets: inputs textuais, textarea, select.
+     !important pra dominar regras inline/scoped do `<style jsx>` que
+     definem font-size menor (ex.: ct-copilot-input 13px, kanban-card-actions
+     select 11px). Em mobile o ganho de a11y supera o ajuste visual. */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="number"],
+  input:not([type]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* --- Touch targets: botoes primarios/secundarios alcancam 44px
+     (WCAG 2.5.5 AAA / Apple HIG / Material). Usamos min-height +
+     padding mantido pra nao quebrar largura. */
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-secondary {
+    min-height: 44px;
+  }
+
+  /* AppShell nav items (sidebar e mobile-header) — 44px de toque */
+  .appshell-nav-item { min-height: 44px; }
+  .appshell-mobile-nav-item { min-height: 44px; padding: 10px 14px; }
+
+  /* Theme toggle 38x38 -> 44x44 */
+  .theme-toggle { width: 44px; height: 44px; }
+
+  /* Botoes inline (Concluir, Adaptar, Salvar candidatura) — 36px
+     visual + padding generoso pro hitbox real ficar >=44px com
+     padding clicavel ampliado verticalmente. */
+  .ct-action-cta,
+  .ct-job-link,
+  .ct-subscores-link,
+  .ct-link-btn {
+    min-height: 36px;
+    padding: 8px 4px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Microaction "check" (botao de concluir gap) — 32px desktop, 44px mobile */
+  .ct-microaction-check { min-width: 44px; min-height: 44px; }
+
+  /* Modal close (X) — 30px desktop, 40px mobile (perto do 44px sem quebrar layout) */
+  .modal-x { width: 40px; height: 40px; }
+
+  /* --- Overflow: salarios e textos longos nos cards de vaga */
+  .ct-job-card,
+  .ct-job-meta,
+  .ct-job-title { word-break: break-word; overflow-wrap: anywhere; }
+
+  /* --- Modais: max-height + scroll interno pra nao estourar viewport.
+     Modal base ja usa overlay com overflow-y: auto, mas em telas
+     curtas (iPhone SE landscape) o modal-body pode passar de 100vh.
+     Adicionamos max-height calculada com margem de seguranca. */
+  .modal,
+  .ct-refresh-modal,
+  .ct-tailor-modal {
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+  .modal-overlay { padding: 16px; align-items: center; }
+  .ct-tailor-modal-bg { padding: 16px; }
+
+  /* --- Kanban: scroll horizontal com snap pra UX mobile aceitavel.
+     O grid existente ja vira 1 coluna em <=700px (KanbanClient inline
+     style jsx), mas se um agente reverter pra multi-coluna em mobile,
+     este garante snap behavior. */
+  .kanban {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .kanban-col {
+    scroll-snap-align: start;
+    min-width: 260px;
+  }
+
+  /* --- Headers de tela: menos padding vertical, fontes menores */
+  .ct-gaps-header { padding: 12px 0 0; gap: 14px; }
+  .ct-gaps-title { font-size: 24px; }
+  .ct-dash-header { gap: 16px; margin-bottom: 18px; }
+  .ct-dash-title { font-size: 26px; }
+
+  /* --- Filtros do radar: pills com area de toque maior */
+  .ct-filter-pill { font-size: 13px; padding: 10px 14px; min-height: 44px; }
+  .ct-filter-pill-select { font-size: 16px; }
+
+  /* --- Cards: padding reduzido pra ganhar conteudo util */
+  .ct-job-card { padding: 14px 16px; gap: 12px; }
+  .ct-microaction-card { padding: 14px 16px; }
+  .ct-evidence-card { padding: 14px 18px; }
+
+  /* --- AppShell LGPD card: padding reduzido em sidebar mobile-fallback */
+  .appshell-lgpd-card { padding: 12px 14px; }
+
+  /* --- Tabelas: wrap em scroll horizontal opt-in. Componentes que
+     usam .ct-table-wrap devem aproveitar; outros mantem layout. */
+  .ct-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Refinamentos pra iPhone SE 1a gen (320px) e Galaxy Fold dobrado */
+  .ct-dash-title { font-size: 22px; }
+  .ct-gaps-title { font-size: 22px; }
+  .ct-target-pill { font-size: 11px; padding: 8px 12px; }
+  .ct-score-big { font-size: 48px; }
+  .modal-overlay { padding: 8px; }
+  .ct-tailor-modal-bg { padding: 8px; }
+  .modal-head { padding: 18px 18px 12px; }
+  .modal-body { padding: 16px 18px 18px; }
+  /* Kanban: garante coluna unica e largura cheia */
+  .kanban { grid-template-columns: 1fr !important; }
+  .kanban-col { min-width: 0; }
+}
+
