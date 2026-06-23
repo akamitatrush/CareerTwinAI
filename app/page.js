@@ -353,12 +353,75 @@ export default function Home() {
                   <span className="ct-onb-brand-name">CareerTwin AI</span>
                 </div>
 
+                {/* Ilustracao decorativa: 3 silhuetas humanas com linha de
+                    progresso ascendente. SVG inline (sem dep externa, sem
+                    request HTTP, respeita CSP). Tema "carreira de pessoas
+                    crescendo". Decorativa — aria-hidden. */}
+                <div className="ct-onb-brand-illust" aria-hidden="true">
+                  <svg viewBox="0 0 360 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Linha de tendencia (ascendente) */}
+                    <path d="M20 140 Q 90 130, 130 100 T 240 60 T 340 30"
+                      stroke="rgba(255,255,255,0.22)" strokeWidth="2" strokeLinecap="round" fill="none" strokeDasharray="0" />
+                    {/* Pontos na linha (milestones) */}
+                    <circle cx="90" cy="130" r="3" fill="rgba(255,255,255,0.4)" />
+                    <circle cx="180" cy="80" r="3" fill="rgba(255,255,255,0.4)" />
+                    <circle cx="280" cy="42" r="4" fill="rgba(255,255,255,0.7)" />
+
+                    {/* Pessoa 1 (esquerda) */}
+                    <g transform="translate(40, 80)">
+                      <circle cx="22" cy="14" r="11" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" />
+                      <path d="M5 60 Q5 38, 22 38 Q39 38, 39 60" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinejoin="round" />
+                    </g>
+
+                    {/* Pessoa 2 (centro, destacada) */}
+                    <g transform="translate(140, 60)">
+                      <circle cx="26" cy="16" r="13" fill="rgba(255,255,255,0.28)" stroke="rgba(255,255,255,0.7)" strokeWidth="1.8" />
+                      <path d="M4 70 Q4 44, 26 44 Q48 44, 48 70" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.7)" strokeWidth="1.8" strokeLinejoin="round" />
+                      {/* Check mark indicando crescimento */}
+                      <circle cx="44" cy="14" r="9" fill="rgba(122,255,178,0.85)" />
+                      <path d="M40 14 L43.5 17.5 L49 11.5" stroke="#0E3D2A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </g>
+
+                    {/* Pessoa 3 (direita, mais alta — futuro/cargo-alvo) */}
+                    <g transform="translate(255, 35)">
+                      <circle cx="22" cy="14" r="11" fill="rgba(255,255,255,0.22)" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" />
+                      <path d="M5 60 Q5 38, 22 38 Q39 38, 39 60" fill="rgba(255,255,255,0.14)" stroke="rgba(255,255,255,0.55)" strokeWidth="1.5" strokeLinejoin="round" />
+                      {/* Mini estrela acima (cargo-alvo) */}
+                      <path d="M22 -2 L23.5 2.5 L28 2.5 L24.3 5.5 L25.8 10 L22 7.3 L18.2 10 L19.7 5.5 L16 2.5 L20.5 2.5 Z"
+                        fill="rgba(255,212,128,0.9)" />
+                    </g>
+                  </svg>
+                </div>
+
                 <div className="ct-onb-brand-content">
                   <div className="ct-onb-brand-eyebrow">CONSTRUA SEU GÊMEO</div>
                   <h1 className="ct-onb-brand-title">Um retrato vivo da sua carreira — que evolui com você.</h1>
                   <p className="ct-onb-brand-sub">
                     Conectamos seu perfil real ao que o mercado realmente pede e mostramos a próxima ação concreta. Sem achismo, com a fonte de cada recomendação.
                   </p>
+                  {/* Trust pills: 3 features curtas, cada uma com icone. Mostra
+                      defensibilidade (RAG curado, LGPD, sem achismo) no espaco
+                      onde antes era vazio. */}
+                  <ul className="ct-onb-brand-pills" role="list">
+                    <li>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                      </svg>
+                      <span>Base curada BR</span>
+                    </li>
+                    <li>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6z" />
+                      </svg>
+                      <span>LGPD-by-design</span>
+                    </li>
+                    <li>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+                      </svg>
+                      <span>Fonte em cada texto</span>
+                    </li>
+                  </ul>
                 </div>
 
                 <div className="ct-onb-lgpd">

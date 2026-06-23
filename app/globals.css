@@ -3270,6 +3270,55 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   filter: blur(12px);
 }
 .ct-onb-brand-mark { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+
+/* Ilustracao decorativa entre o mark e o content. Ocupa o espaco que
+   antes era vazio (margin-top: auto empurrava o content pro bottom).
+   SVG inline, semi-transparente, respira no gradient. */
+.ct-onb-brand-illust {
+  margin-top: 24px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+.ct-onb-brand-illust svg {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  display: block;
+}
+@media (max-width: 900px) {
+  .ct-onb-brand-illust { margin-top: 18px; }
+  .ct-onb-brand-illust svg { max-width: 280px; }
+}
+
+/* Pills de defensibilidade abaixo da subtitle. Trust pills curtas,
+   icone + label. Glass effect leve sobre o gradient. */
+.ct-onb-brand-pills {
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ct-onb-brand-pills li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #E8E8FA;
+  letter-spacing: -.01em;
+  backdrop-filter: blur(4px);
+}
+.ct-onb-brand-pills svg { color: #C9C9F0; flex: none; }
 .ct-onb-brand-mark-icon {
   width: 34px;
   height: 34px;
@@ -3282,7 +3331,7 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.2);
 }
 .ct-onb-brand-name { font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
-.ct-onb-brand-content { margin-top: auto; position: relative; z-index: 1; }
+.ct-onb-brand-content { margin-top: 28px; position: relative; z-index: 1; }
 .ct-onb-brand-eyebrow {
   font-size: 11px;
   font-weight: 800;
@@ -3320,7 +3369,8 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   max-width: 360px;
 }
 .ct-onb-lgpd {
-  margin-top: 32px;
+  margin-top: auto;
+  padding-top: 28px;
   display: flex;
   align-items: flex-start;
   gap: 12px;
