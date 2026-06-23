@@ -1,8 +1,10 @@
 name: E2E
 
+# E2E roda APENAS em PRs com label "e2e" (caro: ~3-5min + depende de
+# secrets que podem nao estar configurados em todos os contextos).
+# Antes rodava em push pra main, mas isso enviava email de falha toda
+# vez que faltasse ANTHROPIC_API_KEY ou outra config.
 on:
-  push:
-    branches: [main]
   pull_request:
     types: [labeled, synchronize]
     branches: [main]
@@ -17,11 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
-    # Em PRs, só roda se a label "e2e" estiver presente (e2e é caro: ~3-5min).
-    # Sempre roda em push pra main.
-    if: |
-      github.event_name == 'push' ||
-      contains(github.event.pull_request.labels.*.name, 'e2e')
+    if: contains(github.event.pull_request.labels.*.name, 'e2e')
 
     services:
       postgres:
@@ -50,7 +48,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
