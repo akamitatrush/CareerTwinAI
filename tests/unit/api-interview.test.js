@@ -18,6 +18,8 @@ import { makeReq } from "../helpers/api.js";
 vi.mock("@/lib/llm", () => ({
   completeJSON: vi.fn(),
   completeJSONWithUsage: vi.fn(),
+  completeJSONFast: vi.fn(),
+  completeJSONFastWithUsage: vi.fn(),
 }));
 vi.mock("@/lib/prompts", () => ({
   promptInterviewQuestion: vi.fn(async () => ({ system: "sys", user: "usr" })),
@@ -39,7 +41,7 @@ vi.mock("@/lib/rate-limit", () => ({
   ),
 }));
 
-import { completeJSON, completeJSONWithUsage } from "@/lib/llm";
+import { completeJSON, completeJSONWithUsage, completeJSONFastWithUsage } from "@/lib/llm";
 import {
   promptInterviewQuestion,
   promptInterviewEval,
@@ -58,6 +60,7 @@ beforeEach(async () => {
   vi.resetModules();
   completeJSON.mockReset();
   completeJSONWithUsage.mockReset();
+  completeJSONFastWithUsage.mockReset();
   promptInterviewQuestion.mockReset();
   promptInterviewQuestion.mockResolvedValue({ system: "sys", user: "usr" });
   promptInterviewEval.mockReset();
@@ -143,7 +146,9 @@ describe("POST /api/interview — gates billing e rate-limit", () => {
     guardLLM.mockResolvedValueOnce({ ok: false, retryAfter: 30 });
     const r = await POST(makeReq({ action: "question", role: "Backend" }));
     expect(r.status).toBe(429);
+    // Nem standard nem fast devem ser chamados quando rate-limit nega.
     expect(completeJSONWithUsage).not.toHaveBeenCalled();
+    expect(completeJSONFastWithUsage).not.toHaveBeenCalled();
   });
 
   it("402 LIMIT_REACHED quando enforceUsage nega", async () => {
@@ -163,7 +168,8 @@ describe("POST /api/interview — gates billing e rate-limit", () => {
 
   it("anonimo NAO chama enforce", async () => {
     auth.mockResolvedValue(null);
-    completeJSONWithUsage.mockResolvedValue({ result: { pergunta: "Q?" }, usage: { inputTokens: 100, outputTokens: 50 } });
+    // question agora usa Haiku (completeJSONFastWithUsage) — mocka aqui.
+    completeJSONFastWithUsage.mockResolvedValue({ result: { pergunta: "Q?" }, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(makeReq({ action: "question", role: "Backend" }));
     expect(r.status).toBe(200);
     expect(enforceUsage).not.toHaveBeenCalled();
@@ -171,21 +177,26 @@ describe("POST /api/interview — gates billing e rate-limit", () => {
 });
 
 describe("POST /api/interview — modos question + evaluate", () => {
-  it("action=question: chama promptInterviewQuestion (NAO eval)", async () => {
+  it("action=question: chama promptInterviewQuestion (NAO eval) e usa Haiku", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockResolvedValue({ result: { pergunta: "Como vc estrutura uma API?" }, usage: { inputTokens: 100, outputTokens: 50 } });
+    // question agora usa Haiku (completeJSONFastWithUsage).
+    completeJSONFastWithUsage.mockResolvedValue({ result: { pergunta: "Como vc estrutura uma API?" }, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(
       makeReq({ action: "question", role: "Backend", gaps: ["k8s"], asked: [] })
     );
     expect(r.status).toBe(200);
     expect(promptInterviewQuestion).toHaveBeenCalledTimes(1);
     expect(promptInterviewEval).not.toHaveBeenCalled();
+    // Garante que a question usou variante Fast (Haiku).
+    expect(completeJSONFastWithUsage).toHaveBeenCalledTimes(1);
+    expect(completeJSONWithUsage).not.toHaveBeenCalled();
     const data = await r.json();
     expect(data.pergunta).toBeDefined();
   });
 
-  it("action=evaluate: chama promptInterviewEval (NAO question)", async () => {
+  it("action=evaluate: chama promptInterviewEval (NAO question) e usa Sonnet", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
+    // evaluate fica em Sonnet (rigor) — completeJSONWithUsage.
     completeJSONWithUsage.mockResolvedValue({ result: { nota: 8, feedback: "Bom" }, usage: { inputTokens: 100, outputTokens: 50 } });
     const r = await POST(
       makeReq({
@@ -198,11 +209,15 @@ describe("POST /api/interview — modos question + evaluate", () => {
     expect(r.status).toBe(200);
     expect(promptInterviewEval).toHaveBeenCalledTimes(1);
     expect(promptInterviewQuestion).not.toHaveBeenCalled();
+    // Garante que a eval usou Sonnet (NAO Fast).
+    expect(completeJSONWithUsage).toHaveBeenCalledTimes(1);
+    expect(completeJSONFastWithUsage).not.toHaveBeenCalled();
   });
 
   it("502 LLM_FAILED quando completeJSON lanca", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockRejectedValue(new Error("timeout"));
+    // action=question agora usa Fast — falha vem por la.
+    completeJSONFastWithUsage.mockRejectedValue(new Error("timeout"));
     const r = await POST(makeReq({ action: "question", role: "Backend" }));
     expect(r.status).toBe(502);
     const data = await r.json();

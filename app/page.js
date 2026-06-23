@@ -581,6 +581,29 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+              {/* Steps granulares vindo do SSE de /api/analyze. Renderiza so
+                  enquanto estamos na fase analyze (procStep <= 2). Da feedback
+                  contextual de "validando -> LLM+jobs em paralelo -> computando
+                  -> salvando" pra reduzir tempo PERCEBIDO durante os ~15s. */}
+              {procStepText && procStep <= 2 && (
+                <ul className="ct-proc-steps" aria-label="Progresso do diagnóstico">
+                  {[
+                    { id: "validating", label: "Validando entrada" },
+                    { id: "llm_jobs_parallel", label: "Analisando CV + buscando vagas em paralelo" },
+                    { id: "computing", label: "Calculando score determinístico" },
+                    { id: "persisting", label: isLogged ? "Salvando seu histórico" : "Finalizando" },
+                  ].map((s, idx, arr) => {
+                    const currentIdx = arr.findIndex((x) => x.id === procStepText);
+                    const state =
+                      currentIdx < 0 ? "" :
+                      idx < currentIdx ? "done" :
+                      idx === currentIdx ? "active" : "";
+                    return (
+                      <li key={s.id} className={state}>{s.label}</li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </section>
         )}

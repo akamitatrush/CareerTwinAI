@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSONWithUsage } from "@/lib/llm";
+import { completeJSONFastWithUsage } from "@/lib/llm";
 import { promptLinkedinParse } from "@/lib/prompts";
 import { LinkedinParseBody, LinkedinShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
@@ -88,7 +88,10 @@ async function handler(req) {
   let result;
   let llmUsage = null;
   try {
-    const { result: raw, usage } = await completeJSONWithUsage(promptLinkedinParse(text), {
+    // Haiku 4.5: parsing de texto LinkedIn -> JSON e trabalho leve, nao precisa
+    // de Sonnet. 3-5x mais rapido + 1/4 do custo. Cache default ON — mesmo texto
+    // colado novamente bate cache (idempotente, 1h TTL).
+    const { result: raw, usage } = await completeJSONFastWithUsage(promptLinkedinParse(text), {
       route: "linkedin.parse",
       userId,
     });

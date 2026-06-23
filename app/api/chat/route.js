@@ -199,9 +199,12 @@ async function handler(req) {
   }
 
   try {
+    // Skip cache: chat e conversacional — mesmo prompt (mesma history) pode ate
+    // bater, mas user espera frescor (turn novo = resposta nova). Cache iria
+    // dar mesma resposta toda vez no mesmo turn, frustrando re-tries.
     const { result: data, usage } = await completeJSONWithUsage(
       prompt,
-      { route: "chat", userId }
+      { route: "chat", userId, cache: false }
     );
     // Token tracking (Wave 11). Falha silenciosa.
     if (usage) {

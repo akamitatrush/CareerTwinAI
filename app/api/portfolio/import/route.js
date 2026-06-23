@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSONWithUsage } from "@/lib/llm";
+import { completeJSONFastWithUsage } from "@/lib/llm";
 import { promptPortfolio } from "@/lib/prompts";
 import { PortfolioImportBody, PortfolioShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
@@ -223,7 +223,9 @@ async function handler(req) {
   let portfolio;
   let llmUsage = null;
   try {
-    const { result: raw, usage } = await completeJSONWithUsage(
+    // Haiku 4.5: parsing de GitHub repos + site text -> projetos. Trabalho leve,
+    // nao precisa de Sonnet. Cache default ON — mesmo user GitHub bate cache.
+    const { result: raw, usage } = await completeJSONFastWithUsage(
       promptPortfolio(github, repos, siteText),
       { route: "portfolio.import", userId }
     );

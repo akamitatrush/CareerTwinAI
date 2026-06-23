@@ -104,9 +104,12 @@ async function handler(req) {
   const { role, cv, vaga, applicationId, vagaTitulo, vagaEmpresa } = parsed.data;
 
   try {
+    // Skip cache: tailor produz adaptacao unica por vaga + user. Mesmo input
+    // (raro) gera CV adaptado novo — alterar pra cache iria devolver CV
+    // identico em re-tries, mascarando regressoes do modelo.
     const { result: data, usage: llmUsage } = await completeJSONWithUsage(
       promptTailor(role, cv, vaga),
-      { route: "tailor", userId }
+      { route: "tailor", userId, cache: false }
     );
 
     // Tokens cobrados pelo provider — track imediatamente, antes do persist.

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { completeJSONWithUsage } from "@/lib/llm";
+import { completeJSONWithUsage, completeJSONFastWithUsage } from "@/lib/llm";
 import { promptInterviewQuestion, promptInterviewEval } from "@/lib/prompts";
 import { InterviewBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
@@ -138,7 +138,10 @@ async function handler(req) {
 
   try {
     if (body.action === "question") {
-      const { result: data, usage } = await completeJSONWithUsage(
+      // Haiku 4.5: gerar pergunta de entrevista e trabalho leve (1 pergunta
+      // estruturada por gap). Sonnet seria overkill. Cache default ON — mesmo
+      // role+gaps+asked bate cache (raro mas possivel em mock repetido).
+      const { result: data, usage } = await completeJSONFastWithUsage(
         await promptInterviewQuestion(body.role, body.gaps, body.asked),
         { route: "interview.question", userId }
       );
@@ -146,9 +149,12 @@ async function handler(req) {
       await trackAndAudit(usage, "question");
       return NextResponse.json(data);
     }
+    // EVALUATE fica em Sonnet: avaliar resposta com rigor (STAR, CAR, gaps)
+    // pede modelo top. Tambem skip cache — feedback deve ser sempre fresco
+    // mesmo se user repetir resposta (educativo + raro acontecer).
     const { result: data, usage } = await completeJSONWithUsage(
       promptInterviewEval(body.role, body.pergunta, body.resposta),
-      { route: "interview.eval", userId }
+      { route: "interview.eval", userId, cache: false }
     );
     // Uso ja foi contabilizado em enforceUsage acima (fix TOCTOU).
     await trackAndAudit(usage, "eval");

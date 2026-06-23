@@ -19,7 +19,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { makeReq } from "../helpers/api.js";
 
 vi.mock("@/lib/llm", () => ({
+  // Mantemos completeJSONWithUsage no mock pra retro-compat de tests antigos
+  // que ainda checam .not.toHaveBeenCalled() — em cv-analyze a rota usa Fast.
   completeJSONWithUsage: vi.fn(),
+  completeJSONFastWithUsage: vi.fn(),
 }));
 vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/billing/enforce", () => ({
@@ -39,7 +42,7 @@ vi.mock("@/lib/rate-limit", () => ({
   ),
 }));
 
-import { completeJSONWithUsage } from "@/lib/llm";
+import { completeJSONWithUsage, completeJSONFastWithUsage } from "@/lib/llm";
 import { auth } from "@/lib/auth";
 import {
   enforceUsage,
@@ -89,6 +92,7 @@ let POST;
 beforeEach(async () => {
   vi.resetModules();
   completeJSONWithUsage.mockReset();
+  completeJSONFastWithUsage.mockReset();
   auth.mockReset();
   enforceUsage.mockReset();
   enforceUsage.mockResolvedValue({
@@ -118,7 +122,7 @@ describe("POST /api/cv/analyze-bullets — auth", () => {
     const data = await r.json();
     expect(data.code).toBe("UNAUTHORIZED");
     // Sem chamar LLM nem billing antes do gate de auth.
-    expect(completeJSONWithUsage).not.toHaveBeenCalled();
+    expect(completeJSONFastWithUsage).not.toHaveBeenCalled();
     expect(enforceUsage).not.toHaveBeenCalled();
   });
 
@@ -135,7 +139,7 @@ describe("POST /api/cv/analyze-bullets — gates billing e rate-limit", () => {
     guardLLM.mockResolvedValueOnce({ ok: false, retryAfter: 30 });
     const r = await POST(makeReq({ cv: CV_WITH_BULLETS }));
     expect(r.status).toBe(429);
-    expect(completeJSONWithUsage).not.toHaveBeenCalled();
+    expect(completeJSONFastWithUsage).not.toHaveBeenCalled();
   });
 
   it("402 LIMIT_REACHED quando enforceUsage nega", async () => {
@@ -151,7 +155,7 @@ describe("POST /api/cv/analyze-bullets — gates billing e rate-limit", () => {
     const data = await r.json();
     expect(data.code).toBe("LIMIT_REACHED");
     expect(data.feature).toBe("cv-analyze");
-    expect(completeJSONWithUsage).not.toHaveBeenCalled();
+    expect(completeJSONFastWithUsage).not.toHaveBeenCalled();
   });
 
   it("402 BUDGET_EXCEEDED pre-LLM dispara audit", async () => {
@@ -173,7 +177,7 @@ describe("POST /api/cv/analyze-bullets — gates billing e rate-limit", () => {
         action: "SECURITY_BUDGET_EXCEEDED",
       })
     );
-    expect(completeJSONWithUsage).not.toHaveBeenCalled();
+    expect(completeJSONFastWithUsage).not.toHaveBeenCalled();
   });
 });
 
@@ -225,18 +229,18 @@ describe("POST /api/cv/analyze-bullets — extracao de bullets", () => {
     const data = await r.json();
     expect(data.bullets).toEqual([]);
     // Nem chama LLM quando nao tem nada pra analisar.
-    expect(completeJSONWithUsage).not.toHaveBeenCalled();
+    expect(completeJSONFastWithUsage).not.toHaveBeenCalled();
   });
 
   it("linhas <15 chars sao filtradas antes do prompt", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockResolvedValue({
+    completeJSONFastWithUsage.mockResolvedValue({
       result: VALID_LLM_RESPONSE,
       usage: { tokensIn: 100, tokensOut: 50 },
     });
     await POST(makeReq({ cv: CV_WITH_BULLETS }));
     // Verifica que "ab" (linha curta) NAO entrou no prompt do LLM.
-    const callArgs = completeJSONWithUsage.mock.calls[0][0];
+    const callArgs = completeJSONFastWithUsage.mock.calls[0][0];
     const userPrompt = callArgs.user;
     expect(userPrompt).not.toContain('"""ab"""');
     // Mas o bullet "Construi sistema..." (>15 chars) entrou.
@@ -247,7 +251,7 @@ describe("POST /api/cv/analyze-bullets — extracao de bullets", () => {
 describe("POST /api/cv/analyze-bullets — LLM e response shape", () => {
   it("200 retorna bullets com originalLineIndex mapeado", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockResolvedValue({
+    completeJSONFastWithUsage.mockResolvedValue({
       result: VALID_LLM_RESPONSE,
       usage: { tokensIn: 100, tokensOut: 50 },
     });
@@ -268,7 +272,7 @@ describe("POST /api/cv/analyze-bullets — LLM e response shape", () => {
 
   it("trackTokenUsage chamado com usage do LLM", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockResolvedValue({
+    completeJSONFastWithUsage.mockResolvedValue({
       result: VALID_LLM_RESPONSE,
       usage: { tokensIn: 100, tokensOut: 50, costUsd: 0.001 },
     });
@@ -280,9 +284,9 @@ describe("POST /api/cv/analyze-bullets — LLM e response shape", () => {
     );
   });
 
-  it("502 LLM_FAILED quando completeJSONWithUsage lanca", async () => {
+  it("502 LLM_FAILED quando completeJSONFastWithUsage lanca", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockRejectedValue(new Error("anthropic 500 timeout"));
+    completeJSONFastWithUsage.mockRejectedValue(new Error("anthropic 500 timeout"));
     const r = await POST(makeReq({ cv: CV_WITH_BULLETS }));
     expect(r.status).toBe(502);
     const data = await r.json();
@@ -294,7 +298,7 @@ describe("POST /api/cv/analyze-bullets — LLM e response shape", () => {
 
   it("sanitiza issues invalidas e clampeia score", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockResolvedValue({
+    completeJSONFastWithUsage.mockResolvedValue({
       result: {
         bullets: [
           {
@@ -325,7 +329,7 @@ describe("POST /api/cv/analyze-bullets — LLM e response shape", () => {
   it("corta suggestion em 600 chars (defesa contra payload gigante)", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
     const huge = "x".repeat(2000);
-    completeJSONWithUsage.mockResolvedValue({
+    completeJSONFastWithUsage.mockResolvedValue({
       result: {
         bullets: [{ index: 0, score: 30, issues: [], suggestion: huge }],
       },
@@ -338,7 +342,7 @@ describe("POST /api/cv/analyze-bullets — LLM e response shape", () => {
 
   it("ignora bullets com index fora do range", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockResolvedValue({
+    completeJSONFastWithUsage.mockResolvedValue({
       result: {
         bullets: [
           { index: 99, score: 30, issues: [], suggestion: "fora do range" },
@@ -356,7 +360,7 @@ describe("POST /api/cv/analyze-bullets — LLM e response shape", () => {
 
   it("BUDGET_EXCEEDED post-LLM gera audit (mas devolve 200)", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockResolvedValue({
+    completeJSONFastWithUsage.mockResolvedValue({
       result: VALID_LLM_RESPONSE,
       usage: { tokensIn: 100, tokensOut: 50 },
     });
@@ -375,7 +379,7 @@ describe("POST /api/cv/analyze-bullets — LLM e response shape", () => {
 
   it("LLM retornando shape errado (nao array) nao quebra — retorna []", async () => {
     auth.mockResolvedValue({ user: { id: "u1" } });
-    completeJSONWithUsage.mockResolvedValue({
+    completeJSONFastWithUsage.mockResolvedValue({
       result: { bullets: "isso devia ser array" },
       usage: { tokensIn: 50, tokensOut: 30 },
     });

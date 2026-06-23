@@ -163,7 +163,10 @@ async function core(req, emit = () => {}) {
 
   const prompt = await promptDiag(role.trim(), cv.trim());
   const [llmSettled, jobsSettled] = await Promise.allSettled([
-    completeJSONWithUsage(prompt, { route: "analyze", userId }),
+    // Skip cache: diagnostico user-specific. Mesmo CV+role no mesmo dia deve
+    // gerar snapshot novo com explicacao fresca (e o que o user espera ao
+    // pedir "re-rodar"). Cache pouparia tokens mas mascara analise estale.
+    completeJSONWithUsage(prompt, { route: "analyze", userId, cache: false }),
     searchJobs({ role: role.trim(), location: "Brasil", limit: 50 }),
   ]);
 

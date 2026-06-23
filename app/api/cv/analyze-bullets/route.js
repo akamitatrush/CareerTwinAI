@@ -19,7 +19,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { completeJSONWithUsage } from "@/lib/llm";
+import { completeJSONFastWithUsage } from "@/lib/llm";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
@@ -190,7 +190,9 @@ Regras estritas:
 - Saida tem que ser SOMENTE o JSON, sem markdown, sem texto antes ou depois.`;
 
   try {
-    const { result, usage } = await completeJSONWithUsage(
+    // Haiku 4.5: analise bullet-a-bullet (score 0-100 + issues) e classificacao
+    // leve. Sonnet seria overkill. Cache default ON — bullets identicos batem.
+    const { result, usage } = await completeJSONFastWithUsage(
       { system, user: userPrompt },
       { route: "cv-analyze", userId }
     );

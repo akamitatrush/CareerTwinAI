@@ -267,11 +267,15 @@ async function handler(req) {
   try {
     // Passa completedHabilidades pro LLM evitar repetir as mesmas microacoes
     // (loop "marca done -> volta mesma sugestao -> marca de novo").
+    // Skip cache: refresh user-specific (mesmo CV+role deve gerar snapshot
+    // fresco com nova explicacao). Cache mascarariam analises antigas e
+    // mesmas microacoes — quebra a UX do "completed -> reroll".
     const { result: raw, usage } = await completeJSONWithUsage(
       await promptDiag(role.trim(), cv.trim(), completedHabilidades),
       {
         route: "profile.refresh",
         userId,
+        cache: false,
       }
     );
     llmUsage = usage;

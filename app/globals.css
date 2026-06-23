@@ -596,6 +596,32 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 .proc-steps .step.doing{opacity:1; color:var(--text);}
 .proc-steps .step.doing::before{content:"\203A  "; color:var(--alert);}
 
+/* SSE granular steps — vindo de /api/analyze?stream=1. Lista compacta dos
+   sub-passos do pipeline pra reduzir o tempo PERCEBIDO durante a fase do LLM.
+   Atualizado em tempo real conforme o backend emite events {type:"step"}. */
+.ct-proc-steps{
+  list-style:none; padding:0;
+  display:flex; flex-direction:column; gap:10px;
+  max-width:420px; margin:20px auto 0;
+}
+.ct-proc-steps li{
+  padding:11px 16px; border-radius:10px;
+  background:var(--surface-2); color:var(--text-soft);
+  font-size:13.5px; line-height:1.35;
+  border:1px solid var(--border);
+  transition:background .25s, color .25s, border-color .25s;
+}
+.ct-proc-steps li.active{
+  background:var(--primary-soft); color:var(--primary-deep);
+  font-weight:600; border-color:var(--primary-deep);
+}
+.ct-proc-steps li.done{
+  background:var(--positive-soft); color:var(--positive-deep);
+  border-color:var(--positive-deep);
+}
+.ct-proc-steps li.done::before{content:"\2713  "; font-weight:700;}
+.ct-proc-steps li.active::before{content:"\203A  "; font-weight:700;}
+
 /* ===========================================================
  * Report header (mirror)
  * =========================================================== */
