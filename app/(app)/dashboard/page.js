@@ -7,6 +7,7 @@ import { WEIGHTS, SS_META } from "@/lib/score";
 import { computeCompleteness } from "@/lib/metrics/completeness";
 import { HIRED_MEDIAN } from "@/lib/metrics/median-stub";
 import ActionCardClient from "./ActionCardClient";
+import RefreshDiagnosisButton from "./RefreshDiagnosisButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard — CareerTwin AI" };
@@ -218,7 +219,7 @@ function WelcomeBanner({ profile, onDismiss }) {
         <p className="ct-welcome-banner-text">
           {isFirstTime
             ? "Cole seu currículo na home (/) ou clique em “Construir meu gêmeo” pra começar. Tudo fica salvo aqui."
-            : "Seu diagnóstico está abaixo. Conforme você conclui microações, mostramos o ganho projetado — pra cristalizar no score, atualize seu CV e refaça o diagnóstico."}
+            : "Seu diagnóstico está abaixo. Conforme você conclui microações, mostramos o ganho projetado. Quando estiver pronto, clique em “Atualizar diagnóstico” que recalculamos sem você ter que re-colar o CV."}
         </p>
         <div className="ct-welcome-banner-actions">
           {isFirstTime ? (
@@ -333,7 +334,7 @@ function ScoreRingCol({
             <strong>+{projectedGain} pts projetados</strong> com{" "}
             {completedCount} {completedCount === 1 ? "ação concluída" : "ações concluídas"}
             <span className="ct-score-proj-help">
-              {" "}— atualize o CV e refaça o diagnóstico pra cristalizar.
+              {" "}— clique em “Atualizar diagnóstico” abaixo pra cristalizar.
             </span>
           </span>
         </div>
@@ -475,6 +476,10 @@ function NextActionsCol({ latest, allGapsDone, projectedGain }) {
     .sort((a, b) => (b.impactoPontos || 0) - (a.impactoPontos || 0))
     .slice(0, 3);
 
+  const completedCount = Array.isArray(latest?.gaps)
+    ? latest.gaps.filter((g) => g.completedAt).length
+    : 0;
+
   return (
     <div>
       <div className="ct-actions-head">
@@ -485,33 +490,11 @@ function NextActionsCol({ latest, allGapsDone, projectedGain }) {
       </div>
       <div className="ct-actions-list">
         {gaps.length === 0 ? (
-          <div className="ct-empty-card">
-            {allGapsDone ? (
-              <>
-                <strong>Você concluiu todas as ações.</strong> O score acima
-                ainda mostra o estado do CV que você analisou. Pra cristalizar
-                os <strong>+{projectedGain} pontos projetados</strong>:{" "}
-                <ol style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: 13.5, lineHeight: 1.6 }}>
-                  <li>Atualize seu CV adicionando as novas conquistas</li>
-                  <li>
-                    Refaça o diagnóstico em{" "}
-                    <Link href="/" className="ct-link-inline">
-                      a home (com novo CV) →
-                    </Link>
-                  </li>
-                </ol>
-              </>
-            ) : (
-              <>
-                <strong>Sem microações pendentes neste snapshot.</strong>{" "}
-                Refaça o diagnóstico em{" "}
-                <Link href="/" className="ct-link-inline">
-                  a home →
-                </Link>{" "}
-                pra gerar novas a partir do seu CV atualizado.
-              </>
-            )}
-          </div>
+          <RefreshDiagnosisButton
+            allGapsDone={allGapsDone}
+            projectedGain={projectedGain}
+            completedCount={completedCount}
+          />
         ) : (
           gaps.map((g, i) => (
             <ActionCardClient key={g.id || i} gap={g} index={i} />
