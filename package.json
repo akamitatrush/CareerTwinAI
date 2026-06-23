@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
-    "@prisma/client": "^6.19.3",
+    "@prisma/client": "^7.8.0",
     "@sentry/nextjs": "^10.59.0",
     "@upstash/redis": "^1.38.0",
     "mammoth": "^1.12.0",
