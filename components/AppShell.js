@@ -32,6 +32,11 @@ const NAV = [
     iconPath: "M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6z",
   },
   {
+    href: "/cvs-adaptados",
+    label: "CVs adaptados",
+    iconPath: "M14 3v5h5M14 3H6v18h12V8z",
+  },
+  {
     href: "/candidaturas",
     label: "Candidaturas",
     iconPath: "M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z",

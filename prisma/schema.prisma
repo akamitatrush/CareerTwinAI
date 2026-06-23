@@ -23,8 +23,8 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Monitoramento: cron-digest checa para nao mandar 2x na mesma semana.
-  lastDigestAt   DateTime?
-  digestEnabled  Boolean   @default(true)
+  lastDigestAt  DateTime?
+  digestEnabled Boolean   @default(true)
 
   accounts      Account[]
   sessions      Session[]
@@ -91,11 +91,17 @@ model Profile {
   linkedinJson Json?
 
   // Portfolio (GitHub username + projetos extraidos + sites pessoais).
-  githubUser   String?
+  githubUser    String?
   portfolioJson Json?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // Welcome flow. firstDiagnosisAt e setado no primeiro ScoreSnapshot persistido
+  // (detecta "primeira vez de verdade"). welcomedAt e setado quando o usuario
+  // dismissa o banner welcome no /dashboard — junto, decidem se o banner aparece.
+  firstDiagnosisAt DateTime?
+  welcomedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -174,21 +180,21 @@ enum ApplicationStatus {
 }
 
 model Application {
-  id          String            @id @default(cuid())
-  userId      String
-  titulo      String
-  empresa     String
-  local       String?
-  url         String?
-  salario     String?
-  source      String?
-  status      ApplicationStatus @default(SAVED)
-  notes       String?           @db.Text
-  savedAt     DateTime          @default(now())
-  appliedAt   DateTime?
-  rejectedAt  DateTime?
-  offerAt     DateTime?
-  updatedAt   DateTime          @updatedAt
+  id         String            @id @default(cuid())
+  userId     String
+  titulo     String
+  empresa    String
+  local      String?
+  url        String?
+  salario    String?
+  source     String?
+  status     ApplicationStatus @default(SAVED)
+  notes      String?           @db.Text
+  savedAt    DateTime          @default(now())
+  appliedAt  DateTime?
+  rejectedAt DateTime?
+  offerAt    DateTime?
+  updatedAt  DateTime          @updatedAt
 
   user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   events      ApplicationEvent[]

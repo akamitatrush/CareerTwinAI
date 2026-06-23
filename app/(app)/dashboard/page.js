@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WEIGHTS, SS_META } from "@/lib/score";
@@ -9,6 +10,25 @@ import ActionCardClient from "./ActionCardClient";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard — CareerTwin AI" };
+
+// Server action: dismissa o banner welcome marcando Profile.welcomedAt.
+// Sem userId no input: id sempre vem de auth() no servidor (anti IDOR).
+// Falha silenciosa — proxima visita ao /dashboard volta a mostrar o banner
+// caso o UPDATE caia, mas nao queremos derrubar o render por isso.
+async function dismissWelcomeAction() {
+  "use server";
+  const session = await auth();
+  if (!session?.user?.id) return;
+  try {
+    await prisma.profile.update({
+      where: { userId: session.user.id },
+      data: { welcomedAt: new Date() },
+    });
+    revalidatePath("/dashboard");
+  } catch (e) {
+    console.error("dismiss welcome falhou:", e?.message);
+  }
+}
 
 const SS_KEYS = [
   "aderencia_vagas",
@@ -84,6 +104,13 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      {/* Welcome banner: aparece ate o user dismissar (welcomedAt setado).
+          Para users sem diagnostico (firstDiagnosisAt null) direciona pra home,
+          para users que acabaram de fazer o primeiro mostra mensagem de boas-vindas. */}
+      {!profile?.welcomedAt && (
+        <WelcomeBanner profile={profile} onDismiss={dismissWelcomeAction} />
+      )}
+
       {/* Empty state se sem snapshot */}
       {!latest && <EmptyState />}
 
@@ -131,6 +158,58 @@ function EmptyState() {
       >
         Construir meu gêmeo →
       </Link>
+    </div>
+  );
+}
+
+// Banner de boas-vindas. Server component que recebe a server action via prop
+// — o <form action={onDismiss}> aciona dismissWelcomeAction e re-renderiza
+// o /dashboard sem o banner. Variante "primeira vez" (sem firstDiagnosisAt)
+// orienta a fazer o diagnostico; variante "ja diagnosticou" celebra o score.
+function WelcomeBanner({ profile, onDismiss }) {
+  const isFirstTime = !profile?.firstDiagnosisAt;
+  return (
+    <div className="ct-welcome-banner" role="region" aria-label="Boas-vindas">
+      <div className="ct-welcome-banner-icon" aria-hidden="true">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4.5L6 21l1.5-7.5L2 9h7z" />
+        </svg>
+      </div>
+      <div className="ct-welcome-banner-body">
+        <h2 className="ct-welcome-banner-title">
+          {isFirstTime ? "Bem-vindo ao CareerTwin AI" : "Olá de novo"}
+        </h2>
+        <p className="ct-welcome-banner-text">
+          {isFirstTime
+            ? "Cole seu currículo na home (/) ou clique em “Construir meu gêmeo” pra começar. Tudo fica salvo aqui."
+            : "Seu primeiro diagnóstico chegou. Confira o score abaixo e marque as microações conforme conclui — o score recalcula sozinho."}
+        </p>
+        <div className="ct-welcome-banner-actions">
+          {isFirstTime ? (
+            <Link href="/" className="ct-welcome-banner-cta">
+              Construir meu gêmeo →
+            </Link>
+          ) : (
+            <Link href="/transparencia" className="ct-welcome-banner-cta">
+              Ver como o score é calculado →
+            </Link>
+          )}
+          <form action={onDismiss}>
+            <button type="submit" className="ct-welcome-banner-dismiss">
+              Não mostrar mais
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

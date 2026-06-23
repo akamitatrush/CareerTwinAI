@@ -127,7 +127,7 @@ export default function RadarClient({ initial }) {
       ) : (
         <div className="ct-jobs-list">
           {vagas.map((v, i) => (
-            <JobCard key={(v.url || "") + i} job={v} />
+            <JobCard key={(v.url || "") + i} job={v} index={i} />
           ))}
         </div>
       )}
@@ -181,7 +181,11 @@ function FilterNumber({ label, value, onChange, options, suffix }) {
   );
 }
 
-function JobCard({ job }) {
+function JobCard({ job, index }) {
+  // Disclosure "Por que esse match?" — fica fechado por padrao pra nao
+  // poluir a lista. Cada card tem estado proprio (nao compartilhado).
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
   const initial = (job.empresa || "?").charAt(0).toUpperCase();
   const fit = job.match || 0;
   // Anel SVG: r=26 → circunferencia ~163.4px. offset = (1 - fit/100) * C
@@ -190,6 +194,16 @@ function JobCard({ job }) {
   const offset = CIRC * (1 - fit / 100);
   const fitColor =
     fit >= 70 ? "var(--positive)" : fit >= 40 ? "var(--primary)" : "var(--attention)";
+
+  const skillsComuns = job.comuns || [];
+  const skillsFalta = job.falta || [];
+  // Aproximacao client-side: o backend so devolve `comuns` (skills do perfil
+  // que casam) + `falta` (top 3 skills da vaga ausentes no perfil). O total
+  // exato das skills da vaga nao trafega pra economizar payload — esse numero
+  // (comuns + falta) e o melhor que da pra reconstruir aqui sem nova request.
+  const skillsTotal = skillsComuns.length + skillsFalta.length;
+  // ID estavel pro aria-controls (job.url nem sempre presente nos fixtures).
+  const panelId = `breakdown-${index}`;
 
   return (
     <div className="ct-job-card">
@@ -207,7 +221,7 @@ function JobCard({ job }) {
           )}
         </div>
         <div className="ct-job-tags">
-          {(job.comuns || []).slice(0, 3).map((skill, i) => (
+          {skillsComuns.slice(0, 3).map((skill, i) => (
             <span className="ct-job-tag have" key={"c" + i}>
               <svg
                 width="11"
@@ -225,7 +239,7 @@ function JobCard({ job }) {
               {skill}
             </span>
           ))}
-          {(job.falta || []).slice(0, 2).map((skill, i) => (
+          {skillsFalta.slice(0, 2).map((skill, i) => (
             <span className="ct-job-tag missing" key={"m" + i}>
               <svg
                 width="11"
@@ -263,40 +277,139 @@ function JobCard({ job }) {
         </div>
       </div>
       <div className="ct-job-fit">
-        <div className="ct-fit-ring">
-          <svg
-            width="62"
-            height="62"
-            viewBox="0 0 62 62"
-            role="img"
-            aria-label={`Aderência: ${fit}%`}
-          >
-            <circle
-              cx="31"
-              cy="31"
-              r="26"
-              fill="none"
-              stroke="var(--primary-soft)"
-              strokeWidth="6"
-            />
-            <circle
-              cx="31"
-              cy="31"
-              r="26"
-              fill="none"
-              stroke={fitColor}
-              strokeWidth="6"
-              strokeLinecap="round"
-              strokeDasharray={CIRC.toFixed(1)}
-              strokeDashoffset={offset.toFixed(1)}
-              transform="rotate(-90 31 31)"
-            />
-          </svg>
-          {/* Texto duplicado do SVG: aria-hidden pra evitar leitura dupla. */}
-          <div className="ct-fit-num" aria-hidden="true">{fit}</div>
-        </div>
-        <span className="ct-fit-label">ADERÊNCIA</span>
+        {/* Ring vira botao: aria-expanded indica estado, aria-controls aponta
+            pro painel. aria-label longo pq o SR le antes do click — explica o
+            que vai acontecer ("clique pra ver o calculo"). */}
+        <button
+          type="button"
+          className="ct-fit-ring-btn"
+          onClick={() => setShowBreakdown((v) => !v)}
+          aria-expanded={showBreakdown}
+          aria-controls={panelId}
+          aria-label={`Aderência ${fit}%. ${
+            showBreakdown ? "Fechar" : "Abrir"
+          } detalhamento do cálculo.`}
+        >
+          <div className="ct-fit-ring">
+            <svg
+              width="62"
+              height="62"
+              viewBox="0 0 62 62"
+              aria-hidden="true"
+            >
+              <circle
+                cx="31"
+                cy="31"
+                r="26"
+                fill="none"
+                stroke="var(--primary-soft)"
+                strokeWidth="6"
+              />
+              <circle
+                cx="31"
+                cy="31"
+                r="26"
+                fill="none"
+                stroke={fitColor}
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={CIRC.toFixed(1)}
+                strokeDashoffset={offset.toFixed(1)}
+                transform="rotate(-90 31 31)"
+              />
+            </svg>
+            <div className="ct-fit-num" aria-hidden="true">{fit}</div>
+          </div>
+          <span className="ct-fit-label">ADERÊNCIA</span>
+        </button>
       </div>
+
+      {showBreakdown && (
+        <div
+          className="ct-job-breakdown"
+          id={panelId}
+          role="region"
+          aria-label={`Detalhamento da aderência de ${fit}% pra ${job.titulo}`}
+        >
+          <h4>Por que {fit}% de aderência?</h4>
+          <div className="ct-job-breakdown-formula">
+            <code>match = |skills em comum| / max(|perfil|, |vaga|) × 100</code>
+          </div>
+          <div className="ct-job-breakdown-numbers">
+            <div className="ct-job-breakdown-num-row">
+              <span className="ct-job-breakdown-num-label">Skills em comum:</span>
+              <span className="ct-job-breakdown-num-value">{skillsComuns.length}</span>
+            </div>
+            <div className="ct-job-breakdown-num-row">
+              <span className="ct-job-breakdown-num-label">
+                Skills detectadas na vaga:
+              </span>
+              <span className="ct-job-breakdown-num-value">{skillsTotal}</span>
+            </div>
+            <div className="ct-job-breakdown-num-row">
+              <span className="ct-job-breakdown-num-label">Match calculado:</span>
+              <span className="ct-job-breakdown-num-value strong">{fit}%</span>
+            </div>
+          </div>
+
+          {skillsComuns.length > 0 && (
+            <>
+              <h5>O que você já cobre</h5>
+              <div className="ct-job-breakdown-chips">
+                {skillsComuns.map((s, i) => (
+                  <span key={"bc" + i} className="ct-job-tag have">
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 12.5l4.5 4.5L19 7" />
+                    </svg>
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          {skillsFalta.length > 0 && (
+            <>
+              <h5>O que falta</h5>
+              <div className="ct-job-breakdown-chips">
+                {skillsFalta.map((s, i) => (
+                  <span key={"bf" + i} className="ct-job-tag missing">
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    {s}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+
+          <p className="ct-job-breakdown-foot">
+            Skills são extraídas das descrições das vagas via taxonomia
+            curada. Mais detalhes em <Link href="/transparencia">/transparencia</Link>.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

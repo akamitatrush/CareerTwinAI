@@ -237,12 +237,19 @@ export async function POST(req) {
     // Notificacao in-app de novo diagnostico. Calcula delta vs snapshot
     // anterior pro corpo da mensagem. Falha silenciosa (helper) — diagnostico
     // ja foi persistido, badge so atualiza no proximo fetch caso falhe.
+    let prevSnapshotsCount = 0;
     try {
-      const prev = await prisma.scoreSnapshot.findFirst({
+      prevSnapshotsCount = await prisma.scoreSnapshot.count({
         where: { userId, id: { not: snapshot.id } },
-        orderBy: { createdAt: "desc" },
-        select: { overall: true },
       });
+      const prev =
+        prevSnapshotsCount > 0
+          ? await prisma.scoreSnapshot.findFirst({
+              where: { userId, id: { not: snapshot.id } },
+              orderBy: { createdAt: "desc" },
+              select: { overall: true },
+            })
+          : null;
       const delta = prev ? snapshot.overall - prev.overall : null;
       await notify({
         userId,
@@ -253,6 +260,35 @@ export async function POST(req) {
       });
     } catch (e) {
       console.error("analyze: notify falhou", e?.message);
+    }
+
+    // Welcome flow: se esse e o PRIMEIRO snapshot do usuario, marca
+    // firstDiagnosisAt no profile e dispara a notificacao WELCOME (uma vez,
+    // idempotente). Falhas sao silenciosas — o diagnostico ja esta salvo,
+    // welcome e UX nao bloqueante. prevSnapshotsCount === 0 quer dizer que
+    // o snapshot que acabamos de criar e o primeiro do user.
+    if (prevSnapshotsCount === 0) {
+      try {
+        await prisma.profile.update({
+          where: { userId },
+          data: { firstDiagnosisAt: new Date() },
+        });
+      } catch (e) {
+        console.error("analyze: set firstDiagnosisAt falhou", e?.message);
+      }
+      try {
+        const existing = await prisma.notification.count({
+          where: { userId, kind: "WELCOME" },
+        });
+        if (existing === 0) {
+          await notify({
+            userId,
+            ...NotificationTemplates.welcome(),
+          });
+        }
+      } catch (e) {
+        console.error("analyze: welcome notify falhou", e?.message);
+      }
     }
 
     // Rastro LGPD: registra fonte + consentimento (payloadHash prova consent

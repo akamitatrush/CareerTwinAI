@@ -7,6 +7,28 @@ import LinkedinImportButton from "@/components/LinkedinImportButton";
 import PortfolioImportButton from "@/components/PortfolioImportButton";
 import { track } from "@/components/PostHogProvider";
 
+// Card visual de fonte conectada (CV / LinkedIn / GitHub). Não recebe ação —
+// é só status visual. As ações ficam nos botões de .ct-onb-extras logo abaixo.
+function SourceCard({ label, done }) {
+  return (
+    <div className={"ct-onb-source-card" + (done ? " done" : "")}>
+      <div className="ct-onb-source-icon" aria-hidden="true">
+        {done ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12.5l4.5 4.5L19 7" />
+          </svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" strokeDasharray="3 4" />
+          </svg>
+        )}
+      </div>
+      <span className="ct-onb-source-label">{label}</span>
+      <span className="ct-onb-source-status">{done ? "Conectado" : "Pendente"}</span>
+    </div>
+  );
+}
+
 export default function Home() {
   const [stage, setStage] = useState("input");
   const [cv, setCv] = useState("");
@@ -19,15 +41,23 @@ export default function Home() {
   const [opp, setOpp] = useState(null);
   const [isLogged, setIsLogged] = useState(false);
   const [snapshotId, setSnapshotId] = useState(null);
+  const [onbState, setOnbState] = useState(null);
 
   // Detecta sessao no client. Endpoint publico do NextAuth, sem expor PII alem
-  // do que o proprio user ja sabe (email/nome).
+  // do que o proprio user ja sabe (email/nome). Se logged, em sequencia busca
+  // o state do onboarding (fontes conectadas) pra renderizar o contador X/3.
   useEffect(() => {
     let alive = true;
     fetch("/api/auth/session")
       .then((r) => r.json())
       .then((s) => {
-        if (alive && s?.user?.id) setIsLogged(true);
+        if (alive && s?.user?.id) {
+          setIsLogged(true);
+          return fetch("/api/profile/onboarding").then((r) => r.json());
+        }
+      })
+      .then((state) => {
+        if (alive && state && !state.error) setOnbState(state);
       })
       .catch(() => {});
     return () => { alive = false; };
@@ -230,7 +260,11 @@ export default function Home() {
               <div className="ct-onb-input">
                 <div className="ct-onb-input-head">
                   <span className="ct-onb-step">ETAPA 1 DE 2 · CONECTAR SUAS FONTES</span>
-                  {/* Future: counter X/3 se tracar fontes connectadas */}
+                  {isLogged && onbState && (
+                    <span className="ct-onb-counter" aria-label={`${onbState.connectedCount} de ${onbState.total} fontes conectadas`}>
+                      <strong>{onbState.connectedCount}</strong>/{onbState.total}
+                    </span>
+                  )}
                 </div>
                 <h2 className="ct-onb-input-title">Vamos construir teu gêmeo digital</h2>
                 <p className="ct-onb-input-sub">
@@ -272,6 +306,14 @@ export default function Home() {
                     </button>
                     <button className="btn btn-ghost" onClick={loadSample} disabled={busy}>Carregar exemplo</button>
                   </div>
+
+                  {isLogged && onbState && (
+                    <div className="ct-onb-sources" role="list" aria-label="Status das fontes conectadas">
+                      <SourceCard label="Currículo" done={onbState.sources.cv} />
+                      <SourceCard label="LinkedIn" done={onbState.sources.linkedin} />
+                      <SourceCard label="GitHub" done={onbState.sources.github} />
+                    </div>
+                  )}
 
                   <div className="ct-onb-extras">
                     <label className="ct-onb-extra-btn" title="PDF ou DOCX">
