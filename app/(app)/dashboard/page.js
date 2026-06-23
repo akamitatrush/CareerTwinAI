@@ -9,6 +9,8 @@ import { getRealMedian } from "@/lib/metrics/median-real";
 import ActionCardClient from "./ActionCardClient";
 import RefreshDiagnosisButton from "./RefreshDiagnosisButton";
 import DashboardTracker from "./DashboardTracker";
+import SkillGraph from "@/components/SkillGraph";
+import { skillsForRole } from "@/lib/skills-taxonomy";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard — CareerTwin AI" };
@@ -165,6 +167,29 @@ export default async function DashboardPage() {
           />
           <SubScoresCol latest={latest} projectedByDimension={projectedByDimension} />
         </div>
+      )}
+
+      {/* Skill graph — feature #7 do roadmap. Renderiza so quando o user tem
+          snapshot E perfil estruturado com skills (sem isso o grafo fica vazio
+          e nao agrega). targetSkills vem de skillsForRole — lookup hardcoded
+          por enquanto (Fase 3 sera embeddings de JD). */}
+      {latest && Array.isArray(profile?.skills) && profile.skills.length > 0 && (
+        <section
+          className="ct-dash-skill-graph"
+          aria-labelledby="ct-skill-graph-title"
+        >
+          <h2 id="ct-skill-graph-title" className="ct-section-title">
+            Mapa de skills
+          </h2>
+          <p className="ct-section-sub">
+            Visual interativo das suas skills vs o que o cargo-alvo pede.
+          </p>
+          <SkillGraph
+            profileSkills={profile.skills}
+            targetSkills={skillsForRole(profile.targetRole)}
+            role={profile.targetRole}
+          />
+        </section>
       )}
 
       {/* 2-col: actions + profile snapshot */}

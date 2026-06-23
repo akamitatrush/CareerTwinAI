@@ -5048,3 +5048,82 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   .ct-copilot-typing span { animation: none; opacity: 0.6; }
 }
 
+/* === Skill Graph (feature #7 do STRATEGY_ROADMAP) ===
+   Wrapper responsivo do SVG + legenda + tooltip. SVG mantem aspect ratio via
+   viewBox e height auto (preserveAspectRatio default). */
+.ct-skill-graph-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ct-skill-graph-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-item .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-item.have .dot { background: var(--positive); }
+.legend-item.extra .dot { background: var(--primary-soft); border: 1px solid var(--primary); }
+.legend-item.missing .dot { background: var(--attention-soft); border: 1px solid var(--attention); }
+
+/* Tooltip absolute-positioned below the graph. Centralizado via translateX -50%.
+   pointer-events: none deixa hover/focus passar pros nodes embaixo. */
+.ct-skill-graph-tooltip {
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 12.5px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ct-skill-graph-tooltip strong { color: var(--text); }
+.ct-skill-graph-tooltip span { color: var(--text-muted); }
+
+/* Container da secao no /dashboard — segue padrao visual das outras
+   secoes (surface card com sombra leve). margin-bottom da espaco antes
+   das .ct-dash-cols. */
+.ct-dash-skill-graph {
+  margin: 32px 0;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Focus visible nos nodes (SVG <g> com tabIndex=0) — copia o focus-ring
+   global pra navegacao por teclado ficar visivel. */
+.ct-skill-graph-wrap svg g:focus-visible circle {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 0 3px var(--primary-soft));
+}
+

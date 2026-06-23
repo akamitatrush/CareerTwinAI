@@ -11,14 +11,34 @@ import { EVENTS } from "@/lib/analytics/events";
 // Renderizado a partir do AppShell, que ja eh server-side gated por auth() —
 // nao vaza pra public pages (login, /entrar, marketing).
 //
-// Streaming: por enquanto request/response (deferred). O endpoint /api/chat
-// hoje devolve JSON via completeJSON; SSE exigiria mudar provider stack.
+// Streaming: consome SSE de /api/chat?stream=1. O LLM responde JSON
+// {"resposta":"..."} — extraimos o texto progressivamente conforme chega
+// (best-effort: regex no JSON parcial; ao final o servidor envia {done, full}
+// e a gente parseia o JSON completo pra confiar no resultado canonico).
 // State management: localStorage com janela rolante (ultimas 20 msgs) pra
 // nao explodir tamanho. Historico vai pra LLM com cap em 10 msgs * 4k chars
 // (ChatBody.history.max = 30, content.max = 4000).
 //
 // LGPD: salvamos historico em localStorage do proprio user — nunca vai pro
 // servidor exceto via /api/chat, que ja eh ownership-checked por sessao.
+
+// Extrai o valor de "resposta" de um JSON parcial em construcao via stream.
+// Regex tolera escape (\") e quebra de linha. Em JSON ainda nao fechado,
+// retorna o que ja foi acumulado dentro da string. Usado SO durante o
+// streaming pro preview ao vivo — o estado final usa JSON.parse na resposta
+// completa devolvida pelo backend (campo `full`).
+function extractPartialResposta(text) {
+  if (!text) return "";
+  // Procura: "resposta" : " ... (sem fechar com aspas naotratadas)
+  const match = text.match(/"resposta"\s*:\s*"((?:\\.|[^"\\])*)/);
+  if (!match) return "";
+  // Unescape basico (\\n, \", \\): suficiente pra preview. JSON.parse trata
+  // o resto no final.
+  return match[1]
+    .replace(/\\n/g, "\n")
+    .replace(/\\"/g, '"')
+    .replace(/\\\\/g, "\\");
+}
 
 const HISTORY_KEY = "ct-copilot-history";
 const MAX_HISTORY = 20;
@@ -166,28 +186,84 @@ export default function CopilotWidget({ user }) {
     track(EVENTS.COPILOT_MESSAGE_SENT, { len: userMsg.length, path: pathname });
 
     try {
-      const res = await fetch("/api/chat", {
+      // ?stream=1 ativa SSE. Servidor envia data:{delta:"..."} por chunk e
+      // data:{done:true, full:"<JSON completo>"} no fim. Erro mid-stream
+      // chega como data:{error:"..."} (status HTTP ja foi 200).
+      const res = await fetch("/api/chat?stream=1", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          // /api/chat valida via ChatBody: role + message + history
           role: targetRole,
           history,
           message: userMsg,
         }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
+
+      // Erro precoce (auth/rate/budget/validacao): servidor ainda manda JSON
+      // antes de entrar no stream — content-type indica.
+      const ctype = res.headers.get("content-type") || "";
+      if (!res.ok || !ctype.includes("text/event-stream")) {
+        const data = await res.json().catch(() => ({}));
         const msg = data?.error || `Falha (HTTP ${res.status}). Tente de novo.`;
         throw new Error(msg);
       }
-      // /api/chat devolve { resposta } (campo PT-BR canonico). Fallback a
-      // message/text por seguranca caso a rota mude no futuro.
-      const assistantText =
-        data.resposta || data.message || data.text || "Sem resposta.";
-      setMessages((m) => [...m, { role: "assistant", content: assistantText }]);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let accumulated = "";
+      let finalText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+
+        // SSE: blocos separados por "\n\n", cada um tem linha "data: {...}".
+        const events = buf.split("\n\n");
+        buf = events.pop() || "";
+
+        for (const ev of events) {
+          const dataLine = ev.split("\n").find((l) => l.startsWith("data: "));
+          if (!dataLine) continue;
+          try {
+            const data = JSON.parse(dataLine.slice(6));
+            if (typeof data.delta === "string") {
+              accumulated += data.delta;
+              // Preview ao vivo: extrai "resposta" do JSON parcial em construcao.
+              const partial = extractPartialResposta(accumulated);
+              if (partial) setStreaming(partial);
+            } else if (data.error) {
+              throw new Error(data.error);
+            } else if (data.done) {
+              // Resposta canonica: parse o JSON completo enviado pelo servidor.
+              // Tolera o caso (improvavel) de o LLM ter respondido sem cercar
+              // — `full` ja contem o texto bruto do modelo.
+              try {
+                const parsed = JSON.parse(data.full || accumulated);
+                finalText = parsed?.resposta || extractPartialResposta(accumulated) || "Sem resposta.";
+              } catch {
+                finalText = extractPartialResposta(accumulated) || "Sem resposta.";
+              }
+            }
+          } catch (parseErr) {
+            // Linha SSE corrompida: ignora silenciosamente. Se foi erro
+            // sinalizado pelo data.error acima, repropaga.
+            if (parseErr?.message && parseErr.message !== "Unexpected end of JSON input") {
+              if (parseErr.message.startsWith("A IA falhou") || parseErr.message.includes("STREAM_FAILED")) {
+                throw parseErr;
+              }
+            }
+          }
+        }
+      }
+
+      if (!finalText) {
+        finalText = extractPartialResposta(accumulated) || "Sem resposta.";
+      }
+      setMessages((m) => [...m, { role: "assistant", content: finalText }]);
       track(EVENTS.COPILOT_MESSAGE_RECEIVED, {
-        len: assistantText.length,
+        len: finalText.length,
         path: pathname,
       });
     } catch (e) {

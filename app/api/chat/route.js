@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { completeJSONWithUsage } from "@/lib/llm";
+import { streamLLM } from "@/lib/llm-stream";
 import { promptChat } from "@/lib/prompts";
 import { ChatBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
@@ -119,9 +120,86 @@ export async function POST(req) {
     .filter(Boolean)
     .slice(0, 20);
 
+  // Branch streaming: ?stream=1 retorna SSE; sem ele cai pra JSON one-shot.
+  // Auth/rate-limit/budget/ownership/validacao SAO IDENTICOS — so o transporte muda.
+  // Decisao deliberada: o prompt e o mesmo (promptChat), o JSON final tambem
+  // tem o mesmo shape {"resposta":"..."}. O cliente acumula chunks e parseia.
+  const url = new URL(req.url);
+  const wantsStream = url.searchParams.get("stream") === "1";
+
+  const prompt = promptChat(role, perfil, gaps, history, message);
+
+  if (wantsStream) {
+    // SSE: enviamos eventos {delta} conforme chega texto, {done, full} ao fim.
+    // Em erro mid-stream emitimos {error} e fechamos — cliente trata sem 502
+    // porque o status HTTP ja foi 200 quando comecamos a stream.
+    const encoder = new TextEncoder();
+    const sseStream = new ReadableStream({
+      async start(controller) {
+        const { stream, getUsage } = streamLLM(prompt, { route: "chat.stream", userId });
+        let fullText = "";
+        try {
+          for await (const chunk of stream) {
+            fullText += chunk;
+            const data = JSON.stringify({ delta: chunk });
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+          }
+          // Marca de fim — cliente sabe que terminou e tem o texto agregado.
+          const done = JSON.stringify({ done: true, full: fullText });
+          controller.enqueue(encoder.encode(`data: ${done}\n\n`));
+        } catch (e) {
+          // Mensagem generica pra nao vazar detalhe do provider; usuario re-tenta.
+          console.error("chat: stream falhou", e?.message);
+          const errData = JSON.stringify({
+            error: "A IA falhou no meio da resposta. Tente novamente.",
+            code: "STREAM_FAILED",
+          });
+          controller.enqueue(encoder.encode(`data: ${errData}\n\n`));
+        } finally {
+          // Tracking de tokens APOS o stream (mesmo se falhou no meio — o provider
+          // ja contou input_tokens no message_start). Falha silenciosa.
+          try {
+            const usage = getUsage();
+            if (usage.tokensIn > 0 || usage.tokensOut > 0) {
+              await trackTokenUsage(userId, "chat", usage);
+              const budgetAfter = await checkDailyBudget(userId, userPlan);
+              if (!budgetAfter.ok) {
+                await audit({
+                  userId,
+                  action: "SECURITY_BUDGET_EXCEEDED",
+                  target: `User:${userId}`,
+                  req,
+                  meta: {
+                    feature: "chat.stream",
+                    used: budgetAfter.used,
+                    cap: budgetAfter.cap,
+                    phase: "post-stream",
+                  },
+                });
+              }
+            }
+          } catch (e) {
+            console.error("chat: post-stream tracking falhou", e?.message);
+          }
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(sseStream, {
+      headers: {
+        "content-type": "text/event-stream; charset=utf-8",
+        "cache-control": "no-cache, no-transform",
+        "connection": "keep-alive",
+        // Anti-buffering por proxies (nginx). Garante chunks chegarem ao vivo.
+        "x-accel-buffering": "no",
+      },
+    });
+  }
+
   try {
     const { result: data, usage } = await completeJSONWithUsage(
-      promptChat(role, perfil, gaps, history, message),
+      prompt,
       { route: "chat", userId }
     );
     // Token tracking (Wave 11). Falha silenciosa.

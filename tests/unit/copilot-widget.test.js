@@ -61,11 +61,20 @@ describe("CopilotWidget — source structure", () => {
 
   it("chama POST /api/chat com role, history e message (ChatBody)", () => {
     const src = readSource(WIDGET_PATH);
-    expect(src).toMatch(/fetch\(\s*["']\/api\/chat["']/);
+    // Streaming usa /api/chat?stream=1. O matcher aceita o path + qualquer query.
+    expect(src).toMatch(/fetch\(\s*["']\/api\/chat(\?stream=1)?["']/);
     // Body deve enviar role + history + message conforme validator
     expect(src).toMatch(/role:\s*targetRole/);
     expect(src).toMatch(/history,?/);
     expect(src).toMatch(/message:\s*userMsg/);
+  });
+
+  it("consome SSE de /api/chat?stream=1 (streaming via ?stream=1)", () => {
+    const src = readSource(WIDGET_PATH);
+    expect(src).toMatch(/\/api\/chat\?stream=1/);
+    // Le ReadableStream via reader.read()
+    expect(src).toMatch(/getReader\(\)/);
+    expect(src).toMatch(/TextDecoder/);
   });
 
   it("le e grava historico em localStorage", () => {
