@@ -2,6 +2,12 @@ import { describe, it, expect } from "vitest";
 import { searchFixtures } from "@/lib/jobs/providers/fixtures";
 import { extractSkills, matchScore } from "@/lib/skills-taxonomy";
 
+// Helper: pega o catalogo inteiro via searchFixtures (role vazio retorna tudo
+// ate `limit`). Usamos limit alto pra garantir que pegamos 100% do catalogo.
+async function getAllFixtures() {
+  return searchFixtures({ role: "", limit: 500 });
+}
+
 // Regressao critica: ate v0.3.0 as fixtures geravam descricao "vazia de skills"
 // → matchScore retornava 0 → rota /api/opportunities filtrava tudo → UI vazia.
 // Estes testes garantem que o catalogo curado nao volta a esse estado.
@@ -39,12 +45,109 @@ describe("fixtures produzem vagas com skills extraiveis", () => {
 
   it("toda fixture do catalogo tem >= 5 skills extraiveis", async () => {
     // Garante riqueza minima da descricao — defesa contra regressao.
-    const r = await searchFixtures({ role: "", limit: 100 });
-    expect(r.length).toBeGreaterThanOrEqual(30);
+    const r = await getAllFixtures();
+    expect(r.length).toBeGreaterThanOrEqual(60);
     r.forEach((j) => {
       const skills = extractSkills(`${j.titulo} ${j.descricao}`);
       expect(skills.length).toBeGreaterThanOrEqual(5);
     });
+  });
+
+  it("catalogo tem >= 60 fixtures (densidade pra preview sem provider real)", async () => {
+    const r = await getAllFixtures();
+    expect(r.length).toBeGreaterThanOrEqual(60);
+  });
+
+  it("catalogo cobre >= 8 areas distintas (backend, frontend, data, produto, ux, devops, seguranca, vendas, etc.)", async () => {
+    const r = await getAllFixtures();
+    // Heuristica: substring de cada area-keyword nos titulos do catalogo.
+    // Nao usamos `areas` interna (encapsulada) — testamos via titulo, que e
+    // o sinal final entregue na UI.
+    const areaKeywords = [
+      "backend",
+      "frontend",
+      "fullstack",
+      "dados",
+      "engenheiro(a) de dados",
+      "cientista",
+      "machine learning",
+      "product manager",
+      "product designer",
+      "ux researcher",
+      "devops",
+      "site reliability",
+      "cloud architect",
+      "seguranca",
+      "pentester",
+      "qa",
+      "ios",
+      "android",
+      "mobile",
+      "marketing",
+      "growth",
+      "vendas",
+      "customer success",
+      "sales engineer",
+      "financeiro",
+      "controller",
+      "people analytics",
+      "tech recruiter",
+      "engineering manager",
+      "consultor",
+      "estrategico",
+      "s&op",
+      "operacoes",
+      "learning",
+      "designer instrucional",
+      "content strategist",
+      "redator",
+      "compliance",
+      "esg",
+      "ai engineer",
+      "ml platform",
+    ];
+    const haystack = r.map((j) => j.titulo.toLowerCase()).join(" | ");
+    const hits = areaKeywords.filter((k) => haystack.includes(k.toLowerCase()));
+    expect(hits.length).toBeGreaterThanOrEqual(8);
+  });
+
+  it("catalogo tem diversidade geografica (cidades fora do eixo SP/RJ/CWB)", async () => {
+    const r = await getAllFixtures();
+    const locals = r.map((j) => j.local.toLowerCase()).join(" | ");
+    // Pelo menos uma cidade fora do eixo SP / RJ / Curitiba precisa existir.
+    const diversidadeCidades = [
+      "belo horizonte",
+      "porto alegre",
+      "recife",
+      "florianopolis",
+      "salvador",
+      "brasilia",
+      "campinas",
+    ];
+    const hits = diversidadeCidades.filter((c) => locals.includes(c));
+    expect(hits.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("salario medio do catalogo e realista BR (>= R$ 5k, <= R$ 30k)", async () => {
+    // Parse do campo `salario` formatado em pt-BR ("R$ 8.000 - R$ 13.000").
+    // Calcula media dos pontos medios (min+max)/2 de cada vaga e checa range.
+    const r = await getAllFixtures();
+    const midpoints = r
+      .map((j) => {
+        if (!j.salario) return null;
+        // Match "R$ X.XXX - R$ Y.YYY" → captura 2 numeros (pontos como sep de milhar).
+        const m = j.salario.match(/R\$\s*([\d.]+)\s*-\s*R\$\s*([\d.]+)/);
+        if (!m) return null;
+        const min = Number(m[1].replace(/\./g, ""));
+        const max = Number(m[2].replace(/\./g, ""));
+        if (Number.isNaN(min) || Number.isNaN(max)) return null;
+        return (min + max) / 2;
+      })
+      .filter((x) => x !== null);
+    expect(midpoints.length).toBeGreaterThan(0);
+    const avg = midpoints.reduce((a, b) => a + b, 0) / midpoints.length;
+    expect(avg).toBeGreaterThanOrEqual(5000);
+    expect(avg).toBeLessThanOrEqual(30000);
   });
 
   it("role desconhecido nao retorna vazio (fallback catalogo)", async () => {
