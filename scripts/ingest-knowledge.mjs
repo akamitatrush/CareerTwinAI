@@ -99,14 +99,37 @@ async function main() {
     return;
   }
 
-  // Batch de 50 — Voyage permite ate 128, mas 50 deixa margem de seguranca
-  // pro tamanho total da request (cada chunk pode ter ate ~600 chars).
-  const BATCH = 50;
+  // CLI args pra throttling
+  const batchArg = process.argv.find((a) => a.startsWith("--batch-size="));
+  const delayArg = process.argv.find((a) => a.startsWith("--delay-ms="));
+  // Voyage AI free tier (sem cartao): 3 RPM / 10K TPM.
+  // Cada chunk ~150-250 tokens -> batch 8 mantem TPM <2K
+  // Wait 22s entre batches -> ~2.7 RPM (margem)
+  // Total pra 159 chunks: ~20 batches * 22s = ~7-8 min
+  // Com cartao adicionado em voyageai.com, sobe pra 300 RPM e batch pode ser 50.
+  const BATCH = batchArg ? Number(batchArg.split("=")[1]) : 8;
+  const DELAY_MS = delayArg ? Number(delayArg.split("=")[1]) : 22000;
+  console.log(`Config: batch=${BATCH}, delay=${DELAY_MS}ms entre batches`);
+  console.log(`Total estimado: ${Math.ceil(toIngest.length / BATCH)} batches x ${DELAY_MS / 1000}s = ${Math.ceil((toIngest.length / BATCH) * (DELAY_MS / 1000) / 60)}min`);
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let batchNum = 0;
+  const totalBatches = Math.ceil(toIngest.length / BATCH);
+
   for (let i = 0; i < toIngest.length; i += BATCH) {
+    batchNum++;
     const batch = toIngest.slice(i, i + BATCH);
-    console.log(`Embed batch ${i / BATCH + 1}: ${batch.length} chunks…`);
+    console.log(`Embed batch ${batchNum}/${totalBatches}: ${batch.length} chunks…`);
     const texts = batch.map((c) => c.content);
-    const vectors = await embedTexts(texts, { inputType: "document" });
+    let vectors;
+    try {
+      vectors = await embedTexts(texts, { inputType: "document" });
+    } catch (e) {
+      console.error(`Batch ${batchNum} falhou:`, e.message);
+      console.error(`Progresso parcial: ${batchNum - 1}/${totalBatches} batches concluidos.`);
+      console.error(`Re-rode o script — chunks ja salvos serao pulados (idempotente).`);
+      throw e;
+    }
     if (vectors.length !== batch.length) {
       throw new Error(
         `Vector count mismatch: ${vectors.length} vs ${batch.length}`
@@ -145,6 +168,13 @@ async function main() {
           embedding = EXCLUDED.embedding,
           "updatedAt" = NOW()
       `;
+    }
+    console.log(`  ✓ batch ${batchNum}/${totalBatches} salvo.`);
+    // Throttle entre batches pra respeitar rate limit (3 RPM no Voyage free).
+    // Pula o sleep no ultimo batch.
+    if (batchNum < totalBatches) {
+      console.log(`  ⏳ aguardando ${DELAY_MS / 1000}s antes do proximo batch (rate limit)...`);
+      await sleep(DELAY_MS);
     }
   }
 

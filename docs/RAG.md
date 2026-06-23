@@ -322,11 +322,38 @@ Checklist OWASP aplicado:
 npx prisma migrate deploy
 
 # 2. Ingere os 159 chunks (gera embeddings via Voyage AI)
+#    Default respeita free tier sem cartao (3 RPM): batch=8, delay=22s.
+#    Leva ~7 min pra 159 chunks. Idempotente — re-rodar pula os ja salvos.
 npm run ingest:knowledge
+
+#    Se VOYAGE_API_KEY tem cartao adicionado (300 RPM), pode acelerar:
+#    node scripts/ingest-knowledge.mjs --batch-size=50 --delay-ms=2000
+#    Leva ~30s.
 
 # 3. Roda eval pra confirmar que retrieval está performando
 npm run eval:rag
 ```
+
+### Voyage AI free tier — limites importantes
+
+Sem cartão adicionado em https://www.voyageai.com:
+- **3 requests/minuto** (RPM)
+- **10K tokens/minuto** (TPM)
+- 200M tokens free pra sempre
+
+**O default do script** (`batch=8`, `delay=22000ms`) respeita esses limites — leva ~7 min pra 159 chunks. Vai ver mensagens tipo:
+
+```
+Config: batch=8, delay=22000ms entre batches
+Total estimado: 20 batches x 22s = 7min
+Embed batch 1/20: 8 chunks…
+  ✓ batch 1/20 salvo.
+  ⏳ aguardando 22s antes do proximo batch (rate limit)...
+```
+
+**Se rodar com batch maior sem cartão:** vai bater 429 no 2º batch (como aconteceu inicialmente). Script é idempotente — re-rodar pula chunks já salvos.
+
+**Pra acelerar:** adicionar método de pagamento eleva pra 300 RPM. Aí use `--batch-size=50 --delay-ms=2000`.
 
 ### Adicionar chunks novos
 
