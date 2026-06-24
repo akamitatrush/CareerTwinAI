@@ -291,9 +291,9 @@ export default function CopilotWidget({ user }) {
     <>
       <button
         type="button"
-        className={"ct-copilot-fab" + (open ? " open" : "")}
+        className={"ct-copilot-fab ct-copilot-fab-pulse" + (open ? " open" : "")}
         onClick={handleToggle}
-        aria-label={open ? "Fechar copilot" : "Abrir copilot"}
+        aria-label={open ? "Fechar copilot" : "Abrir copiloto de carreira"}
         aria-expanded={open}
         aria-controls="ct-copilot-panel"
       >

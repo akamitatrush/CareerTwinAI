@@ -15,6 +15,16 @@
   --primary-tint: #C7C7E8;
   --primary-light: #6B6BC8;
 
+  /* === Accent cyan/magenta (refresh visual) ===
+     Tokens novos pra acentos vibrantes (Score Ring glow, banners de
+     destaque, hover/focus). Indigo Sereno continua sendo a marca
+     principal; cyan/magenta são raros e decorativos. */
+  --accent-cyan: #70FFDD;
+  --accent-cyan-deep: #4DCFB3;
+  --accent-cyan-glow: rgba(112, 255, 221, 0.35);
+  --accent-magenta: #B924FF;
+  --accent-magenta-soft: rgba(185, 36, 255, 0.18);
+
   --positive: #15A871;
   --positive-deep: #0E7B53;
   --positive-soft: #E0F5EC;
@@ -141,6 +151,15 @@
   --attention-deep: #D97706;
   --attention-soft: #2E1F0A;     /* era #FEF3E7 (quase branco) → laranja deep wash */
   --attention-tint: #92400E;
+
+  /* === Accent cyan/magenta em dark — luminance ajustada ===
+     Cyan continua vibrante, deep um pouco mais claro pra contrastar
+     com bg dark. Glow alpha ligeiramente maior. */
+  --accent-cyan: #70FFDD;
+  --accent-cyan-deep: #5BE0C4;
+  --accent-cyan-glow: rgba(112, 255, 221, 0.42);
+  --accent-magenta: #D364FF;
+  --accent-magenta-soft: rgba(211, 100, 255, 0.22);
 
   /* === Sombras dark — alpha aumentado pra ter depth sobre #0D1117 === */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
@@ -544,8 +563,13 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 }
 .btn-primary:hover{
   background: linear-gradient(180deg, var(--primary) 0%, var(--primary-deep) 100%);
-  box-shadow: var(--shadow-md), var(--inset-top-light);
+  /* Refresh visual: underglow cyan sutil + shadows existentes */
+  box-shadow: 0 0 0 3px var(--accent-cyan-glow), var(--shadow-md), var(--inset-top-light);
   transform: translateY(-1px);
+}
+.btn-primary:focus-visible{
+  /* Refresh visual: focus ring duplo (cyan accent + indigo soft) */
+  box-shadow: 0 0 0 3px var(--accent-cyan-glow), var(--shadow-focus), var(--inset-top-light);
 }
 .btn-primary:active{
   transform: scale(0.98) translateY(0);
@@ -2022,7 +2046,20 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   position: relative;
   width: 180px;
   height: 180px;
-  filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18));
+  /* Refresh visual: drop-shadow indigo (depth) + drop-shadow cyan (vida própria).
+     O glow cyan pulsa muito sutilmente via scoreGlow (12s loop). */
+  filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18)) drop-shadow(0 0 32px var(--accent-cyan-glow));
+  animation: scoreGlow 12s ease-in-out infinite;
+}
+@keyframes scoreGlow {
+  0%, 100% { filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18)) drop-shadow(0 0 24px rgba(112, 255, 221, 0.18)); }
+  50%      { filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18)) drop-shadow(0 0 38px rgba(112, 255, 221, 0.40)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ct-score-ring-wrap {
+    animation: none;
+    filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18)) drop-shadow(0 0 32px var(--accent-cyan-glow));
+  }
 }
 .ct-score-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .ct-score-big {
@@ -3243,12 +3280,13 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
     radial-gradient(circle at 80% 10%, rgba(186, 186, 240, 0.18) 0%, transparent 50%),
     linear-gradient(165deg, var(--primary-light) 0%, var(--primary) 38%, var(--primary-deep) 75%, #1F1F4F 100%);
   color: #fff;
-  padding: 42px 38px;
+  /* Refresh visual: hero mais alto + padding vertical ampliado pra respirar */
+  padding: 56px 38px;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  min-height: 560px;
+  min-height: 640px;
 }
 .ct-onb-brand::before {
   content: "";
@@ -3292,6 +3330,22 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 @media (max-width: 900px) {
   .ct-onb-brand-illust { margin-top: 18px; }
   .ct-onb-brand-illust svg { max-width: 280px; }
+}
+
+/* Refresh visual: wrapper opcional aplicado pelo Agent B na ilustração
+   pra dar leve flutuação (8s loop, translateY 0 → -4px → 0).
+   Movimento subliminar — não compete com o conteúdo. */
+.ct-onb-illust-animated {
+  animation: ctIllustFloat 8s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+@keyframes ctIllustFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ct-onb-illust-animated { animation: none; }
 }
 
 /* Pills de defensibilidade abaixo da subtitle. Trust pills curtas,
@@ -5048,11 +5102,23 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   box-shadow: var(--shadow-lg);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: all 220ms var(--ease-standard);
+  /* Refresh visual: pulse cyan a cada 4s — sinaliza presença sem ser intrusivo */
+  animation: copilotPulse 4s ease-in-out infinite;
 }
-.ct-copilot-fab:hover { transform: translateY(-2px) scale(1.04); box-shadow: var(--shadow-xl); }
-.ct-copilot-fab:focus-visible { outline: none; box-shadow: var(--shadow-lg), var(--shadow-focus); }
+@keyframes copilotPulse {
+  0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 0 var(--accent-cyan-glow); }
+  50%      { box-shadow: var(--shadow-lg), 0 0 0 10px rgba(112, 255, 221, 0); }
+}
+.ct-copilot-fab:hover {
+  transform: translateY(-2px) scale(1.04);
+  /* Refresh visual: hover puxa pra cyan-mix + glow accent */
+  background: linear-gradient(140deg, var(--primary) 0%, var(--accent-cyan-deep) 140%);
+  box-shadow: var(--shadow-xl), 0 0 0 4px var(--accent-cyan-glow);
+}
+.ct-copilot-fab:focus-visible { outline: none; box-shadow: var(--shadow-lg), var(--shadow-focus), 0 0 0 4px var(--accent-cyan-glow); }
 .ct-copilot-fab.open {
   background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  animation: none;
 }
 @media (max-width: 720px) {
   .ct-copilot-fab { bottom: 18px; right: 18px; width: 48px; height: 48px; }
@@ -5179,7 +5245,7 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 
 @media (prefers-reduced-motion: reduce) {
   .ct-copilot-panel { animation: none; }
-  .ct-copilot-fab { transition: none; }
+  .ct-copilot-fab { transition: none; animation: none; box-shadow: var(--shadow-lg); }
   .ct-copilot-fab:hover { transform: none; }
   .ct-copilot-typing span { animation: none; opacity: 0.6; }
 }
@@ -5788,5 +5854,108 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   /* Kanban: garante coluna unica e largura cheia */
   .kanban { grid-template-columns: 1fr !important; }
   .kanban-col { min-width: 0; }
+}
+
+/* ===========================================================
+ * Refresh visual — Banner "Highlight da Semana" + Section divider
+ * Componentes novos pro dashboard. Agent B aplica essas classes;
+ * aqui ficam só os estilos. Acento cyan vibrante decorativo.
+ * =========================================================== */
+.ct-highlight-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-cyan);
+  border-radius: var(--radius-lg);
+  margin: 0 0 24px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+.ct-highlight-banner::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan-glow));
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.ct-highlight-banner-icon {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a3c34;
+  flex: none;
+  box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);
+}
+
+.ct-highlight-banner-content {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.ct-highlight-banner-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+  letter-spacing: -.2px;
+}
+
+.ct-highlight-banner-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.ct-highlight-banner-cta {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent-cyan-deep);
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-cyan-deep);
+  white-space: nowrap;
+  transition: all 180ms var(--ease-standard);
+  flex: none;
+  z-index: 1;
+  background: transparent;
+  cursor: pointer;
+}
+.ct-highlight-banner-cta:hover {
+  background: var(--accent-cyan-deep);
+  color: #fff;
+}
+.ct-highlight-banner-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+}
+
+/* Mobile: stack vertical, CTA full-width */
+@media (max-width: 680px) {
+  .ct-highlight-banner { flex-direction: column; align-items: flex-start; }
+  .ct-highlight-banner-cta { align-self: stretch; text-align: center; }
+}
+
+/* Section divider sutil — gradiente transparente → border → transparente */
+.ct-section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 32px 0;
+  border: 0;
 }
 

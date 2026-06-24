@@ -10,6 +10,7 @@ import ActionCardClient from "./ActionCardClient";
 import RefreshDiagnosisButton from "./RefreshDiagnosisButton";
 import DashboardTracker from "./DashboardTracker";
 import DailyQuestCard from "./DailyQuestCard";
+import DashboardHighlightBanner from "@/components/DashboardHighlightBanner";
 import SkillGraph from "@/components/SkillGraph";
 import { skillsForRole } from "@/lib/skills-taxonomy";
 
@@ -152,6 +153,17 @@ export default async function DashboardPage() {
       {/* Empty state se sem snapshot */}
       {!latest && <EmptyState />}
 
+      {/* Highlight banner: mensagem contextual baseada no estado do user.
+          So aparece quando ha snapshot — empty state ja tem call-to-action
+          proprio. Variant "microacao" se ha gaps completados (incentivo a
+          recalcular), senao "refresh" (lembrete suave de atualizar). */}
+      {latest && completedGaps.length > 0 && (
+        <DashboardHighlightBanner variant="microacao" count={completedGaps.length} />
+      )}
+      {latest && completedGaps.length === 0 && (
+        <DashboardHighlightBanner variant="refresh" />
+      )}
+
       {/* HERO: Score Ring + Sub-scores */}
       {latest && (
         <div className="ct-dash-hero">
@@ -169,6 +181,8 @@ export default async function DashboardPage() {
           <SubScoresCol latest={latest} projectedByDimension={projectedByDimension} />
         </div>
       )}
+
+      {latest && <hr className="ct-section-divider" />}
 
       {/* Daily quest — feature #10 do roadmap (habit loop). Renderiza so depois
           do hero pra dar destaque sem competir com o score. Componente faz
@@ -197,6 +211,8 @@ export default async function DashboardPage() {
           />
         </section>
       )}
+
+      {latest && <hr className="ct-section-divider" />}
 
       {/* 2-col: actions + profile snapshot */}
       {latest && (

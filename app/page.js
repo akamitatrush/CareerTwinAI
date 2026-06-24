@@ -357,7 +357,7 @@ export default function Home() {
                     progresso ascendente. SVG inline (sem dep externa, sem
                     request HTTP, respeita CSP). Tema "carreira de pessoas
                     crescendo". Decorativa — aria-hidden. */}
-                <div className="ct-onb-brand-illust" aria-hidden="true">
+                <div className="ct-onb-brand-illust ct-onb-illust-animated" aria-hidden="true">
                   <svg viewBox="0 0 360 180" fill="none" xmlns="http://www.w3.org/2000/svg">
                     {/* Linha de tendencia (ascendente) */}
                     <path d="M20 140 Q 90 130, 130 100 T 240 60 T 340 30"
@@ -395,7 +395,7 @@ export default function Home() {
 
                 <div className="ct-onb-brand-content">
                   <div className="ct-onb-brand-eyebrow">CONSTRUA SEU GÊMEO</div>
-                  <h1 className="ct-onb-brand-title">Um retrato vivo da sua carreira — que evolui com você.</h1>
+                  <h1 className="ct-onb-brand-title">Sua carreira merece um copiloto que te ajude a chegar lá.</h1>
                   <p className="ct-onb-brand-sub">
                     Conectamos seu perfil real ao que o mercado realmente pede e mostramos a próxima ação concreta. Sem achismo, com a fonte de cada recomendação.
                   </p>
