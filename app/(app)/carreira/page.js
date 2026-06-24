@@ -27,16 +27,29 @@ export default async function CarreiraPage() {
 
   return (
     <main id="main-content" className="app-container">
-      <div className="ct-gaps-header">
-        <div>
-          <h1 className="ct-gaps-title">Plano de carreira</h1>
-          <p className="ct-gaps-sub">
-            Roadmap visual pra chegar no seu cargo-alvo.{" "}
-            {targetRole && (
-              <>
-                Alvo: <strong>{targetRole}</strong>.
-              </>
-            )}
+      <header className="ct-page-header">
+        <div className="ct-page-header-icon" aria-hidden="true">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 21l5-9 4 5 5-8 4 7" />
+            <path d="M3 21h18" />
+          </svg>
+        </div>
+        <div className="ct-page-header-content">
+          <div className="ct-page-header-eyebrow">PLANO DE CARREIRA</div>
+          <h1 className="ct-page-header-title">
+            Sua trajetória até o cargo-alvo
+          </h1>
+          <p className="ct-page-header-sub">
+            Roadmap visual com milestones, skills e evidências necessárias.
           </p>
         </div>
         {targetRole && (
@@ -63,7 +76,7 @@ export default async function CarreiraPage() {
             </svg>
           </Link>
         )}
-      </div>
+      </header>
 
       {!targetRole ? (
         <NoTargetState />
@@ -119,27 +132,41 @@ function CareerRoadmap({ path, userSkills }) {
     userSkills.map((s) => String(s).toLowerCase()),
   );
 
+  // Pre-calcula progress por milestone pra (a) identificar o "atual" (primeiro
+  // nao 100%) e (b) reusar no render sem recalcular. Milestone atual ganha
+  // .ct-pulse-cyan no marker pra dizer visualmente "voce esta aqui".
+  const milestoneProgress = path.milestones.map((m) => {
+    const skillsHave = m.skills.filter((s) =>
+      userSkillsSet.has(s.toLowerCase()),
+    );
+    const total = m.skills.length || 1;
+    const progress = Math.round((skillsHave.length / total) * 100);
+    return { skillsHave, progress, total };
+  });
+  const currentIdx = milestoneProgress.findIndex((mp) => mp.progress < 100);
+
   return (
     <div className="ct-career-roadmap">
       <header className="ct-career-roadmap-head">
         <h2>{path.targetTitle}</h2>
         <p className="ct-career-roadmap-timeline">
-          Timeline estimado: <strong>{path.timeline}</strong>
+          Timeline estimado:{" "}
+          <strong className="ct-accent-text">{path.timeline}</strong>
         </p>
       </header>
 
       <ol className="ct-career-milestones">
         {path.milestones.map((m, i) => {
-          const skillsHave = m.skills.filter((s) =>
-            userSkillsSet.has(s.toLowerCase()),
-          );
-          const total = m.skills.length || 1;
-          const progress = Math.round((skillsHave.length / total) * 100);
+          const { skillsHave, progress } = milestoneProgress[i];
           const isLast = i === path.milestones.length - 1;
+          const isCurrent = i === currentIdx;
+          const markerClass =
+            "ct-career-milestone-marker" +
+            (isCurrent ? " ct-pulse-cyan" : "");
 
           return (
             <li key={m.order} className="ct-career-milestone">
-              <div className="ct-career-milestone-marker">
+              <div className={markerClass}>
                 <span className="ct-career-milestone-num" aria-hidden="true">
                   {m.order}
                 </span>
@@ -149,7 +176,8 @@ function CareerRoadmap({ path, userSkills }) {
                 <header className="ct-career-milestone-header">
                   <h3>{m.title}</h3>
                   <span className="ct-career-milestone-duration">
-                    {m.durationWeeks} semanas
+                    <span className="ct-accent-text">{m.durationWeeks}</span>{" "}
+                    semanas
                   </span>
                 </header>
 

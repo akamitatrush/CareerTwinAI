@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { searchJobs } from "@/lib/jobs";
 import { extractSkills, SKILLS } from "@/lib/skills-taxonomy";
 import { suggestCoursesForSkill } from "@/lib/knowledge/course-retrieval";
+import DashboardHighlightBanner from "@/components/DashboardHighlightBanner";
 import GapsKpiStrip from "./GapsKpiStrip";
 import SkillMap from "./SkillMap";
 import RequirementsFrequency from "./RequirementsFrequency";
@@ -134,6 +135,8 @@ export default async function GapsPage() {
   const snapshot = data.latestSnapshot;
   const gaps = Array.isArray(snapshot?.gaps) ? snapshot.gaps : [];
   const hasGaps = gaps.length > 0;
+  const completedCount = gaps.filter((g) => g.completedAt).length;
+  const openCount = gaps.length - completedCount;
 
   // Pre-calcula cursos por gap pra renderizar inline em cada microacao
   // (em vez de uma secao "Cursos sugeridos" separada no final, que perdia
@@ -154,13 +157,41 @@ export default async function GapsPage() {
 
   return (
     <main id="main-content" className="app-container">
-      <div className="ct-gaps-header">
-        <div>
-          <h1 className="ct-gaps-title">Análise de lacunas</h1>
-          <p className="ct-gaps-sub">
-            Três atos: <strong>onde você está</strong>,{" "}
-            <strong>o que falta</strong> e <strong>o que fazer</strong>.
+      <header className="ct-page-header">
+        <div className="ct-page-header-icon" aria-hidden="true">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 3l3 12 4-8 4 6 7-13" />
+          </svg>
+        </div>
+        <div className="ct-page-header-content">
+          <div className="ct-page-header-eyebrow">DIAGNÓSTICO · LACUNAS</div>
+          <h1 className="ct-page-header-title">Análise de lacunas</h1>
+          <p className="ct-page-header-sub">
+            Identificamos o que falta entre seu perfil atual e o cargo-alvo.
+            Cada gap vem com microação acionável.
           </p>
+          {hasGaps && (
+            <div className="ct-page-header-meta">
+              <span>
+                <strong className="ct-accent-text">{gaps.length}</strong>{" "}
+                {gaps.length === 1 ? "gap" : "gaps"}
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>
+                <strong className="ct-accent-text">{completedCount}</strong>{" "}
+                {completedCount === 1 ? "concluído" : "concluídos"}
+              </span>
+            </div>
+          )}
         </div>
         {data.profile?.targetRole && (
           <Link
@@ -186,7 +217,17 @@ export default async function GapsPage() {
             </svg>
           </Link>
         )}
-      </div>
+      </header>
+
+      {/* Highlight banner: convida a recalcular quando o user ja fez progresso
+          mas ainda tem gaps abertos. So aparece nesse cenario — empty/no-target
+          tem CTAs proprios; "tudo feito" nao precisa de empuxo. */}
+      {hasGaps && completedCount > 0 && openCount > 0 && (
+        <DashboardHighlightBanner
+          variant="microacao"
+          count={completedCount}
+        />
+      )}
 
       {data.noTarget ? (
         <NoTargetState />
@@ -203,64 +244,70 @@ export default async function GapsPage() {
 
           {/* Ato 2 — O que falta */}
           {data.summary && data.summary.totalJobs > 0 && (
-            <section className="ct-gaps-act ct-gaps-act-2" aria-labelledby="gaps-act-2">
-              <header className="ct-gaps-act-head">
-                <span className="ct-gaps-act-num" aria-hidden="true">
-                  2
-                </span>
-                <div>
-                  <h2 id="gaps-act-2" className="ct-gaps-act-title">
-                    O que falta
-                  </h2>
-                  <p className="ct-gaps-act-sub">
-                    Lado a lado: suas habilidades cruzadas com o mercado e o
-                    que aparece mais nas vagas reais.
-                  </p>
+            <>
+              <hr className="ct-section-divider" />
+              <section className="ct-gaps-act ct-gaps-act-2" aria-labelledby="gaps-act-2">
+                <header className="ct-gaps-act-head">
+                  <span className="ct-gaps-act-num" aria-hidden="true">
+                    2
+                  </span>
+                  <div>
+                    <h2 id="gaps-act-2" className="ct-gaps-act-title">
+                      O que falta
+                    </h2>
+                    <p className="ct-gaps-act-sub">
+                      Lado a lado: suas habilidades cruzadas com o mercado e o
+                      que aparece mais nas vagas reais.
+                    </p>
+                  </div>
+                </header>
+                <div className="ct-gaps-act-2-cols">
+                  <SkillMap
+                    skills={data.profile?.skills || []}
+                    requirementSet={data.requirementSet}
+                    canonicalSet={data.canonicalSet}
+                  />
+                  <RequirementsFrequency
+                    requirements={data.requirements}
+                    isIllustrative={data.summary.isIllustrative}
+                    limit={8}
+                  />
                 </div>
-              </header>
-              <div className="ct-gaps-act-2-cols">
-                <SkillMap
-                  skills={data.profile?.skills || []}
-                  requirementSet={data.requirementSet}
-                  canonicalSet={data.canonicalSet}
-                />
-                <RequirementsFrequency
-                  requirements={data.requirements}
-                  isIllustrative={data.summary.isIllustrative}
-                  limit={8}
-                />
-              </div>
-            </section>
+              </section>
+            </>
           )}
 
           {/* Ato 3 — O que fazer */}
           {hasGaps && (
-            <section className="ct-gaps-act ct-gaps-act-3" aria-labelledby="gaps-act-3">
-              <header className="ct-gaps-act-head">
-                <span className="ct-gaps-act-num" aria-hidden="true">
-                  3
-                </span>
-                <div>
-                  <h2 id="gaps-act-3" className="ct-gaps-act-title">
-                    O que fazer
-                  </h2>
-                  <p className="ct-gaps-act-sub">
-                    Microações priorizadas por impacto no seu score. Cada uma
-                    sugere cursos pra fechar a lacuna.
-                  </p>
+            <>
+              <hr className="ct-section-divider" />
+              <section className="ct-gaps-act ct-gaps-act-3" aria-labelledby="gaps-act-3">
+                <header className="ct-gaps-act-head">
+                  <span className="ct-gaps-act-num" aria-hidden="true">
+                    3
+                  </span>
+                  <div>
+                    <h2 id="gaps-act-3" className="ct-gaps-act-title">
+                      O que fazer
+                    </h2>
+                    <p className="ct-gaps-act-sub">
+                      Microações priorizadas por impacto no seu score. Cada uma
+                      sugere cursos pra fechar a lacuna.
+                    </p>
+                  </div>
+                </header>
+                <div className="ct-microactions-list">
+                  {sortedGaps.map((gap) => (
+                    <MicroactionCard
+                      key={gap.id}
+                      gap={gap}
+                      courses={coursesByGapId.get(gap.id) || []}
+                      priority={gap.id === firstPendingId ? "top" : null}
+                    />
+                  ))}
                 </div>
-              </header>
-              <div className="ct-microactions-list">
-                {sortedGaps.map((gap) => (
-                  <MicroactionCard
-                    key={gap.id}
-                    gap={gap}
-                    courses={coursesByGapId.get(gap.id) || []}
-                    priority={gap.id === firstPendingId ? "top" : null}
-                  />
-                ))}
-              </div>
-            </section>
+              </section>
+            </>
           )}
         </>
       )}

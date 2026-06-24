@@ -28,15 +28,8 @@ export default async function OportunidadesPage() {
   if (!profile?.targetRole || !latestSnapshot) {
     return (
       <main id="main-content" className="app-container">
-        <div className="ct-gaps-header">
-          <div>
-            <h1 className="ct-gaps-title">Radar de vagas</h1>
-            <p className="ct-gaps-sub">
-              Vagas reais ordenadas pela sua aderência — com o porquê de cada match.
-            </p>
-          </div>
-        </div>
-        <div className="ct-dash-empty">
+        <PageHeader />
+        <div className="ct-empty-state-v2">
           <h2>Sem diagnóstico ainda</h2>
           <p>
             Faça um diagnóstico no <Link href="/dashboard">seu dashboard</Link> pra
@@ -58,15 +51,66 @@ export default async function OportunidadesPage() {
 
   return (
     <main id="main-content" className="app-container">
-      <div className="ct-gaps-header">
-        <div>
-          <h1 className="ct-gaps-title">Radar de vagas</h1>
-          <p className="ct-gaps-sub">
-            Vagas reais ordenadas pela sua aderência — com o porquê de cada match.
-          </p>
-        </div>
-      </div>
+      <PageHeader targetRole={profile.targetRole} />
       <RadarClient initial={initialData} />
     </main>
+  );
+}
+
+// Header padrao da pagina — ct-page-header com icone radar, eyebrow, title,
+// sub e (quando ha targetRole) o target pill. Extraido pra evitar duplicacao
+// entre o caminho "sem diagnostico" e o caminho normal.
+function PageHeader({ targetRole }) {
+  return (
+    <header className="ct-page-header">
+      <div className="ct-page-header-icon" aria-hidden="true">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="12" cy="12" r="5" />
+          <circle cx="12" cy="12" r="1.5" />
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3" />
+        </svg>
+      </div>
+      <div className="ct-page-header-content">
+        <div className="ct-page-header-eyebrow">RADAR · OPORTUNIDADES</div>
+        <h1 className="ct-page-header-title">Radar de vagas</h1>
+        <p className="ct-page-header-sub">
+          Vagas reais matched ao seu perfil. Match em %, transparente.
+        </p>
+      </div>
+      {targetRole && (
+        <Link
+          href="/conta"
+          className="ct-target-pill"
+          title="Mudar cargo-alvo"
+          aria-label={`Mudar cargo-alvo, atual: ${targetRole}`}
+        >
+          <span className="ct-target-label">CARGO-ALVO</span>
+          <span className="ct-target-value">{targetRole}</span>
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </Link>
+      )}
+    </header>
   );
 }

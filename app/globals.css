@@ -5959,3 +5959,130 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   border: 0;
 }
 
+/* ============================================================
+   LEVEL 2 VISUAL REFRESH — /gaps, /oportunidades, /carreira
+   Estende sistema cyan/turquoise (tokens já em :root).
+   Foco: page-header unificado, utilitários de acento, empty
+   state v2, animação accent-pulse sutil e enhances opt-in.
+   ============================================================ */
+
+/* Page header consistente (abaixo do nav, antes do conteúdo) */
+.ct-page-header {
+  display: flex; align-items: flex-start; gap: 18px;
+  padding: 24px 28px; margin-bottom: 24px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-cyan);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  position: relative; overflow: hidden;
+}
+.ct-page-header::after {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan-glow));
+  opacity: 0.45; pointer-events: none;
+}
+.ct-page-header-icon {
+  flex: none; width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  color: #08313F; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 20px; box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);
+  position: relative; z-index: 1;
+}
+.ct-page-header-content { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.ct-page-header-eyebrow {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-cyan-deep); font-weight: 600; margin: 0 0 4px;
+}
+.ct-page-header-title {
+  font-family: var(--font-display); font-size: 26px; line-height: 1.2;
+  font-weight: 700; letter-spacing: -0.5px; color: var(--text-strong); margin: 0;
+}
+.ct-page-header-sub {
+  font-size: 14.5px; color: var(--text-muted); line-height: 1.55;
+  max-width: 60ch; margin: 6px 0 0;
+}
+.ct-page-header-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ct-page-header-meta > * {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-family: var(--font-mono, ui-monospace, monospace);
+  padding: 4px 10px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-soft);
+}
+
+@media (max-width: 640px) {
+  .ct-page-header { gap: 14px; padding: 18px; }
+  .ct-page-header-icon { width: 36px; height: 36px; font-size: 16px; border-radius: 10px; }
+  .ct-page-header-title { font-size: 20px; }
+  .ct-page-header-sub { font-size: 13.5px; }
+  .ct-page-header::after { display: none; }
+}
+
+/* Section pattern opcional — eyebrow + spacing rhythm */
+.ct-page-section { margin: 28px 0; }
+.ct-section-eyebrow {
+  display: inline-block; font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent-cyan-deep); font-weight: 600; margin: 0 0 10px;
+}
+
+/* Utilitários de acento cyan */
+.ct-accent-text { color: var(--accent-cyan-deep); font-weight: 600; }
+.ct-accent-glow { transition: box-shadow 200ms ease, color 200ms ease, transform 200ms ease; }
+.ct-accent-glow:hover { box-shadow: 0 0 0 3px var(--accent-cyan-glow); color: var(--accent-cyan-deep); }
+.ct-accent-glow:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-cyan-glow); }
+.ct-pulse-cyan { animation: ctAccentPulse 7s ease-in-out infinite; will-change: box-shadow; }
+
+@keyframes ctAccentPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-cyan-glow); }
+  50%      { box-shadow: 0 0 0 6px transparent; }
+}
+
+/* Empty state v2 — cyan accent, dashed border, ícone com glow */
+.ct-empty-state-v2 {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 14px; padding: 56px 32px;
+  background: var(--surface);
+  border: 1.5px dashed color-mix(in srgb, var(--accent-cyan-deep) 55%, var(--border));
+  border-radius: var(--radius-lg); color: var(--text-muted);
+}
+.ct-empty-state-v2 .ct-empty-state-v2-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  color: #08313F; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px; box-shadow: 0 8px 24px -6px var(--accent-cyan-glow);
+}
+.ct-empty-state-v2 .ct-empty-state-v2-title {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text); margin: 0;
+}
+.ct-empty-state-v2 .ct-empty-state-v2-desc {
+  font-size: 14px; line-height: 1.55; max-width: 46ch; margin: 0;
+}
+
+@media (max-width: 640px) {
+  .ct-empty-state-v2 { padding: 36px 18px; }
+  .ct-empty-state-v2 .ct-empty-state-v2-icon { width: 52px; height: 52px; font-size: 22px; }
+}
+
+/* Enhances opt-in em classes existentes (sem migrar nada) */
+.ct-progress-bar.ct-progress-bar-high > div,
+.ct-progress-bar > div.ct-progress-bar-high {
+  background: linear-gradient(90deg, var(--accent-cyan-deep), var(--accent-cyan));
+  box-shadow: 0 0 8px var(--accent-cyan-glow);
+}
+.ct-career-milestone-marker.completed .ct-career-milestone-num,
+.ct-career-milestone-marker.is-completed .ct-career-milestone-num,
+.ct-career-milestone.completed .ct-career-milestone-num {
+  background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  color: #08313F; box-shadow: var(--shadow-md), 0 0 0 4px var(--accent-cyan-glow);
+}
+.ct-career-roadmap-head.ct-accent-tint {
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface) 60%, var(--accent-cyan-glow) 100%);
+  border-color: color-mix(in srgb, var(--accent-cyan-deep) 30%, var(--primary-tint));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-pulse-cyan { animation: none; }
+  .ct-accent-glow { transition: none; }
+}
+
