@@ -35,6 +35,10 @@ jobs:
 
       - name: Prisma validate
         run: npx prisma validate
+        env:
+          # Prisma v6 exige DATABASE_URL mesmo pra validate offline (P1012).
+          # Valor placeholder so pra schema parser nao reclamar — nao conecta.
+          DATABASE_URL: postgres://placeholder:placeholder@localhost:5432/placeholder
 
       - name: Unit tests (vitest)
         run: npm test
