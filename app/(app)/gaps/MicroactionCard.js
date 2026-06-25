@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { safeHref } from "@/lib/url-safe";
 import { track } from "@/components/PostHogProvider";
 import { EVENTS } from "@/lib/analytics/events";
+import SrcChip from "@/components/SrcChip";
 
 /**
  * Card expandido de microacao (ato 3 da /gaps).
@@ -62,9 +63,19 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
     }
   }
 
-  // Remove citacao "[fonte: ...]" do final do "porque" (ruido visual aqui).
+  // Wave 10 — EXTRAI a fonte ("[Curriculo]"/"[Mercado]"/"[Base de Vagas]"/
+  // "[RAG]"/"[BLS]") do final do "porque" e renderiza como chip (<SrcChip>).
+  // Antes: a citacao era simplesmente removida (commit antigo: "ruido visual
+  // aqui"), quebrando o moat #1 (transparencia radical / score auditavel).
+  // Agora preservamos a fonte sem poluir o texto.
+  const porqueFonteMatch = gap.porque
+    ? gap.porque.match(/\[([^\]]+)\]\s*$/)
+    : null;
+  const porqueFonte = porqueFonteMatch
+    ? `[${porqueFonteMatch[1].trim()}]`
+    : null;
   const porqueLimpo = gap.porque
-    ? gap.porque.replace(/\s*\[(.+?)\]\s*$/, "")
+    ? gap.porque.replace(/\s*\[[^\]]+\]\s*$/, "").trim()
     : "";
 
   const impactPts = gap.impactoPontos || 4;
@@ -132,7 +143,10 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
         {porqueLimpo && (
           <div className="ct-microaction-block">
             <span className="ct-microaction-block-label">Por que importa</span>
-            <p className="ct-microaction-why">{porqueLimpo}</p>
+            <p className="ct-microaction-why">
+              {porqueLimpo}
+              <SrcChip src={porqueFonte} />
+            </p>
           </div>
         )}
 

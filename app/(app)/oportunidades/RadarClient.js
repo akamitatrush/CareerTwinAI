@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { safeHref } from "@/lib/url-safe";
+import SrcChip from "@/components/SrcChip";
 
 // Labels casam exatamente com os aliases que a rota /api/opportunities
 // normaliza (junior/jr/trainee, pleno/mid, senior/sr...). Strings vazias =
@@ -366,11 +367,21 @@ function JobCard({ job, index }) {
             </span>
           ))}
         </div>
-        {job.porque && (
-          <p className="ct-job-why">
-            {job.porque.replace(/\s*\[(.+?)\]\s*$/, "")}
-          </p>
-        )}
+        {job.porque && (() => {
+          // Wave 10 — extrai a fonte ("[Base de Vagas]"/"[Mercado]"/etc) do
+          // final do "porque" e renderiza como <SrcChip>. O fallback
+          // deterministico tambem injeta "[Base de Vagas]", entao todo card
+          // ganha chip — moat #1 (transparencia / score auditavel) preservado.
+          const m = job.porque.match(/\[([^\]]+)\]\s*$/);
+          const fonte = m ? `[${m[1].trim()}]` : null;
+          const texto = job.porque.replace(/\s*\[[^\]]+\]\s*$/, "").trim();
+          return (
+            <p className="ct-job-why">
+              {texto}
+              <SrcChip src={fonte} />
+            </p>
+          );
+        })()}
         <div className="ct-job-actions">
           {/* safeHref: vagas vem de fontes externas (Lever/Greenhouse/etc),
               defesa-em-profundidade contra URLs com schemes perigosos. */}
