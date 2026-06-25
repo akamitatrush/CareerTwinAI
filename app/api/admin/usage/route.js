@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { isOwnerEmail } from "@/lib/billing/enforce";
+import { isAdminEmail } from "@/lib/admin-access";
 
 // GET /api/admin/usage — visao de uso do produto. Owner-only (gated por
 // OWNER_EMAILS). Retorna contagens + atividade recente dos ultimos 14 dias.
@@ -26,7 +26,7 @@ export async function GET() {
   if (!session?.user?.email) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (!isOwnerEmail(session.user.email)) {
+  if (!isAdminEmail(session.user.email)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

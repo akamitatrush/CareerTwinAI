@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { isOwnerEmail } from "@/lib/billing/enforce";
+import { isAdminEmail } from "@/lib/admin-access";
 
 // Pagina /admin — visao de uso pra owners. Mesma logica do /api/admin/usage
 // mas SSR direto (sem fetch publico). Owner-only via OWNER_EMAILS env.
@@ -44,7 +44,7 @@ function fmtRelative(d) {
 export default async function AdminPage() {
   const session = await auth();
   if (!session?.user?.email) redirect("/entrar");
-  if (!isOwnerEmail(session.user.email)) redirect("/dashboard");
+  if (!isAdminEmail(session.user.email)) redirect("/dashboard");
 
   const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
@@ -122,8 +122,8 @@ export default async function AdminPage() {
           <div className="ct-page-header-eyebrow">ADMIN · USO DO PRODUTO</div>
           <h1 className="ct-page-header-title">Quem testou e o que fizeram</h1>
           <p className="ct-page-header-sub">
-            Visão de uso dos owners autorizados (OWNER_EMAILS). Total de usuários
-            do produto + atividade dos teus convidados. Apenas você vê isso.
+            Visão de uso da equipe autorizada (OWNER_EMAILS) + total do produto.
+            Acesso restrito por ADMIN_EMAILS — apenas você vê isso.
           </p>
         </div>
       </header>
