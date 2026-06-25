@@ -23,6 +23,21 @@ const NAV = [
     iconPath: "M21 21l-6-6M10 17a7 7 0 110-14 7 7 0 010 14z",
   },
   {
+    href: "/concursos",
+    label: "Concursos",
+    iconPath: "M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z",
+  },
+  {
+    href: "/estagios",
+    label: "Estágios",
+    iconPath: "M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M3 7h18l-1 13H4z",
+  },
+  {
+    href: "/funil",
+    label: "Funil de busca",
+    iconPath: "M3 5h18l-7 9v6l-4-2v-4z",
+  },
+  {
     // Roadmap visual de carreira (feature #5 do STRATEGY_ROADMAP, MVP
     // deterministico). Fica antes do /plano porque o "plano de carreira"
     // e a visao macro (12-18 meses), e o /plano e tactico (proximas semanas).
