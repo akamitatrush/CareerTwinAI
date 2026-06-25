@@ -42,9 +42,15 @@
   --site-accent: var(--accent-cyan);
   --site-accent-deep: var(--accent-cyan-deep);
   --site-accent-glow: var(--accent-cyan-glow);
+  --site-accent-on: #08313F;  /* texto sobre o accent (CTA primary). Light/dark: teal escuro sobre cyan. */
   --site-accent-magenta: var(--accent-magenta);
   --site-mesh-cyan: rgba(112, 255, 221, 0.10);
   --site-mesh-magenta: rgba(185, 36, 255, 0.08);
+
+  /* Tokens compartilhados app+site para texto sobre fundos accent (Wave 7/8 polish).
+     Light/dark: teal escuro sobre cyan; noir: preto puro sobre lime (Cloudwalk). */
+  --accent-on-cyan: #08313F;
+  --on-primary: #FFFFFF;
   --site-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
   --site-shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(112, 255, 221, 0.25) inset;
 
@@ -318,9 +324,14 @@
   --site-accent: var(--accent-cyan);
   --site-accent-deep: var(--accent-cyan-deep);
   --site-accent-glow: var(--accent-cyan-glow);
+  --site-accent-on: #000000;  /* noir: PRETO PURO sobre lime (Cloudwalk-style, alto contraste). */
   --site-accent-magenta: #FAFAFA;
   --site-mesh-cyan: rgba(194, 245, 66, 0.04);
   --site-mesh-magenta: rgba(255, 255, 255, 0.02);
+
+  /* Override pra noir — texto sobre lime accent precisa ser preto puro */
+  --accent-on-cyan: #000000;
+  --on-primary: #000000;  /* noir: --primary virou #FAFAFA (branco), entao texto sobre primary eh preto */
   --site-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   --site-shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.10) inset;
 
@@ -6342,7 +6353,7 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   justify-content: center;
   gap: 8px;
   background: linear-gradient(135deg, var(--site-accent) 0%, var(--site-accent-deep) 100%);
-  color: #08313F;
+  color: var(--site-accent-on, #08313F);
   padding: 16px 32px;
   border-radius: var(--radius-pill);
   font-weight: 600;
@@ -6355,12 +6366,12 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   transition: transform 200ms var(--ease-out-quart),
               box-shadow 200ms var(--ease-out-quart),
               filter 200ms var(--ease-out-quart);
-  box-shadow: 0 8px 24px rgba(112, 255, 221, 0.20);
+  box-shadow: 0 8px 24px var(--site-accent-glow);
 }
 
 .site-btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 32px rgba(112, 255, 221, 0.32);
+  box-shadow: 0 12px 32px var(--site-accent-glow);
   filter: brightness(1.04);
 }
 
