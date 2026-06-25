@@ -78,7 +78,7 @@ export default function SiteCursorGlow() {
         height: 600,
         borderRadius: "50%",
         background:
-          "radial-gradient(circle, rgba(112,255,221,0.10), rgba(112,255,221,0.04) 35%, transparent 70%)",
+          "radial-gradient(circle, var(--site-accent-glow), color-mix(in srgb, var(--site-accent-glow) 40%, transparent) 35%, transparent 70%)",
         pointerEvents: "none",
         zIndex: 1,
         mixBlendMode: "screen",

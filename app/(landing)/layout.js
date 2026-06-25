@@ -35,8 +35,8 @@ export default function SiteLayout({ children }) {
     <div
       data-site-root
       style={{
-        background: "#0A0A0E",
-        color: "#FAFAFC",
+        background: "var(--site-bg)",
+        color: "var(--site-fg)",
         minHeight: "100vh",
         position: "relative",
         overflowX: "hidden",

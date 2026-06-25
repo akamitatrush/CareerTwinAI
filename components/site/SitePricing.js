@@ -107,7 +107,7 @@ export default function SitePricing() {
               textTransform: "uppercase",
               letterSpacing: "0.18em",
               fontSize: 11,
-              color: "#70FFDD",
+              color: "var(--site-accent)",
               margin: "0 0 20px 0",
             }}
           >
@@ -120,18 +120,18 @@ export default function SitePricing() {
               lineHeight: 1.05,
               letterSpacing: "-0.025em",
               fontWeight: 700,
-              color: "#FAFAFC",
+              color: "var(--site-fg)",
               margin: "0 0 24px",
             }}
           >
             Simples,{" "}
-            <span style={{ color: "#A0A0AB" }}>sem letras miúdas.</span>
+            <span style={{ color: "var(--site-fg-muted)" }}>sem letras miúdas.</span>
           </h2>
           <p
             style={{
               fontSize: "clamp(16px, 1.4vw, 19px)",
               lineHeight: 1.6,
-              color: "#A0A0AB",
+              color: "var(--site-fg-muted)",
               margin: 0,
             }}
           >
@@ -155,17 +155,17 @@ export default function SitePricing() {
               style={{
                 position: "relative",
                 background: t.highlight
-                  ? "linear-gradient(160deg, rgba(112,255,221,0.06) 0%, rgba(255,255,255,0.03) 100%)"
-                  : "rgba(255,255,255,0.025)",
+                  ? "linear-gradient(160deg, var(--site-accent-glow) 0%, var(--site-card-bg) 100%)"
+                  : "var(--site-card-bg)",
                 border: t.highlight
-                  ? "1px solid rgba(112,255,221,0.30)"
-                  : "1px solid rgba(255,255,255,0.07)",
+                  ? "1px solid var(--site-accent)"
+                  : "1px solid var(--site-border)",
                 borderRadius: 24,
                 padding: "40px 32px",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
+                backdropFilter: "blur(var(--site-glass-blur))",
+                WebkitBackdropFilter: "blur(var(--site-glass-blur))",
                 boxShadow: t.highlight
-                  ? "0 0 60px rgba(112,255,221,0.10), 0 0 0 1px rgba(112,255,221,0.08) inset"
+                  ? "0 0 60px var(--site-accent-glow), 0 0 0 1px var(--site-accent-glow) inset"
                   : "none",
                 display: "flex",
                 flexDirection: "column",
@@ -182,8 +182,8 @@ export default function SitePricing() {
                     fontSize: 10,
                     textTransform: "uppercase",
                     letterSpacing: "0.16em",
-                    color: "#0A0A0E",
-                    background: "#70FFDD",
+                    color: "var(--site-bg)",
+                    background: "var(--site-accent)",
                     padding: "4px 10px",
                     borderRadius: 999,
                     fontWeight: 600,
@@ -202,9 +202,9 @@ export default function SitePricing() {
                     fontSize: 10,
                     textTransform: "uppercase",
                     letterSpacing: "0.16em",
-                    color: "#A0A0AB",
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.10)",
+                    color: "var(--site-fg-muted)",
+                    background: "var(--site-card-bg)",
+                    border: "1px solid var(--site-border-strong)",
                     padding: "4px 10px",
                     borderRadius: 999,
                   }}
@@ -219,7 +219,7 @@ export default function SitePricing() {
                     fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
                     fontSize: 22,
                     fontWeight: 600,
-                    color: "#FAFAFC",
+                    color: "var(--site-fg)",
                     margin: "0 0 12px",
                   }}
                 >
@@ -233,7 +233,7 @@ export default function SitePricing() {
                       lineHeight: 1,
                       letterSpacing: "-0.03em",
                       fontWeight: 700,
-                      color: "#FAFAFC",
+                      color: "var(--site-fg)",
                     }}
                   >
                     {t.price}
@@ -241,14 +241,14 @@ export default function SitePricing() {
                   <span
                     style={{
                       fontSize: 14,
-                      color: "#6B6B7B",
+                      color: "var(--site-fg-dim)",
                       fontWeight: 500,
                     }}
                   >
                     {t.period}
                   </span>
                 </div>
-                <p style={{ fontSize: 14, color: "#A0A0AB", lineHeight: 1.5, margin: 0 }}>
+                <p style={{ fontSize: 14, color: "var(--site-fg-muted)", lineHeight: 1.5, margin: 0 }}>
                   {t.description}
                 </p>
               </div>
@@ -262,7 +262,7 @@ export default function SitePricing() {
                       alignItems: "flex-start",
                       gap: 10,
                       fontSize: 14,
-                      color: "#A0A0AB",
+                      color: "var(--site-fg-muted)",
                       lineHeight: 1.45,
                     }}
                   >
@@ -271,7 +271,7 @@ export default function SitePricing() {
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke={t.highlight ? "#70FFDD" : "#A0A0AB"}
+                      stroke={t.highlight ? "var(--site-accent)" : "var(--site-fg-muted)"}
                       strokeWidth="2.4"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -294,14 +294,14 @@ export default function SitePricing() {
                   padding: "14px 24px",
                   borderRadius: 999,
                   marginTop: "auto",
-                  background: t.highlight ? "#70FFDD" : "rgba(255,255,255,0.05)",
-                  color: t.highlight ? "#0A0A0E" : "#FAFAFC",
+                  background: t.highlight ? "var(--site-accent)" : "var(--site-card-bg)",
+                  color: t.highlight ? "var(--site-bg)" : "var(--site-fg)",
                   fontWeight: 600,
                   fontSize: 14,
                   textDecoration: "none",
                   border: t.highlight
-                    ? "1px solid #70FFDD"
-                    : "1px solid rgba(255,255,255,0.12)",
+                    ? "1px solid var(--site-accent)"
+                    : "1px solid var(--site-border-strong)",
                   textAlign: "center",
                   transition: "transform 200ms ease",
                 }}
@@ -316,7 +316,7 @@ export default function SitePricing() {
           style={{
             textAlign: "center",
             fontSize: 13,
-            color: "#6B6B7B",
+            color: "var(--site-fg-dim)",
             marginTop: 40,
             maxWidth: 600,
             margin: "40px auto 0",

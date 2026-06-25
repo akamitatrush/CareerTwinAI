@@ -22,7 +22,7 @@ const FEATURES = [
         <circle cx="20" cy="8" r="1.2" fill="currentColor" stroke="none" />
       </svg>
     ),
-    accent: "#70FFDD",
+    accent: "cyan",
   },
   {
     title: "RAG curado BR",
@@ -35,7 +35,7 @@ const FEATURES = [
         <path d="M8 9h7M8 13h5" />
       </svg>
     ),
-    accent: "#70FFDD",
+    accent: "cyan",
   },
   {
     title: "Modo experimentar",
@@ -47,7 +47,7 @@ const FEATURES = [
         <path d="M12 7v5l3 2" />
       </svg>
     ),
-    accent: "#B924FF",
+    accent: "magenta",
   },
   {
     title: "LGPD by-design",
@@ -59,7 +59,7 @@ const FEATURES = [
         <path d="M9 12l2 2 4-4" />
       </svg>
     ),
-    accent: "#70FFDD",
+    accent: "cyan",
   },
   {
     title: "Streaming SSE",
@@ -71,7 +71,7 @@ const FEATURES = [
         <path d="M4 21h16" />
       </svg>
     ),
-    accent: "#B924FF",
+    accent: "magenta",
   },
   {
     title: "Marketplace neutro",
@@ -84,9 +84,18 @@ const FEATURES = [
         <path d="M3 17l9 4 9-4" />
       </svg>
     ),
-    accent: "#70FFDD",
+    accent: "cyan",
   },
 ];
+
+// Resolve accent key pra token CSS — assim a paleta segue o tema (noir
+// converte magenta em branco neutro automaticamente via tokens).
+function accentColor(key) {
+  return key === "magenta" ? "var(--site-accent-magenta)" : "var(--site-accent)";
+}
+function accentMesh(key) {
+  return key === "magenta" ? "var(--site-mesh-magenta)" : "var(--site-mesh-cyan)";
+}
 
 export default function SiteFeatures() {
   const gridRef = useRef(null);
@@ -148,7 +157,7 @@ export default function SiteFeatures() {
               textTransform: "uppercase",
               letterSpacing: "0.18em",
               fontSize: 11,
-              color: "#70FFDD",
+              color: "var(--site-accent)",
               margin: "0 0 20px 0",
             }}
           >
@@ -162,24 +171,24 @@ export default function SiteFeatures() {
               lineHeight: 1.05,
               letterSpacing: "-0.025em",
               fontWeight: 700,
-              color: "#FAFAFC",
+              color: "var(--site-fg)",
               margin: "0 0 24px",
             }}
           >
             Tudo o que outras ferramentas escondem,{" "}
-            <span style={{ color: "#A0A0AB" }}>nós deixamos auditável.</span>
+            <span style={{ color: "var(--site-fg-muted)" }}>nós deixamos auditável.</span>
           </h2>
           <p
             className="site-body-lg"
             style={{
               fontSize: "clamp(16px, 1.4vw, 20px)",
               lineHeight: 1.55,
-              color: "#A0A0AB",
+              color: "var(--site-fg-muted)",
               margin: 0,
             }}
           >
             Cada decisão técnica do CareerTwin existe pra responder uma pergunta
-            difícil de quem usa: <em style={{ color: "#FAFAFC", fontStyle: "normal" }}>por quê</em>?
+            difícil de quem usa: <em style={{ color: "var(--site-fg)", fontStyle: "normal" }}>por quê</em>?
           </p>
         </header>
 
@@ -199,22 +208,22 @@ export default function SiteFeatures() {
               className="site-card-glass"
               style={{
                 position: "relative",
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.07)",
+                background: "var(--site-card-bg)",
+                border: "1px solid var(--site-border)",
                 borderRadius: 20,
                 padding: 32,
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
+                backdropFilter: "blur(var(--site-glass-blur))",
+                WebkitBackdropFilter: "blur(var(--site-glass-blur))",
                 overflow: "hidden",
                 transition: "transform 300ms ease, border-color 300ms ease, background 300ms ease, opacity 700ms ease",
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.14)";
-                e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                e.currentTarget.style.borderColor = "var(--site-border-strong)";
+                e.currentTarget.style.background = "var(--site-card-bg-hover)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
-                e.currentTarget.style.background = "rgba(255,255,255,0.03)";
+                e.currentTarget.style.borderColor = "var(--site-border)";
+                e.currentTarget.style.background = "var(--site-card-bg)";
               }}
             >
               {/* sutil halo do accent no canto */}
@@ -227,9 +236,7 @@ export default function SiteFeatures() {
                   width: 140,
                   height: 140,
                   borderRadius: "50%",
-                  background: f.accent === "#70FFDD"
-                    ? "radial-gradient(circle, rgba(112,255,221,0.10), transparent 70%)"
-                    : "radial-gradient(circle, rgba(185,36,255,0.10), transparent 70%)",
+                  background: `radial-gradient(circle, ${accentMesh(f.accent)}, transparent 70%)`,
                   pointerEvents: "none",
                 }}
               />
@@ -238,12 +245,12 @@ export default function SiteFeatures() {
                   width: 44,
                   height: 44,
                   borderRadius: 12,
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "var(--site-card-bg)",
+                  border: "1px solid var(--site-border)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: f.accent,
+                  color: accentColor(f.accent),
                   marginBottom: 24,
                 }}
               >
@@ -258,7 +265,7 @@ export default function SiteFeatures() {
                   lineHeight: 1.2,
                   letterSpacing: "-0.015em",
                   fontWeight: 600,
-                  color: "#FAFAFC",
+                  color: "var(--site-fg)",
                   margin: "0 0 12px",
                 }}
               >
@@ -268,7 +275,7 @@ export default function SiteFeatures() {
                 style={{
                   fontSize: 15,
                   lineHeight: 1.55,
-                  color: "#A0A0AB",
+                  color: "var(--site-fg-muted)",
                   margin: "0 0 18px",
                 }}
               >
@@ -278,10 +285,10 @@ export default function SiteFeatures() {
                 style={{
                   fontSize: 13,
                   lineHeight: 1.5,
-                  color: "#FAFAFC",
+                  color: "var(--site-fg)",
                   margin: 0,
                   fontStyle: "italic",
-                  borderLeft: `2px solid ${f.accent}`,
+                  borderLeft: `2px solid ${accentColor(f.accent)}`,
                   paddingLeft: 12,
                 }}
               >

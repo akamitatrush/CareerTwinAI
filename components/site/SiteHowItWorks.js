@@ -90,7 +90,7 @@ export default function SiteHowItWorks() {
         padding: "140px 24px",
         position: "relative",
         background:
-          "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.015) 50%, transparent 100%)",
+          "linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--site-fg) 2%, transparent) 50%, transparent 100%)",
       }}
     >
       <div
@@ -104,7 +104,7 @@ export default function SiteHowItWorks() {
               textTransform: "uppercase",
               letterSpacing: "0.18em",
               fontSize: 11,
-              color: "#B924FF",
+              color: "var(--site-accent-magenta)",
               margin: "0 0 20px 0",
             }}
           >
@@ -117,12 +117,12 @@ export default function SiteHowItWorks() {
               lineHeight: 1.05,
               letterSpacing: "-0.025em",
               fontWeight: 700,
-              color: "#FAFAFC",
+              color: "var(--site-fg)",
               margin: "0 0 24px",
             }}
           >
             Três passos.{" "}
-            <span style={{ color: "#A0A0AB" }}>Sem ginástica mental.</span>
+            <span style={{ color: "var(--site-fg-muted)" }}>Sem ginástica mental.</span>
           </h2>
         </header>
 
@@ -143,8 +143,8 @@ export default function SiteHowItWorks() {
                 gap: 48,
                 alignItems: "start",
                 padding: "56px 0",
-                borderTop: i === 0 ? "1px solid rgba(255,255,255,0.08)" : "none",
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                borderTop: i === 0 ? "1px solid var(--site-border)" : "none",
+                borderBottom: "1px solid var(--site-border)",
               }}
               className="site-how-step"
             >
@@ -156,7 +156,7 @@ export default function SiteHowItWorks() {
                   letterSpacing: "-0.04em",
                   fontWeight: 700,
                   color: "transparent",
-                  WebkitTextStroke: "1.5px rgba(255,255,255,0.18)",
+                  WebkitTextStroke: "1.5px var(--site-border-strong)",
                 }}
               >
                 {step.n}
@@ -169,7 +169,7 @@ export default function SiteHowItWorks() {
                     textTransform: "uppercase",
                     letterSpacing: "0.15em",
                     fontSize: 11,
-                    color: "#6B6B7B",
+                    color: "var(--site-fg-dim)",
                     margin: "0 0 14px",
                   }}
                 >
@@ -182,7 +182,7 @@ export default function SiteHowItWorks() {
                     lineHeight: 1.15,
                     letterSpacing: "-0.02em",
                     fontWeight: 600,
-                    color: "#FAFAFC",
+                    color: "var(--site-fg)",
                     margin: "0 0 16px",
                     maxWidth: "20ch",
                   }}
@@ -193,7 +193,7 @@ export default function SiteHowItWorks() {
                   style={{
                     fontSize: "clamp(15px, 1.3vw, 18px)",
                     lineHeight: 1.6,
-                    color: "#A0A0AB",
+                    color: "var(--site-fg-muted)",
                     margin: 0,
                     maxWidth: "52ch",
                   }}
@@ -205,7 +205,7 @@ export default function SiteHowItWorks() {
               <div
                 aria-hidden="true"
                 style={{
-                  color: "rgba(255,255,255,0.25)",
+                  color: "var(--site-fg-dim)",
                   justifySelf: "end",
                   width: 56,
                   height: 56,

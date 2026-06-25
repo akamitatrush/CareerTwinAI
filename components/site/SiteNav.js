@@ -30,12 +30,12 @@ export default function SiteNav() {
     zIndex: 100,
     transition: "background 220ms ease, backdrop-filter 220ms ease, border-color 220ms ease",
     background: scrolled
-      ? "rgba(10, 10, 14, 0.72)"
+      ? "color-mix(in srgb, var(--site-bg) 72%, transparent)"
       : "transparent",
     backdropFilter: scrolled ? "saturate(140%) blur(18px)" : "none",
     WebkitBackdropFilter: scrolled ? "saturate(140%) blur(18px)" : "none",
     borderBottom: scrolled
-      ? "1px solid rgba(255,255,255,0.06)"
+      ? "1px solid var(--site-border)"
       : "1px solid transparent",
   };
 
@@ -59,7 +59,7 @@ export default function SiteNav() {
             display: "inline-flex",
             alignItems: "center",
             gap: 10,
-            color: "#FAFAFC",
+            color: "var(--site-fg)",
             textDecoration: "none",
             fontWeight: 600,
             fontSize: 18,
@@ -72,8 +72,8 @@ export default function SiteNav() {
               width: 10,
               height: 10,
               borderRadius: "50%",
-              background: "#70FFDD",
-              boxShadow: "0 0 16px rgba(112,255,221,0.65)",
+              background: "var(--site-accent)",
+              boxShadow: "0 0 16px var(--site-accent-glow)",
               flexShrink: 0,
             }}
           />
@@ -126,12 +126,12 @@ export default function SiteNav() {
           style={{
             display: "none",
             background: "transparent",
-            border: "1px solid rgba(255,255,255,0.10)",
+            border: "1px solid var(--site-border-strong)",
             borderRadius: 10,
             width: 40,
             height: 40,
             cursor: "pointer",
-            color: "#FAFAFC",
+            color: "var(--site-fg)",
             alignItems: "center",
             justifyContent: "center",
           }}
@@ -152,10 +152,10 @@ export default function SiteNav() {
       {mobileOpen && (
         <div
           style={{
-            background: "rgba(10,10,14,0.96)",
+            background: "color-mix(in srgb, var(--site-bg) 96%, transparent)",
             backdropFilter: "blur(18px)",
             WebkitBackdropFilter: "blur(18px)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            borderBottom: "1px solid var(--site-border)",
             padding: "12px 24px 28px",
           }}
         >
@@ -183,7 +183,7 @@ export default function SiteNav() {
 }
 
 const navLinkStyle = {
-  color: "#A0A0AB",
+  color: "var(--site-fg-muted)",
   textDecoration: "none",
   fontSize: 14,
   fontWeight: 500,
@@ -193,11 +193,11 @@ const navLinkStyle = {
 const mobileLinkStyle = {
   display: "block",
   padding: "14px 4px",
-  color: "#FAFAFC",
+  color: "var(--site-fg)",
   textDecoration: "none",
   fontSize: 16,
   fontWeight: 500,
-  borderBottom: "1px solid rgba(255,255,255,0.05)",
+  borderBottom: "1px solid var(--site-border)",
 };
 
 // Fallbacks pro caso de globals.css ainda não ter as classes site-btn-*.
@@ -210,12 +210,12 @@ const btnPrimaryFallback = {
   justifyContent: "center",
   padding: "10px 18px",
   borderRadius: 999,
-  background: "#70FFDD",
-  color: "#0A0A0E",
+  background: "var(--site-accent)",
+  color: "var(--site-bg)",
   fontWeight: 600,
   fontSize: 14,
   textDecoration: "none",
-  border: "1px solid #70FFDD",
+  border: "1px solid var(--site-accent)",
   whiteSpace: "nowrap",
 };
 
@@ -225,11 +225,11 @@ const btnSecondaryFallback = {
   justifyContent: "center",
   padding: "10px 18px",
   borderRadius: 999,
-  background: "rgba(255,255,255,0.04)",
-  color: "#FAFAFC",
+  background: "var(--site-card-bg)",
+  color: "var(--site-fg)",
   fontWeight: 500,
   fontSize: 14,
   textDecoration: "none",
-  border: "1px solid rgba(255,255,255,0.10)",
+  border: "1px solid var(--site-border-strong)",
   whiteSpace: "nowrap",
 };

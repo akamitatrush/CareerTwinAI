@@ -37,8 +37,8 @@ export default function SiteFooter() {
       style={{
         position: "relative",
         padding: "100px 24px 48px",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
-        background: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.20) 100%)",
+        borderTop: "1px solid var(--site-border)",
+        background: "linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--site-bg) 80%, transparent) 100%)",
       }}
     >
       <div
@@ -61,7 +61,7 @@ export default function SiteFooter() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 10,
-                color: "#FAFAFC",
+                color: "var(--site-fg)",
                 textDecoration: "none",
                 fontWeight: 600,
                 fontSize: 20,
@@ -75,8 +75,8 @@ export default function SiteFooter() {
                   width: 10,
                   height: 10,
                   borderRadius: "50%",
-                  background: "#70FFDD",
-                  boxShadow: "0 0 16px rgba(112,255,221,0.55)",
+                  background: "var(--site-accent)",
+                  boxShadow: "0 0 16px var(--site-accent-glow)",
                 }}
               />
               CareerTwin
@@ -85,7 +85,7 @@ export default function SiteFooter() {
               style={{
                 fontSize: 14,
                 lineHeight: 1.55,
-                color: "#6B6B7B",
+                color: "var(--site-fg-dim)",
                 margin: 0,
                 maxWidth: "32ch",
               }}
@@ -102,7 +102,7 @@ export default function SiteFooter() {
                   textTransform: "uppercase",
                   letterSpacing: "0.16em",
                   fontSize: 11,
-                  color: "#6B6B7B",
+                  color: "var(--site-fg-dim)",
                   fontWeight: 600,
                   margin: "0 0 20px",
                 }}
@@ -139,7 +139,7 @@ export default function SiteFooter() {
             alignItems: "center",
             justifyContent: "space-between",
             paddingTop: 32,
-            borderTop: "1px solid rgba(255,255,255,0.05)",
+            borderTop: "1px solid var(--site-border)",
             gap: 24,
             flexWrap: "wrap",
           }}
@@ -147,7 +147,7 @@ export default function SiteFooter() {
           <p
             style={{
               fontSize: 13,
-              color: "#6B6B7B",
+              color: "var(--site-fg-dim)",
               margin: 0,
             }}
           >
@@ -196,7 +196,7 @@ export default function SiteFooter() {
 }
 
 const footerLinkStyle = {
-  color: "#A0A0AB",
+  color: "var(--site-fg-muted)",
   textDecoration: "none",
   fontSize: 14,
   fontWeight: 400,
@@ -207,9 +207,9 @@ const socialIconStyle = {
   width: 36,
   height: 36,
   borderRadius: "50%",
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  color: "#A0A0AB",
+  background: "var(--site-card-bg)",
+  border: "1px solid var(--site-border)",
+  color: "var(--site-fg-muted)",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",

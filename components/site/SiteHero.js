@@ -64,7 +64,7 @@ export default function SiteHero() {
           position: "absolute",
           inset: 0,
           background:
-            "radial-gradient(at 30% 20%, rgba(112,255,221,0.13), transparent 50%), radial-gradient(at 80% 60%, rgba(185,36,255,0.10), transparent 60%)",
+            "radial-gradient(at 30% 20%, var(--site-mesh-cyan), transparent 50%), radial-gradient(at 80% 60%, var(--site-mesh-magenta), transparent 60%)",
           pointerEvents: "none",
           zIndex: 0,
         }}
@@ -94,7 +94,7 @@ export default function SiteHero() {
             textTransform: "uppercase",
             letterSpacing: "0.18em",
             fontSize: 11,
-            color: "#A0A0AB",
+            color: "var(--site-fg-muted)",
             margin: "0 0 28px 0",
           }}
         >
@@ -104,10 +104,10 @@ export default function SiteHero() {
               width: 6,
               height: 6,
               borderRadius: "50%",
-              background: "#70FFDD",
+              background: "var(--site-accent)",
               marginRight: 10,
               verticalAlign: "middle",
-              boxShadow: "0 0 12px rgba(112,255,221,0.6)",
+              boxShadow: "0 0 12px var(--site-accent-glow)",
             }}
           />
           PRODUTO BR · LGPD-FIRST · AUDITÁVEL
@@ -122,7 +122,7 @@ export default function SiteHero() {
             lineHeight: 0.95,
             letterSpacing: "-0.035em",
             fontWeight: 700,
-            color: "#FAFAFC",
+            color: "var(--site-fg)",
             margin: "0 auto 32px",
             maxWidth: "16ch",
           }}
@@ -131,7 +131,7 @@ export default function SiteHero() {
           <span
             style={{
               background:
-                "linear-gradient(120deg, #70FFDD 0%, #B924FF 100%)",
+                "linear-gradient(120deg, var(--site-accent) 0%, var(--site-accent-magenta) 100%)",
               WebkitBackgroundClip: "text",
               backgroundClip: "text",
               color: "transparent",
@@ -148,7 +148,7 @@ export default function SiteHero() {
           style={{
             fontSize: "clamp(17px, 1.6vw, 22px)",
             lineHeight: 1.5,
-            color: "#A0A0AB",
+            color: "var(--site-fg-muted)",
             maxWidth: 720,
             margin: "0 auto 48px",
             fontWeight: 400,
@@ -177,13 +177,13 @@ export default function SiteHero() {
               gap: 8,
               padding: "16px 28px",
               borderRadius: 999,
-              background: "#70FFDD",
-              color: "#0A0A0E",
+              background: "var(--site-accent)",
+              color: "var(--site-bg)",
               fontWeight: 600,
               fontSize: 15,
               textDecoration: "none",
-              border: "1px solid #70FFDD",
-              boxShadow: "0 0 40px rgba(112,255,221,0.18)",
+              border: "1px solid var(--site-accent)",
+              boxShadow: "0 0 40px var(--site-accent-glow)",
               transition: "transform 200ms ease, box-shadow 200ms ease",
             }}
           >
@@ -201,12 +201,12 @@ export default function SiteHero() {
               gap: 8,
               padding: "16px 28px",
               borderRadius: 999,
-              background: "rgba(255,255,255,0.04)",
-              color: "#FAFAFC",
+              background: "var(--site-card-bg)",
+              color: "var(--site-fg)",
               fontWeight: 500,
               fontSize: 15,
               textDecoration: "none",
-              border: "1px solid rgba(255,255,255,0.10)",
+              border: "1px solid var(--site-border-strong)",
             }}
           >
             Ver como funciona
@@ -227,16 +227,16 @@ export default function SiteHero() {
           <svg viewBox="0 0 880 240" width="100%" height="auto" role="presentation">
             <defs>
               <linearGradient id="ctTraj" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#70FFDD" stopOpacity="0" />
-                <stop offset="20%" stopColor="#70FFDD" stopOpacity="0.9" />
-                <stop offset="55%" stopColor="#FAFAFC" stopOpacity="0.85" />
-                <stop offset="85%" stopColor="#B924FF" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#B924FF" stopOpacity="0" />
+                <stop offset="0%" stopColor="var(--site-accent)" stopOpacity="0" />
+                <stop offset="20%" stopColor="var(--site-accent)" stopOpacity="0.9" />
+                <stop offset="55%" stopColor="var(--site-fg)" stopOpacity="0.85" />
+                <stop offset="85%" stopColor="var(--site-accent-magenta)" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="var(--site-accent-magenta)" stopOpacity="0" />
               </linearGradient>
               <linearGradient id="ctBaseline" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.0)" />
-                <stop offset="50%" stopColor="rgba(255,255,255,0.10)" />
-                <stop offset="100%" stopColor="rgba(255,255,255,0.0)" />
+                <stop offset="0%" stopColor="var(--site-fg)" stopOpacity="0" />
+                <stop offset="50%" stopColor="var(--site-fg)" stopOpacity="0.10" />
+                <stop offset="100%" stopColor="var(--site-fg)" stopOpacity="0" />
               </linearGradient>
             </defs>
 
@@ -255,7 +255,7 @@ export default function SiteHero() {
             {/* trajetoria fantasma — "voce hoje" */}
             <path
               d="M 20 200 C 140 200, 220 195, 320 188 S 540 175, 680 168 S 820 160, 860 158"
-              stroke="rgba(255,255,255,0.12)"
+              stroke="var(--site-border-strong)"
               strokeWidth="1"
               strokeDasharray="3 4"
               fill="none"
@@ -263,11 +263,11 @@ export default function SiteHero() {
 
             {/* pontos de inflexao */}
             {[
-              { x: 20, y: 200, c: "#70FFDD" },
-              { x: 320, y: 130, c: "#FAFAFC" },
-              { x: 540, y: 70, c: "#FAFAFC" },
-              { x: 680, y: 80, c: "#FAFAFC" },
-              { x: 860, y: 40, c: "#B924FF" },
+              { x: 20, y: 200, c: "var(--site-accent)" },
+              { x: 320, y: 130, c: "var(--site-fg)" },
+              { x: 540, y: 70, c: "var(--site-fg)" },
+              { x: 680, y: 80, c: "var(--site-fg)" },
+              { x: 860, y: 40, c: "var(--site-accent-magenta)" },
             ].map((p, i) => (
               <g key={i}>
                 <circle cx={p.x} cy={p.y} r="10" fill={p.c} opacity="0.12" />
@@ -286,7 +286,7 @@ export default function SiteHero() {
           bottom: 32,
           left: "50%",
           transform: "translateX(-50%)",
-          color: "#6B6B7B",
+          color: "var(--site-fg-dim)",
           fontSize: 11,
           letterSpacing: "0.16em",
           textTransform: "uppercase",

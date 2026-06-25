@@ -87,7 +87,7 @@ export default function SiteSocialProof() {
               textTransform: "uppercase",
               letterSpacing: "0.18em",
               fontSize: 11,
-              color: "#6B6B7B",
+              color: "var(--site-fg-dim)",
             }}
           >
             Construído pelo time da
@@ -97,7 +97,7 @@ export default function SiteSocialProof() {
               fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
               fontWeight: 700,
               fontSize: 28,
-              color: "#FAFAFC",
+              color: "var(--site-fg)",
               letterSpacing: "-0.02em",
             }}
           >
@@ -112,8 +112,8 @@ export default function SiteSocialProof() {
             gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
             gap: 32,
             padding: "48px 0",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            borderTop: "1px solid var(--site-border)",
+            borderBottom: "1px solid var(--site-border)",
             marginBottom: 80,
           }}
         >
@@ -131,7 +131,7 @@ export default function SiteSocialProof() {
                   lineHeight: 1,
                   letterSpacing: "-0.03em",
                   fontWeight: 700,
-                  color: "#FAFAFC",
+                  color: "var(--site-fg)",
                   marginBottom: 12,
                 }}
               >
@@ -143,7 +143,7 @@ export default function SiteSocialProof() {
                   fontSize: 11,
                   textTransform: "uppercase",
                   letterSpacing: "0.14em",
-                  color: "#6B6B7B",
+                  color: "var(--site-fg-dim)",
                 }}
               >
                 {s.label}
@@ -170,14 +170,14 @@ export default function SiteSocialProof() {
               lineHeight: 1.35,
               letterSpacing: "-0.015em",
               fontWeight: 400,
-              color: "#FAFAFC",
+              color: "var(--site-fg)",
               margin: "0 0 24px",
             }}
           >
-            <span style={{ color: "#70FFDD" }}>“</span>
+            <span style={{ color: "var(--site-accent)" }}>“</span>
             Construímos o CareerTwin como construiríamos qualquer produto sério:
             código auditável, números reproduzíveis, dado tratado com respeito.
-            <span style={{ color: "#70FFDD" }}>”</span>
+            <span style={{ color: "var(--site-accent)" }}>”</span>
           </p>
           <footer
             style={{
@@ -185,7 +185,7 @@ export default function SiteSocialProof() {
               fontSize: 12,
               textTransform: "uppercase",
               letterSpacing: "0.16em",
-              color: "#6B6B7B",
+              color: "var(--site-fg-dim)",
             }}
           >
             — Time CareerTwin
@@ -200,7 +200,7 @@ export default function SiteSocialProof() {
               textTransform: "uppercase",
               letterSpacing: "0.18em",
               fontSize: 11,
-              color: "#6B6B7B",
+              color: "var(--site-fg-dim)",
               textAlign: "center",
               margin: "0 0 28px",
             }}
@@ -224,10 +224,10 @@ export default function SiteSocialProof() {
                   alignItems: "center",
                   gap: 10,
                   padding: "10px 18px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "var(--site-card-bg)",
+                  border: "1px solid var(--site-border)",
                   borderRadius: 999,
-                  color: "#A0A0AB",
+                  color: "var(--site-fg-muted)",
                   fontSize: 13,
                   fontWeight: 500,
                 }}
@@ -241,8 +241,8 @@ export default function SiteSocialProof() {
                     width: 22,
                     height: 22,
                     borderRadius: 6,
-                    background: "rgba(112,255,221,0.10)",
-                    color: "#70FFDD",
+                    background: "var(--site-accent-glow)",
+                    color: "var(--site-accent)",
                     fontFamily: "'JetBrains Mono', ui-monospace, monospace",
                     fontSize: 12,
                     fontWeight: 600,

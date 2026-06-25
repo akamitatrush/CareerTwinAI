@@ -88,7 +88,7 @@ export default function SiteFaq() {
               textTransform: "uppercase",
               letterSpacing: "0.18em",
               fontSize: 11,
-              color: "#B924FF",
+              color: "var(--site-accent-magenta)",
               margin: "0 0 20px 0",
             }}
           >
@@ -101,16 +101,16 @@ export default function SiteFaq() {
               lineHeight: 1.05,
               letterSpacing: "-0.025em",
               fontWeight: 700,
-              color: "#FAFAFC",
+              color: "var(--site-fg)",
               margin: "0 0 24px",
             }}
           >
             Perguntas que{" "}
-            <span style={{ color: "#A0A0AB" }}>todo mundo faz.</span>
+            <span style={{ color: "var(--site-fg-muted)" }}>todo mundo faz.</span>
           </h2>
         </header>
 
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ borderTop: "1px solid var(--site-border)" }}>
           {FAQ.map((item, i) => (
             <details
               key={item.q}
@@ -118,7 +118,7 @@ export default function SiteFaq() {
               data-idx={i}
               className="site-faq-item"
               style={{
-                borderBottom: "1px solid rgba(255,255,255,0.08)",
+                borderBottom: "1px solid var(--site-border)",
                 padding: "24px 0",
               }}
             >
@@ -135,7 +135,7 @@ export default function SiteFaq() {
                   lineHeight: 1.35,
                   fontWeight: 500,
                   letterSpacing: "-0.01em",
-                  color: "#FAFAFC",
+                  color: "var(--site-fg)",
                   padding: "8px 0",
                 }}
               >
@@ -148,11 +148,11 @@ export default function SiteFaq() {
                     width: 32,
                     height: 32,
                     borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.12)",
+                    border: "1px solid var(--site-border-strong)",
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#A0A0AB",
+                    color: "var(--site-fg-muted)",
                     transition: "transform 250ms ease, border-color 250ms ease, color 250ms ease",
                   }}
                 >
@@ -167,7 +167,7 @@ export default function SiteFaq() {
                   paddingRight: 48,
                   fontSize: 16,
                   lineHeight: 1.65,
-                  color: "#A0A0AB",
+                  color: "var(--site-fg-muted)",
                 }}
               >
                 {item.a}
@@ -180,8 +180,8 @@ export default function SiteFaq() {
           .site-faq-item summary::-webkit-details-marker { display: none; }
           .site-faq-item[open] .site-faq-icon {
             transform: rotate(180deg);
-            border-color: rgba(112,255,221,0.40);
-            color: #70FFDD;
+            border-color: var(--site-accent);
+            color: var(--site-accent);
           }
         `}</style>
       </div>
