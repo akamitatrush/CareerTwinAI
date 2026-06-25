@@ -20,19 +20,23 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { decorateUrl } from "@/lib/knowledge/course-retrieval";
+import { safeExternalUrl } from "@/lib/validators";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // strict() rejeita campos extras -- evita payload abuse (ex.: campo userId
 // fake tentando spoof, ou metadados extras tentando lotar log).
-// max 2000 chars na URL: limit comum de browsers; nenhuma URL real de curso
-// passa de ~500 chars.
+// safeExternalUrl: rejeita javascript:/data:/vbscript:/file: e demais schemes
+// nao-http(s). z.string().url() do Zod 4 aceita esses schemes, e cliente faz
+// window.location.href = decoratedUrl -- XSS via redirect se URL maliciosa
+// chegar ate aqui. max 2000 chars: limit comum de browsers; URLs reais de
+// curso passam folgadas em ~500 chars.
 const ClickSchema = z
   .object({
     courseId: z.string().min(1).max(120),
     provider: z.string().min(1).max(120),
-    url: z.string().url().max(2000),
+    url: safeExternalUrl,
   })
   .strict();
 

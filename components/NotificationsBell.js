@@ -14,6 +14,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import AchievementToast from "@/components/AchievementToast";
+import { safeHref } from "@/lib/url-safe";
 
 const EMPTY = { items: [], unreadCount: 0 };
 
@@ -308,9 +309,13 @@ export default function NotificationsBell({ compact = false }) {
                     <div className="appshell-notif-time">
                       {new Date(n.createdAt).toLocaleString("pt-BR")}
                     </div>
-                    {n.link && (
+                    {/* safeHref: defesa-em-profundidade contra javascript:/data:/
+                        vbscript:/file: que poderiam ter entrado no DB (Notification.link
+                        e populado server-side, mas se rota futura aceitar input de user
+                        sem validar, render fica seguro). Sem href safe, esconde o link. */}
+                    {n.link && safeHref(n.link) && (
                       <a
-                        href={n.link}
+                        href={safeHref(n.link)}
                         className="appshell-notif-link"
                         onClick={(e) => e.stopPropagation()}
                       >
