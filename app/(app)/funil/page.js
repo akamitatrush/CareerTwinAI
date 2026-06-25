@@ -59,7 +59,7 @@ export default async function FunilPage() {
   const hasEntries = entries.length > 0;
 
   return (
-    <main id="main-content" className="app-container">
+    <main id="main-content" className="app-container site-section-mesh">
       <header className="ct-page-header">
         <div className="ct-page-header-icon" aria-hidden="true">
           <svg
@@ -222,9 +222,8 @@ function HistoryTable({ entries }) {
         HISTORICO (ULTIMAS {entries.length} SEMANAS)
       </h2>
       <div
+        className="app-glass"
         style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           borderRadius: "var(--radius-lg)",
           overflow: "hidden",
         }}

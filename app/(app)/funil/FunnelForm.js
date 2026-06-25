@@ -108,14 +108,20 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
     <form
       onSubmit={submit}
       aria-label="Registrar numeros do funil desta semana"
+      className="app-glass"
       style={{
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
         borderRadius: "var(--radius-lg)",
         padding: 22,
         marginTop: 8,
       }}
     >
+      <style>{`
+        .ct-funnel-input:focus {
+          outline: none;
+          border-color: var(--accent-cyan) !important;
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-cyan) 22%, transparent), 0 0 18px -4px var(--accent-cyan-glow);
+        }
+      `}</style>
       <div
         style={{
           display: "flex",
@@ -216,6 +222,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
           maxLength={500}
           rows={3}
           placeholder="Ex: tentei mudar abordagem de email, foquei em empresas series B-C..."
+          className="ct-funnel-input"
           style={{
             display: "block",
             width: "100%",
@@ -229,6 +236,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
             color: "var(--text)",
             resize: "vertical",
             boxSizing: "border-box",
+            transition: "border-color 150ms ease, box-shadow 150ms ease",
           }}
         />
       </label>
@@ -274,12 +282,15 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
             padding: "10px 22px",
             border: "none",
             borderRadius: "var(--radius-sm)",
-            background: "var(--text)",
-            color: "var(--bg)",
+            background: submitting
+              ? "var(--text)"
+              : "linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-deep, var(--accent-cyan)) 100%)",
+            color: "#fff",
             fontWeight: 700,
             fontSize: 14,
             cursor: submitting ? "wait" : "pointer",
             opacity: submitting ? 0.65 : 1,
+            boxShadow: submitting ? "none" : "0 4px 16px -6px var(--accent-cyan-glow)",
           }}
         >
           {submitting ? "Salvando..." : initial ? "Atualizar numeros" : "Salvar numeros"}
@@ -324,6 +335,7 @@ function NumberField({ label, hint, value, onChange, max }) {
         step={1}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        className="ct-funnel-input"
         style={{
           width: "100%",
           padding: "10px 12px",
@@ -337,6 +349,7 @@ function NumberField({ label, hint, value, onChange, max }) {
           fontFamily: "var(--font-display)",
           textAlign: "right",
           boxSizing: "border-box",
+          transition: "border-color 150ms ease, box-shadow 150ms ease",
         }}
       />
     </label>

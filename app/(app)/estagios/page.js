@@ -124,20 +124,23 @@ function DicaBanner() {
 
 function FiltersForm({ uf, area, modalidade, query }) {
   // Form GET nativo — submit re-renderiza com novos params na URL.
+  const hasActive = Boolean(uf || area || modalidade || query);
+  const activeBorder = `1px solid var(--accent-cyan)`;
+  const idleBorder = `1px solid var(--border)`;
   return (
     <form
       method="get"
       action="/estagios"
+      className="app-glass"
       style={{
         display: "flex",
         flexWrap: "wrap",
         gap: 10,
         alignItems: "flex-end",
         padding: "16px 20px",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
         borderRadius: "var(--radius-lg)",
         marginBottom: 18,
+        boxShadow: hasActive ? "0 0 0 1px var(--accent-cyan), 0 6px 24px -10px var(--accent-cyan-glow)" : undefined,
       }}
     >
       <label
@@ -156,12 +159,14 @@ function FiltersForm({ uf, area, modalidade, query }) {
           defaultValue={uf || ""}
           style={{
             background: "var(--surface)",
-            border: "1px solid var(--border)",
+            border: uf ? activeBorder : idleBorder,
             borderRadius: 8,
             padding: "8px 10px",
             fontSize: 14,
             color: "var(--text)",
             minWidth: 110,
+            outlineColor: "var(--accent-cyan)",
+            boxShadow: uf ? "0 0 12px -4px var(--accent-cyan-glow)" : undefined,
           }}
         >
           <option value="">Todos</option>
@@ -194,11 +199,13 @@ function FiltersForm({ uf, area, modalidade, query }) {
           list="estagios-areas"
           style={{
             background: "var(--surface)",
-            border: "1px solid var(--border)",
+            border: area ? activeBorder : idleBorder,
             borderRadius: 8,
             padding: "8px 10px",
             fontSize: 14,
             color: "var(--text)",
+            outlineColor: "var(--accent-cyan)",
+            boxShadow: area ? "0 0 12px -4px var(--accent-cyan-glow)" : undefined,
           }}
         />
         <datalist id="estagios-areas">
@@ -230,11 +237,13 @@ function FiltersForm({ uf, area, modalidade, query }) {
           maxLength={120}
           style={{
             background: "var(--surface)",
-            border: "1px solid var(--border)",
+            border: query ? activeBorder : idleBorder,
             borderRadius: 8,
             padding: "8px 10px",
             fontSize: 14,
             color: "var(--text)",
+            outlineColor: "var(--accent-cyan)",
+            boxShadow: query ? "0 0 12px -4px var(--accent-cyan-glow)" : undefined,
           }}
         />
       </label>
@@ -287,7 +296,7 @@ function FiltersForm({ uf, area, modalidade, query }) {
       <button
         type="submit"
         style={{
-          background: "var(--primary)",
+          background: "linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-deep, var(--primary)) 100%)",
           color: "#fff",
           border: 0,
           borderRadius: 8,
@@ -295,6 +304,7 @@ function FiltersForm({ uf, area, modalidade, query }) {
           fontSize: 14,
           fontWeight: 700,
           cursor: "pointer",
+          boxShadow: "0 4px 16px -6px var(--accent-cyan-glow)",
         }}
       >
         Filtrar
@@ -322,10 +332,11 @@ function EstagioCard({ e }) {
   const bolsa = fmtBolsa(e.bolsa);
   return (
     <article
-      className="ct-job-card"
+      className="ct-job-card app-glass ct-glass-hover"
       style={{
         // 2-coluna sem logo (estagio raramente tem brand logo).
         gridTemplateColumns: "1fr auto",
+        transition: "transform 200ms ease, box-shadow 200ms ease",
       }}
     >
       <div className="ct-job-info">
@@ -336,7 +347,7 @@ function EstagioCard({ e }) {
           {e.modalidade && (
             <span
               className="ct-job-chip"
-              style={{ background: "var(--primary-soft)", color: "var(--primary)" }}
+              style={{ background: "color-mix(in srgb, var(--accent-cyan) 14%, transparent)", color: "var(--accent-cyan)", border: "1px solid color-mix(in srgb, var(--accent-cyan) 35%, transparent)" }}
             >
               {e.modalidade}
             </span>
@@ -455,7 +466,13 @@ export default async function EstagiosPage({ searchParams }) {
   }
 
   return (
-    <main id="main-content" className="app-container">
+    <main id="main-content" className="app-container site-section-mesh">
+      <style>{`
+        .ct-glass-hover:hover {
+          transform: scale(1.01);
+          box-shadow: 0 8px 32px -10px var(--accent-cyan-glow), 0 0 0 1px color-mix(in srgb, var(--accent-cyan) 45%, transparent);
+        }
+      `}</style>
       <PageHeader total={items.length} />
 
       <DicaBanner />

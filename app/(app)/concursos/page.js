@@ -86,20 +86,23 @@ function PageHeader() {
 function FiltersForm({ uf, nivel, area }) {
   // Form GET nativo: cada submit re-renderiza a página com os novos params
   // na query string. Sem client JS, sem state. Acessivel por default.
+  const hasActive = Boolean(uf || nivel || area);
+  const activeBorder = `1px solid var(--accent-cyan)`;
+  const idleBorder = `1px solid var(--border)`;
   return (
     <form
       method="get"
       action="/concursos"
+      className="app-glass"
       style={{
         display: "flex",
         flexWrap: "wrap",
         gap: 10,
         alignItems: "flex-end",
         padding: "16px 20px",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
         borderRadius: "var(--radius-lg)",
         marginBottom: 18,
+        boxShadow: hasActive ? "0 0 0 1px var(--accent-cyan), 0 6px 24px -10px var(--accent-cyan-glow)" : undefined,
       }}
     >
       <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, fontWeight: 600, color: "var(--text-soft)" }}>
@@ -109,12 +112,14 @@ function FiltersForm({ uf, nivel, area }) {
           defaultValue={uf || ""}
           style={{
             background: "var(--surface)",
-            border: "1px solid var(--border)",
+            border: uf ? activeBorder : idleBorder,
             borderRadius: 8,
             padding: "8px 10px",
             fontSize: 14,
             color: "var(--text)",
             minWidth: 110,
+            outlineColor: "var(--accent-cyan)",
+            boxShadow: uf ? "0 0 12px -4px var(--accent-cyan-glow)" : undefined,
           }}
         >
           <option value="">Todos</option>
@@ -131,12 +136,14 @@ function FiltersForm({ uf, nivel, area }) {
           defaultValue={nivel || ""}
           style={{
             background: "var(--surface)",
-            border: "1px solid var(--border)",
+            border: nivel ? activeBorder : idleBorder,
             borderRadius: 8,
             padding: "8px 10px",
             fontSize: 14,
             color: "var(--text)",
             minWidth: 140,
+            outlineColor: "var(--accent-cyan)",
+            boxShadow: nivel ? "0 0 12px -4px var(--accent-cyan-glow)" : undefined,
           }}
         >
           <option value="">Todos</option>
@@ -156,11 +163,13 @@ function FiltersForm({ uf, nivel, area }) {
           maxLength={120}
           style={{
             background: "var(--surface)",
-            border: "1px solid var(--border)",
+            border: area ? activeBorder : idleBorder,
             borderRadius: 8,
             padding: "8px 10px",
             fontSize: 14,
             color: "var(--text)",
+            outlineColor: "var(--accent-cyan)",
+            boxShadow: area ? "0 0 12px -4px var(--accent-cyan-glow)" : undefined,
           }}
         />
       </label>
@@ -168,7 +177,7 @@ function FiltersForm({ uf, nivel, area }) {
       <button
         type="submit"
         style={{
-          background: "var(--primary)",
+          background: "linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-deep, var(--primary)) 100%)",
           color: "#fff",
           border: 0,
           borderRadius: 8,
@@ -176,6 +185,7 @@ function FiltersForm({ uf, nivel, area }) {
           fontSize: 14,
           fontWeight: 700,
           cursor: "pointer",
+          boxShadow: "0 4px 16px -6px var(--accent-cyan-glow)",
         }}
       >
         Filtrar
@@ -205,10 +215,11 @@ function ConcursoCard({ c }) {
 
   return (
     <article
-      className="ct-job-card"
+      className="ct-job-card app-glass ct-glass-hover"
       style={{
         // 2-coluna sem logo (concurso não tem brand logo padronizado).
         gridTemplateColumns: "1fr auto",
+        transition: "transform 200ms ease, box-shadow 200ms ease",
       }}
     >
       <div className="ct-job-info">
@@ -217,7 +228,7 @@ function ConcursoCard({ c }) {
             {c.cargo}
           </h3>
           {c.nivel && (
-            <span className="ct-job-chip" style={{ background: "var(--primary-soft)", color: "var(--primary)" }}>
+            <span className="ct-job-chip" style={{ background: "color-mix(in srgb, var(--accent-cyan) 14%, transparent)", color: "var(--accent-cyan)", border: "1px solid color-mix(in srgb, var(--accent-cyan) 35%, transparent)" }}>
               {c.nivel}
             </span>
           )}
@@ -299,7 +310,13 @@ export default async function ConcursosPage({ searchParams }) {
   const items = await fetchConcursos({ uf, nivel, area, limit: 30 });
 
   return (
-    <main id="main-content" className="app-container">
+    <main id="main-content" className="app-container site-section-mesh">
+      <style>{`
+        .ct-glass-hover:hover {
+          transform: scale(1.01);
+          box-shadow: 0 8px 32px -10px var(--accent-cyan-glow), 0 0 0 1px color-mix(in srgb, var(--accent-cyan) 45%, transparent);
+        }
+      `}</style>
       <PageHeader />
 
       <FiltersForm uf={uf} nivel={nivel} area={areaRaw} />

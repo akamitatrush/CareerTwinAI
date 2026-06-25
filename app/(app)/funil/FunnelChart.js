@@ -79,9 +79,8 @@ export default function FunnelChart({ aggregated, analysis }) {
         FUNIL (AGREGADO 4 SEMANAS)
       </h2>
       <div
+        className="app-glass"
         style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           borderRadius: "var(--radius-lg)",
           padding: "22px 22px 8px",
         }}
@@ -93,6 +92,19 @@ export default function FunnelChart({ aggregated, analysis }) {
           role="img"
           aria-label="Funil de candidaturas: barras horizontais decrescentes por estagio"
         >
+          <defs>
+            <linearGradient id="funnel-bar-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="var(--accent-cyan)" />
+              <stop offset="100%" stopColor="var(--accent-cyan-deep, var(--accent-cyan))" />
+            </linearGradient>
+            <filter id="funnel-bar-attention" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           {counts.map((s, i) => {
             const widthRatio = apps > 0 ? s.count / apps : 0;
             const w = Math.max(2, Math.round(BAR_AREA * widthRatio));
@@ -125,18 +137,20 @@ export default function FunnelChart({ aggregated, analysis }) {
                   rx="6"
                 />
 
-                {/* Barra preenchida — gradiente cyan via stroke pra evitar
-                    dependencia de <defs> repetido. Highlight = borda amarela. */}
+                {/* Barra preenchida — gradient cyan-to-cyan-deep. Highlight
+                    do bottleneck recebe stroke alert + glow filter. */}
                 <rect
                   x={LEFT}
                   y={y}
                   width={w}
                   height={BAR_HEIGHT}
-                  fill="var(--accent-cyan-deep)"
+                  fill="url(#funnel-bar-gradient)"
                   rx="6"
-                  opacity={0.85}
-                  stroke={isHighlight ? "#E5A93C" : "none"}
+                  opacity={isHighlight ? 1 : 0.92}
+                  stroke={isHighlight ? "var(--alert, #E5A93C)" : "none"}
                   strokeWidth={isHighlight ? 2.5 : 0}
+                  filter={isHighlight ? "url(#funnel-bar-attention)" : undefined}
+                  style={isHighlight ? { filter: "drop-shadow(0 0 12px var(--alert, #E5A93C))" } : undefined}
                 />
 
                 {/* Valor numerico a direita */}
