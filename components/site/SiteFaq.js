@@ -178,10 +178,22 @@ export default function SiteFaq() {
 
         <style>{`
           .site-faq-item summary::-webkit-details-marker { display: none; }
+          .site-faq-item .site-faq-icon {
+            transition: transform 220ms ease, border-color 220ms ease, color 220ms ease;
+          }
           .site-faq-item[open] .site-faq-icon {
             transform: rotate(180deg);
             border-color: var(--site-accent);
             color: var(--site-accent);
+          }
+          .site-faq-item summary:hover .site-faq-icon {
+            border-color: var(--site-fg);
+            color: var(--site-fg);
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .site-faq-item .site-faq-icon {
+              transition: none !important;
+            }
           }
         `}</style>
       </div>

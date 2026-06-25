@@ -1,21 +1,27 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import SiteHero from "@/components/site/SiteHero";
+import SiteTrustBar from "@/components/site/SiteTrustBar";
 import SiteFeatures from "@/components/site/SiteFeatures";
 import SiteHowItWorks from "@/components/site/SiteHowItWorks";
 import SiteSocialProof from "@/components/site/SiteSocialProof";
+import SiteMetrics from "@/components/site/SiteMetrics";
+import SiteStackMarquee from "@/components/site/SiteStackMarquee";
 import SitePricing from "@/components/site/SitePricing";
 import SiteFaq from "@/components/site/SiteFaq";
 
 // Landing premium servida em / (raiz, via route group `(landing)`). Ordem das
 // sections deliberada:
-//   Hero       — captura atencao com promessa + CTA principal
-//   Features   — porque o produto eh diferente (cards de diferencial)
+//   Hero        — captura atencao com promessa + CTA principal
+//   TrustBar    — selos de confianca (LGPD, auditavel, Brasil-first)
+//   Features    — porque o produto eh diferente (cards de diferencial)
 //   How it works — converte interesse em entendimento (3 steps)
 //   Social proof — credibilidade (stats reais, time Tera, stack)
-//   Pricing    — converte entendimento em decisao (3 tiers, Pro destacado)
-//   FAQ        — derruba ultimas objeções
-//   Footer     — navegacao + legal
+//   Metrics     — em numeros (counter-up no scroll)
+//   StackMarquee — banda horizontal das capacidades-chave
+//   Pricing     — converte entendimento em decisao (3 tiers, Pro destacado)
+//   FAQ         — derruba ultimas objeções
+//   Footer      — navegacao + legal
 //
 // User logado vendo / eh redirecionado pra /meu-gemeo (server-side via auth()).
 // IDOR-safe: a sessao vem do servidor, nao de cookie/header manipulavel cliente.
@@ -42,9 +48,12 @@ export default async function LandingPage() {
         }
       `}</style>
       <SiteHero />
+      <SiteTrustBar />
       <SiteFeatures />
       <SiteHowItWorks />
       <SiteSocialProof />
+      <SiteMetrics />
+      <SiteStackMarquee />
       <SitePricing />
       <SiteFaq />
     </>

@@ -23,6 +23,8 @@ export default function SiteHero() {
     if (typeof window === "undefined") return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const els = containerRef.current?.querySelectorAll("[data-fade]") || [];
+    const parallaxEls = containerRef.current?.querySelectorAll("[data-parallax]") || [];
+
     if (reduce) {
       els.forEach((el) => {
         el.style.opacity = "1";
@@ -40,6 +42,32 @@ export default function SiteHero() {
         el.style.transform = "translateY(0)";
       }, delay + 80);
     });
+
+    // Parallax sutil — translateY proporcional ao scrollY. Atualiza
+    // dentro de requestAnimationFrame pra evitar layout thrash. Apenas
+    // ate ~80% da viewport (depois disso o hero ja saiu da tela).
+    let rafId = null;
+    let lastY = 0;
+    const onScroll = () => {
+      lastY = window.scrollY;
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const vh = window.innerHeight || 800;
+        if (lastY > vh) return; // fora do hero, deixa parado.
+        parallaxEls.forEach((el) => {
+          const factor = Number(el.dataset.parallax || 0.1);
+          // Preserva o "translateY(0)" final do fade-up: aqui aplicamos
+          // apenas o offset do parallax (sem sobrescrever opacity).
+          el.style.transform = `translate3d(0, ${lastY * factor * -1}px, 0)`;
+        });
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   return (
@@ -89,6 +117,7 @@ export default function SiteHero() {
         <p
           className="site-eyebrow"
           data-fade
+          data-parallax="0.06"
           style={{
             fontFamily: "'JetBrains Mono', ui-monospace, monospace",
             textTransform: "uppercase",
@@ -96,6 +125,7 @@ export default function SiteHero() {
             fontSize: 11,
             color: "var(--site-fg-muted)",
             margin: "0 0 28px 0",
+            willChange: "transform",
           }}
         >
           <span
@@ -116,6 +146,7 @@ export default function SiteHero() {
         <h1
           className="site-h-display"
           data-fade
+          data-parallax="0.1"
           style={{
             fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
             fontSize: "clamp(48px, 9.5vw, 144px)",
@@ -125,6 +156,7 @@ export default function SiteHero() {
             color: "var(--site-fg)",
             margin: "0 auto 32px",
             maxWidth: "16ch",
+            willChange: "transform",
           }}
         >
           Sua carreira merece um copiloto que entende o{" "}

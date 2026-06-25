@@ -205,7 +205,7 @@ export default function SiteFeatures() {
               key={f.title}
               data-feature-card
               data-idx={i}
-              className="site-card-glass"
+              className="site-card-glass site-feature-card"
               style={{
                 position: "relative",
                 background: "var(--site-card-bg)",
@@ -215,15 +215,29 @@ export default function SiteFeatures() {
                 backdropFilter: "blur(var(--site-glass-blur))",
                 WebkitBackdropFilter: "blur(var(--site-glass-blur))",
                 overflow: "hidden",
-                transition: "transform 300ms ease, border-color 300ms ease, background 300ms ease, opacity 700ms ease",
+                transition:
+                  "transform 300ms ease, border-color 300ms ease, background 300ms ease, opacity 700ms ease, box-shadow 300ms ease",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = "var(--site-border-strong)";
                 e.currentTarget.style.background = "var(--site-card-bg-hover)";
+                e.currentTarget.style.transform = "translateY(-3px)";
+                e.currentTarget.style.boxShadow = "var(--site-shadow-card-hover)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = "var(--site-border)";
                 e.currentTarget.style.background = "var(--site-card-bg)";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+              onMouseMove={(e) => {
+                // Spotlight sutil seguindo o cursor — usa custom properties pra
+                // alimentar o radial-gradient do ::before declarado no <style>.
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                e.currentTarget.style.setProperty("--mx", `${x}px`);
+                e.currentTarget.style.setProperty("--my", `${y}px`);
               }}
             >
               {/* sutil halo do accent no canto */}
@@ -298,6 +312,42 @@ export default function SiteFeatures() {
           ))}
         </div>
       </div>
+
+      <style>{`
+        .site-feature-card {
+          --mx: 50%;
+          --my: 50%;
+        }
+        .site-feature-card::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: radial-gradient(
+            240px circle at var(--mx) var(--my),
+            var(--site-accent-glow),
+            transparent 60%
+          );
+          opacity: 0;
+          transition: opacity 260ms ease;
+          z-index: 0;
+        }
+        .site-feature-card:hover::before {
+          opacity: 1;
+        }
+        .site-feature-card > * { position: relative; z-index: 1; }
+        @media (prefers-reduced-motion: reduce) {
+          .site-feature-card {
+            transition: none !important;
+          }
+          .site-feature-card:hover {
+            transform: none !important;
+          }
+          .site-feature-card::before {
+            display: none !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }

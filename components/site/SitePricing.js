@@ -152,6 +152,8 @@ export default function SitePricing() {
               key={t.name}
               data-tier
               data-idx={i}
+              data-highlight={t.highlight ? "1" : "0"}
+              className={t.highlight ? "site-pricing-featured" : "site-pricing-tier"}
               style={{
                 position: "relative",
                 background: t.highlight
@@ -170,6 +172,7 @@ export default function SitePricing() {
                 display: "flex",
                 flexDirection: "column",
                 gap: 24,
+                transition: "transform 280ms ease, box-shadow 280ms ease",
               }}
             >
               {t.highlight && (
@@ -327,6 +330,24 @@ export default function SitePricing() {
           Garantia de 7 dias.
         </p>
       </div>
+
+      <style>{`
+        .site-pricing-featured:hover {
+          transform: translateY(-4px) scale(1.02);
+          box-shadow: 0 0 90px var(--site-accent-glow),
+                      0 0 0 1px var(--site-accent-glow) inset,
+                      var(--site-shadow-card-hover);
+        }
+        .site-pricing-tier:hover {
+          transform: translateY(-2px);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .site-pricing-featured:hover,
+          .site-pricing-tier:hover {
+            transform: none !important;
+          }
+        }
+      `}</style>
     </section>
   );
 }
