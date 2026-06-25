@@ -29,7 +29,13 @@ export default async function OportunidadesPage() {
     return (
       <main id="main-content" className="app-container">
         <PageHeader />
-        <div className="ct-empty-state-v2">
+        <div
+          className="ct-empty-state-v2 app-glass"
+          style={{
+            boxShadow:
+              "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+          }}
+        >
           <h2>Sem diagnóstico ainda</h2>
           <p>
             Faça um diagnóstico no <Link href="/dashboard">seu dashboard</Link> pra
@@ -62,8 +68,18 @@ export default async function OportunidadesPage() {
 // entre o caminho "sem diagnostico" e o caminho normal.
 function PageHeader({ targetRole }) {
   return (
-    <header className="ct-page-header">
-      <div className="ct-page-header-icon" aria-hidden="true">
+    <header
+      className="ct-page-header app-glass site-section-mesh"
+      style={{
+        boxShadow:
+          "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }}
+    >
+      <div
+        className="ct-page-header-icon"
+        aria-hidden="true"
+        style={{ filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))" }}
+      >
         <svg
           width="22"
           height="22"

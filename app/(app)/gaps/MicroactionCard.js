@@ -69,12 +69,25 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
 
   const impactPts = gap.impactoPontos || 4;
   const cardClass =
-    "ct-microaction-card" +
+    "ct-microaction-card app-glass" +
     (done ? " done" : "") +
     (priority === "top" && !done ? " priority-top" : "");
 
+  // Top prioridade ainda em aberto = borda esquerda cyan + glow lateral.
+  // Done = card mais discreto (sem glow). Default = sombra padrao.
+  const isTopOpen = priority === "top" && !done;
+  const cardStyle = isTopOpen
+    ? {
+        borderLeft: "3px solid var(--accent-cyan)",
+        boxShadow:
+          "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }
+    : done
+      ? { boxShadow: "var(--shadow-md)" }
+      : { boxShadow: "var(--shadow-md)" };
+
   return (
-    <article className={cardClass}>
+    <article className={cardClass} style={cardStyle}>
       <div className="ct-microaction-leftrail">
         <button
           type="button"
@@ -100,7 +113,13 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
           </div>
           <div className="ct-microaction-head-right">
             {priority === "top" && !done && (
-              <span className="ct-microaction-priority" title="Maior impacto no score">
+              <span
+                className="ct-microaction-priority"
+                title="Maior impacto no score"
+                style={{
+                  filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))",
+                }}
+              >
                 top prioridade
               </span>
             )}

@@ -157,8 +157,18 @@ export default async function GapsPage() {
 
   return (
     <main id="main-content" className="app-container">
-      <header className="ct-page-header">
-        <div className="ct-page-header-icon" aria-hidden="true">
+      <header
+        className="ct-page-header app-glass site-section-mesh"
+        style={{
+          boxShadow:
+            "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+        }}
+      >
+        <div
+          className="ct-page-header-icon"
+          aria-hidden="true"
+          style={{ filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))" }}
+        >
           <svg
             width="22"
             height="22"
@@ -317,7 +327,13 @@ export default async function GapsPage() {
 
 function NoTargetState() {
   return (
-    <div className="ct-dash-empty">
+    <div
+      className="ct-dash-empty app-glass"
+      style={{
+        boxShadow:
+          "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }}
+    >
       <h2>Defina seu cargo-alvo primeiro</h2>
       <p>
         Sem cargo-alvo, não dá pra comparar você com o mercado. Configure em{" "}
@@ -330,7 +346,13 @@ function NoTargetState() {
 
 function NoJobsState() {
   return (
-    <div className="ct-dash-empty">
+    <div
+      className="ct-dash-empty app-glass"
+      style={{
+        boxShadow:
+          "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }}
+    >
       <h2>Não consegui buscar vagas agora</h2>
       <p>
         As fontes de vagas (Adzuna, Jooble, Greenhouse) não retornaram

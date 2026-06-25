@@ -62,7 +62,10 @@ export default function RadarClient({ initial }) {
 
   return (
     <>
-      <div className="ct-filters-bar">
+      <div
+        className="ct-filters-bar app-glass"
+        style={{ boxShadow: "var(--shadow-md)" }}
+      >
         {/* aria-live: anuncia mudanca de contagem quando filtros disparam re-fetch.
             polite = espera SR terminar leitura corrente; atomic=false = so le delta. */}
         <span className="ct-filters-count" aria-live="polite" aria-atomic="true">
@@ -152,7 +155,14 @@ export default function RadarClient({ initial }) {
       )}
 
       {error && (
-        <div className="ct-dash-empty" role="alert">
+        <div
+          className="ct-dash-empty app-glass"
+          role="alert"
+          style={{
+            boxShadow:
+              "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+          }}
+        >
           <h2>Falhou a busca</h2>
           <p>{error}. Tente recarregar.</p>
         </div>
@@ -165,7 +175,13 @@ export default function RadarClient({ initial }) {
           ))}
         </div>
       ) : vagas.length === 0 && !error ? (
-        <div className="ct-dash-empty">
+        <div
+          className="ct-dash-empty app-glass"
+          style={{
+            boxShadow:
+              "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+          }}
+        >
           <h2>Nenhuma vaga voltou agora</h2>
           <p>
             As fontes de vagas (Adzuna, Jooble e os ATS) não responderam ou
@@ -286,8 +302,19 @@ function JobCard({ job, index }) {
   // ID estavel pro aria-controls (job.url nem sempre presente nos fixtures).
   const panelId = `breakdown-${index}`;
 
+  // High priority = fit >= 70%. Card ganha borda esquerda cyan + glow lateral
+  // pra puxar o olho do usuario na lista.
+  const isHighFit = fit >= 70;
+  const cardStyle = isHighFit
+    ? {
+        borderLeft: "3px solid var(--accent-cyan)",
+        boxShadow:
+          "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }
+    : { boxShadow: "var(--shadow-md)" };
+
   return (
-    <div className="ct-job-card">
+    <div className="ct-job-card app-glass" style={cardStyle}>
       <div className="ct-job-logo">{initial}</div>
       <div className="ct-job-info">
         <div className="ct-job-top">
@@ -373,7 +400,14 @@ function JobCard({ job, index }) {
             showBreakdown ? "Fechar" : "Abrir"
           } detalhamento do cálculo.`}
         >
-          <div className="ct-fit-ring">
+          <div
+            className="ct-fit-ring"
+            style={
+              isHighFit
+                ? { filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))" }
+                : undefined
+            }
+          >
             <svg
               width="62"
               height="62"

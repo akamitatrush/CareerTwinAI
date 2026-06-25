@@ -38,8 +38,11 @@ export default function SkillMap({ skills, requirementSet, canonicalSet }) {
 
   return (
     <section
-      className="ct-skill-map"
+      className="ct-skill-map app-glass"
       aria-labelledby="gaps-skill-map-title"
+      style={{
+        boxShadow: "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }}
     >
       <header className="ct-skill-map-head">
         <div>
@@ -104,10 +107,21 @@ function Legend() {
 
 function Group({ variant, label, hint, items }) {
   if (!items || items.length === 0) return null;
+  // Skills "covered" (que batem com o mercado) sao o ponto critico positivo
+  // do mapa — ganham drop-shadow cyan no dot pra puxar o olho.
+  const isCovered = variant === "covered";
   return (
     <div className="ct-skill-map-group">
       <div className="ct-skill-map-group-head">
-        <span className={"ct-skill-map-dot " + variant} aria-hidden="true" />
+        <span
+          className={"ct-skill-map-dot " + variant}
+          aria-hidden="true"
+          style={
+            isCovered
+              ? { filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))" }
+              : undefined
+          }
+        />
         <span className="ct-skill-map-group-label">{label}</span>
         <span className="ct-skill-map-group-count">{items.length}</span>
       </div>

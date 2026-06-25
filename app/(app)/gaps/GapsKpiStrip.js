@@ -79,8 +79,15 @@ export default function GapsKpiStrip({ summary, snapshot, targetRole }) {
 
   return (
     <section
-      className={"ct-gaps-act ct-gaps-act-1" + (celebrate ? " celebrate" : "")}
+      className={
+        "ct-gaps-act ct-gaps-act-1 app-glass" +
+        (celebrate ? " celebrate" : "")
+      }
       aria-labelledby="gaps-act-1"
+      style={{
+        boxShadow:
+          "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }}
     >
       <header className="ct-gaps-act-head">
         <span className="ct-gaps-act-num" aria-hidden="true">
@@ -151,9 +158,28 @@ function KPICard({ value, label, color }) {
         : color === "positive"
           ? "ct-kpi-positive"
           : "";
+  // KPIs "primary" e "positive" recebem glow cyan; "attention" preserva o
+  // tom de alerta nativo. accent-cyan-glow some no light-mode token.
+  const isHighlight = color === "primary" || color === "positive";
   return (
-    <div className="ct-kpi-card">
-      <div className={"ct-kpi-value " + colorClass}>{value}</div>
+    <div
+      className="ct-kpi-card app-glass"
+      style={{
+        boxShadow: isHighlight
+          ? "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)"
+          : "var(--shadow-md)",
+      }}
+    >
+      <div
+        className={"ct-kpi-value " + colorClass}
+        style={
+          isHighlight
+            ? { filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))" }
+            : undefined
+        }
+      >
+        {value}
+      </div>
       <div className="ct-kpi-label">{label}</div>
     </div>
   );
