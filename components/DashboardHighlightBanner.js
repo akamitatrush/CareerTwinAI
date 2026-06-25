@@ -34,8 +34,28 @@ export default function DashboardHighlightBanner({ variant = "refresh", count = 
   const v = VARIANTS[variant] || VARIANTS.refresh;
   const title = v.title.replace("{count}", String(count));
   return (
-    <section className="ct-highlight-banner" aria-label="Destaque">
-      <div className="ct-highlight-banner-icon" aria-hidden="true">
+    <section
+      className="ct-highlight-banner app-glass"
+      aria-label="Destaque"
+      style={{
+        // Refresh visual: banner do dashboard ganha glassmorphism premium +
+        // borda cyan-glow + sombra de profundidade. Mantemos a classe original
+        // ct-highlight-banner pro layout (flex + padding + responsive).
+        background: "var(--app-glass-bg)",
+        backdropFilter: "blur(var(--app-glass-blur))",
+        WebkitBackdropFilter: "blur(var(--app-glass-blur))",
+        border: "1px solid var(--accent-cyan-glow)",
+        boxShadow: "var(--shadow-md), 0 0 24px var(--accent-cyan-glow)",
+      }}
+    >
+      <div
+        className="ct-highlight-banner-icon"
+        aria-hidden="true"
+        style={{
+          // Refresh visual: icone recebe glow cyan pra puxar olhar.
+          filter: "drop-shadow(0 0 8px var(--accent-cyan-glow))",
+        }}
+      >
         <span style={{ fontSize: 22, lineHeight: 1, fontWeight: 700 }}>{v.icon}</span>
       </div>
       <div className="ct-highlight-banner-content">

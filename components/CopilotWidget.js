@@ -296,6 +296,11 @@ export default function CopilotWidget({ user }) {
         aria-label={open ? "Fechar copilot" : "Abrir copiloto de carreira"}
         aria-expanded={open}
         aria-controls="ct-copilot-panel"
+        style={{
+          // Refresh visual: anel cyan-glow sutil em volta do FAB pra reforcar presenca.
+          // Nao sobrescreve animacao copilotPulse (que ja usa box-shadow).
+          filter: "drop-shadow(0 0 12px var(--accent-cyan-glow))",
+        }}
       >
         {open ? (
           <svg
@@ -331,14 +336,36 @@ export default function CopilotWidget({ user }) {
       {open && (
         <aside
           id="ct-copilot-panel"
-          className="ct-copilot-panel"
+          className="ct-copilot-panel app-glass"
           role="dialog"
           aria-label="Career Copilot"
           aria-modal="false"
+          style={{
+            // Refresh visual: glassmorphism sobre o painel. Background e backdrop-filter
+            // vem da util .app-glass; aqui reforcamos borda accent-cyan + glow externo
+            // pra premium-feel. Mantemos box-shadow base do CSS via composicao.
+            background: "var(--app-glass-bg)",
+            backdropFilter: "blur(var(--app-glass-blur))",
+            WebkitBackdropFilter: "blur(var(--app-glass-blur))",
+            border: "1px solid var(--app-glass-border)",
+            boxShadow: "var(--shadow-lg), 0 0 0 1px var(--accent-cyan-glow)",
+          }}
         >
           <header className="ct-copilot-header">
             <div className="ct-copilot-title">
-              <span className="ct-copilot-dot" aria-hidden="true" />
+              {/*
+                Refresh visual: dot ganha pulso cyan (drop-shadow) reforcando
+                presenca "ativa" do copilot. Mantemos a classe original ct-copilot-dot
+                pro fallback de cor positive/posicao — overlay cyan via inline.
+              */}
+              <span
+                className="ct-copilot-dot"
+                aria-hidden="true"
+                style={{
+                  background: "var(--accent-cyan)",
+                  boxShadow: "0 0 8px var(--accent-cyan-glow), 0 0 0 4px var(--accent-cyan-glow)",
+                }}
+              />
               Copilot
             </div>
             <button

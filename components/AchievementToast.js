@@ -48,10 +48,24 @@ export default function AchievementToast({ achievement, onDismiss }) {
   const icon = typeof achievement.icon === "string" ? achievement.icon : "🏆";
   const points = Number.isFinite(achievement.points) ? achievement.points : 0;
 
-  const cls = "ct-achievement-toast" + (visible ? "" : " leaving");
+  const cls = "ct-achievement-toast app-glass" + (visible ? "" : " leaving");
 
   const node = (
-    <div className={cls} role="status" aria-live="polite">
+    <div
+      className={cls}
+      role="status"
+      aria-live="polite"
+      style={{
+        // Refresh visual: glassmorphism premium no toast. Background opaco substituido
+        // por glass blur + borda cyan accent + glow externo. Confetti preservado
+        // (renderiza sobre o glass via z-index do CSS original).
+        background: "var(--app-glass-bg)",
+        backdropFilter: "blur(var(--app-glass-blur))",
+        WebkitBackdropFilter: "blur(var(--app-glass-blur))",
+        border: "1px solid var(--accent-cyan)",
+        boxShadow: "var(--shadow-lg), 0 0 24px var(--accent-cyan-glow)",
+      }}
+    >
       <div className="ct-achievement-toast-confetti" aria-hidden="true">
         {Array.from({ length: 8 }).map((_, i) => (
           <span
@@ -62,7 +76,14 @@ export default function AchievementToast({ achievement, onDismiss }) {
         ))}
       </div>
       <div className="ct-achievement-toast-content">
-        <div className="ct-achievement-toast-icon" aria-hidden="true">
+        <div
+          className="ct-achievement-toast-icon"
+          aria-hidden="true"
+          style={{
+            // Refresh visual: glow cyan no icone trofeu — destaque sem mudar tamanho.
+            filter: "drop-shadow(0 0 8px var(--accent-cyan-glow))",
+          }}
+        >
           {icon}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>

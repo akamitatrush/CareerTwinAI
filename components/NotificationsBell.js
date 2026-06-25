@@ -208,10 +208,24 @@ export default function NotificationsBell({ compact = false }) {
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}
+        style={
+          // Refresh visual: quando ha unread, icone "respira" com glow cyan sutil.
+          unread > 0
+            ? { filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))" }
+            : undefined
+        }
       >
         <BellIcon size={compact ? 17 : 19} />
         {unread > 0 && (
-          <span className="appshell-notif-badge" aria-hidden="true">
+          <span
+            className="appshell-notif-badge"
+            aria-hidden="true"
+            style={{
+              // Refresh visual: badge ganha halo cyan-glow (em cima do background
+              // attention vermelho original). Reforca "novidade" sem mudar a cor.
+              boxShadow: "0 0 12px var(--accent-cyan-glow)",
+            }}
+          >
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -224,11 +238,20 @@ export default function NotificationsBell({ compact = false }) {
           onClick={() => setOpen(false)}
         >
           <aside
-            className="appshell-notif-drawer"
+            className="appshell-notif-drawer app-glass"
             role="dialog"
             aria-label="Notificações"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              // Refresh visual: drawer ganha glassmorphism + borda cyan-glow.
+              // Background opaco do CSS original substituido por glass blur;
+              // overflow:auto + animation do CSS preservados via composicao de classe.
+              background: "var(--app-glass-bg)",
+              backdropFilter: "blur(var(--app-glass-blur))",
+              WebkitBackdropFilter: "blur(var(--app-glass-blur))",
+              borderLeft: "1px solid var(--accent-cyan-glow)",
+            }}
           >
             <div className="appshell-notif-drawer-head">
               <h3>Notificações</h3>
@@ -270,6 +293,13 @@ export default function NotificationsBell({ compact = false }) {
                     onClick={() => {
                       if (!n.readAt) markOneRead(n.id);
                     }}
+                    style={
+                      // Refresh visual: items nao lidos ganham border-left cyan,
+                      // sinalizando "novo" sem depender so do background primary-soft.
+                      !n.readAt
+                        ? { borderLeft: "2px solid var(--accent-cyan)" }
+                        : undefined
+                    }
                   >
                     <div className="appshell-notif-title">{n.title}</div>
                     {n.body && (
