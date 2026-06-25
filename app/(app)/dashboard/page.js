@@ -111,11 +111,43 @@ export default async function DashboardPage() {
         score={Number(latest?.overall) || 0}
         gapsCount={Array.isArray(latest?.gaps) ? latest.gaps.length : 0}
       />
-      {/* Header */}
-      <div className="ct-dash-header site-section-mesh">
+      {/* Header — Arwen uplift: typography ambicioso clamp() + spacing generoso.
+          Mantem classes (Galadriel polishing CSS em paralelo) mas adiciona style
+          inline pra garantir vibe Cloudwalk independente do que .ct-dash-title
+          tem hoje. */}
+      <div
+        className="ct-dash-header site-section-mesh"
+        style={{
+          paddingTop: "clamp(48px, 8vw, 96px)",
+          paddingBottom: "clamp(32px, 5vw, 64px)",
+        }}
+      >
         <div>
-          <p className="ct-dash-eyebrow">Bom te ver de volta,</p>
-          <h1 className="ct-dash-title">Olá, {firstName}</h1>
+          <p
+            className="ct-dash-eyebrow"
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--accent-cyan-deep)",
+              marginBottom: "14px",
+            }}
+          >
+            Dashboard · Bom te ver de volta
+          </p>
+          <h1
+            className="ct-dash-title"
+            style={{
+              fontSize: "clamp(40px, 6vw, 80px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+              marginBottom: "16px",
+            }}
+          >
+            Olá, {firstName}
+          </h1>
         </div>
         <Link
           href="/conta"

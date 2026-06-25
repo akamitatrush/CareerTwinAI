@@ -27,7 +27,17 @@ export default async function CarreiraPage() {
 
   return (
     <main id="main-content" className="app-container">
-      <header className="ct-page-header">
+      {/* Header — Arwen uplift: mesh sutil + typography ambicioso + spacing
+          generoso. Style inline pra garantir vibe premium independente do
+          .ct-page-header-title atual (Galadriel polishing em paralelo). */}
+      <header
+        className="ct-page-header site-section-mesh"
+        style={{
+          paddingTop: "clamp(56px, 9vw, 96px)",
+          paddingBottom: "clamp(32px, 5vw, 64px)",
+          marginBottom: "clamp(32px, 5vw, 64px)",
+        }}
+      >
         <div className="ct-page-header-icon" aria-hidden="true">
           <svg
             width="22"
@@ -44,11 +54,40 @@ export default async function CarreiraPage() {
           </svg>
         </div>
         <div className="ct-page-header-content">
-          <div className="ct-page-header-eyebrow">PLANO DE CARREIRA</div>
-          <h1 className="ct-page-header-title">
+          <div
+            className="ct-page-header-eyebrow"
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--accent-cyan-deep)",
+              marginBottom: "14px",
+            }}
+          >
+            Plano de carreira
+          </div>
+          <h1
+            className="ct-page-header-title"
+            style={{
+              fontSize: "clamp(40px, 6vw, 80px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+              marginBottom: "16px",
+            }}
+          >
             Sua trajetória até o cargo-alvo
           </h1>
-          <p className="ct-page-header-sub">
+          <p
+            className="ct-page-header-sub"
+            style={{
+              fontSize: "clamp(16px, 1.4vw, 19px)",
+              lineHeight: 1.5,
+              color: "var(--text-muted)",
+              maxWidth: "60ch",
+            }}
+          >
             Roadmap visual com milestones, skills e evidências necessárias.
           </p>
         </div>

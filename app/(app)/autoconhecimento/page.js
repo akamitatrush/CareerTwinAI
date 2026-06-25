@@ -51,12 +51,51 @@ export default async function AutoconhecimentoPage() {
 
   return (
     <main className="app-container" id="main-content">
-      <section className="ct-self-hero">
-        <p className="ct-self-hero-eyebrow">Autoconhecimento</p>
-        <h1 className="ct-self-hero-title">
+      {/* Hero — Arwen uplift: mesh sutil + typography ambicioso clamp() +
+          spacing generoso. Mantem classes pra Galadriel polir CSS em
+          paralelo, style inline garante vibe premium agora. */}
+      <section
+        className="ct-self-hero site-section-mesh"
+        style={{
+          paddingTop: "clamp(56px, 9vw, 96px)",
+          paddingBottom: "clamp(32px, 5vw, 64px)",
+          marginBottom: "clamp(32px, 5vw, 64px)",
+        }}
+      >
+        <p
+          className="ct-self-hero-eyebrow"
+          style={{
+            fontSize: "12px",
+            fontWeight: 600,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "var(--accent-cyan-deep)",
+            marginBottom: "14px",
+          }}
+        >
+          Autoconhecimento
+        </p>
+        <h1
+          className="ct-self-hero-title"
+          style={{
+            fontSize: "clamp(40px, 6vw, 80px)",
+            fontWeight: 700,
+            letterSpacing: "-0.03em",
+            lineHeight: 1.05,
+            marginBottom: "16px",
+          }}
+        >
           Quem você é, antes da próxima vaga
         </h1>
-        <p className="ct-self-hero-sub">
+        <p
+          className="ct-self-hero-sub"
+          style={{
+            fontSize: "clamp(16px, 1.4vw, 19px)",
+            lineHeight: 1.55,
+            color: "var(--text-muted)",
+            maxWidth: "62ch",
+          }}
+        >
           3 reflexões pra mapear estilo, valores e propósito. Não são
           diagnósticos clínicos — são pontos de partida pra decisões melhores
           de carreira.

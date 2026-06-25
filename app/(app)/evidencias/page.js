@@ -33,10 +33,39 @@ export default async function EvidenciasPage() {
 
   return (
     <main className="app-container" id="main-content">
-      <div className="ct-gaps-header">
+      {/* Header — Arwen uplift: mesh sutil + typography ambicioso + spacing
+          generoso. Sem eyebrow porque a pagina ja tem contexto claro (titulo
+          explica o que e). */}
+      <div
+        className="ct-gaps-header site-section-mesh"
+        style={{
+          paddingTop: "clamp(56px, 9vw, 96px)",
+          paddingBottom: "clamp(32px, 5vw, 64px)",
+          marginBottom: "clamp(32px, 5vw, 64px)",
+        }}
+      >
         <div>
-          <h1 className="ct-gaps-title">Evidências de competência</h1>
-          <p className="ct-gaps-sub">
+          <h1
+            className="ct-gaps-title"
+            style={{
+              fontSize: "clamp(40px, 6vw, 80px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+              marginBottom: "16px",
+            }}
+          >
+            Evidências de competência
+          </h1>
+          <p
+            className="ct-gaps-sub"
+            style={{
+              fontSize: "clamp(16px, 1.4vw, 19px)",
+              lineHeight: 1.55,
+              color: "var(--text-muted)",
+              maxWidth: "62ch",
+            }}
+          >
             Demonstre suas skills com casos, projetos e métricas reais.
             Recrutador acredita em <strong>evidência específica</strong>, não em
             declaração genérica.

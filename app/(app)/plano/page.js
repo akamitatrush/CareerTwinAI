@@ -111,10 +111,52 @@ export default async function PlanoPage() {
 
   return (
     <main id="main-content" className="app-container">
-      <div className="ct-gaps-header">
+      {/* Header — Arwen uplift: mesh sutil + eyebrow + typography ambicioso
+          clamp() + spacing generoso. Eyebrow "Plano de evolucao" porque o titulo
+          em si nao da contexto temporal claro. */}
+      <div
+        className="ct-gaps-header site-section-mesh"
+        style={{
+          paddingTop: "clamp(56px, 9vw, 96px)",
+          paddingBottom: "clamp(32px, 5vw, 64px)",
+          marginBottom: "clamp(32px, 5vw, 64px)",
+        }}
+      >
         <div>
-          <h1 className="ct-gaps-title">Plano de evolução</h1>
-          <p className="ct-gaps-sub">
+          <span
+            style={{
+              display: "inline-block",
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--accent-cyan-deep)",
+              marginBottom: "14px",
+            }}
+          >
+            Plano de evolução
+          </span>
+          <h1
+            className="ct-gaps-title"
+            style={{
+              fontSize: "clamp(40px, 6vw, 80px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+              marginBottom: "16px",
+            }}
+          >
+            Sua evolução, ao longo do tempo
+          </h1>
+          <p
+            className="ct-gaps-sub"
+            style={{
+              fontSize: "clamp(16px, 1.4vw, 19px)",
+              lineHeight: 1.55,
+              color: "var(--text-muted)",
+              maxWidth: "62ch",
+            }}
+          >
             Seu gêmeo acompanha você ao longo do tempo — não é um retrato
             estático.
           </p>
@@ -171,10 +213,10 @@ export default async function PlanoPage() {
         )}
       </div>
 
-      {/* Timeline */}
+      {/* Timeline — spacing generoso entre sections (Arwen uplift). */}
       <h2
         className="ct-actions-title"
-        style={{ marginTop: 32, marginBottom: 14 }}
+        style={{ marginTop: "clamp(48px, 6vw, 72px)", marginBottom: 14 }}
       >
         Linha do tempo das ações
       </h2>
