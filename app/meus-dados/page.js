@@ -86,7 +86,7 @@ export default async function MeusDadosPage({ searchParams }) {
   return (
     <main className="wrap" style={{ maxWidth: 760, paddingTop: 24 }}>
       <div className="topbar-inner" style={{ marginBottom: 24 }}>
-        <Link href="/meu-gemeo" style={{ textDecoration: "none" }}>
+        <Link href="/dashboard" style={{ textDecoration: "none" }}>
           <div className="brand">
             <div>
               <div className="brand-name">Meus dados</div>
@@ -94,7 +94,7 @@ export default async function MeusDadosPage({ searchParams }) {
             </div>
           </div>
         </Link>
-        <Link href="/meu-gemeo" className="tool-btn" style={{ textDecoration: "none" }}>← Meu gêmeo</Link>
+        <Link href="/dashboard" className="tool-btn" style={{ textDecoration: "none" }}>← Voltar ao dashboard</Link>
       </div>
 
       <h1 className="hero" style={{ fontSize: 32 }}>Seus dados, sob seu controle.</h1>
@@ -132,7 +132,7 @@ export default async function MeusDadosPage({ searchParams }) {
             <b>Candidaturas no funil:</b> {appsCount}
             {appsCount === 0 && (
               <span style={{ opacity: 0.7, marginLeft: 6 }}>
-                — funil vazio. Salve vagas em <Link href="/meu-gemeo">Meu gêmeo</Link> ou crie em <Link href="/candidaturas">Candidaturas</Link>.
+                — funil vazio. Salve vagas no <Link href="/oportunidades">Radar</Link> ou crie em <Link href="/candidaturas">Candidaturas</Link>.
               </span>
             )}
           </li>

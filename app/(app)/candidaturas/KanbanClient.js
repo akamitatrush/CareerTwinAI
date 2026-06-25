@@ -138,13 +138,13 @@ export default function KanbanClient({ initialItems, columns }) {
           <div className="kanban-empty-hero-inner">
             <h2>Seu funil ainda está vazio.</h2>
             <p>
-              Para começar, vá em <Link href="/meu-gemeo">Meu gêmeo → Vagas</Link> e
+              Para começar, vá no <Link href="/oportunidades">Radar de vagas</Link> e
               clique em <b>+ Salvar candidatura</b> nas vagas que te interessarem —
               ou crie uma manualmente aqui mesmo.
             </p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
-              <Link href="/meu-gemeo" className="btn btn-primary" style={{ textDecoration: "none" }}>
-                Ver vagas no meu gêmeo →
+              <Link href="/oportunidades" className="btn btn-primary" style={{ textDecoration: "none" }}>
+                Ver vagas no Radar →
               </Link>
               <button className="btn btn-ghost" onClick={() => setShowNew(true)}>
                 + Adicionar uma à mão

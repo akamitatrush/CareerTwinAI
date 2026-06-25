@@ -27,7 +27,7 @@ export default async function CandidaturasPage() {
   return (
     <main className="wrap" style={{ paddingTop: 24 }}>
       <header className="topbar-inner" style={{ marginBottom: 24 }}>
-        <Link href="/meu-gemeo" style={{ textDecoration: "none" }}>
+        <Link href="/dashboard" style={{ textDecoration: "none" }}>
           <div className="brand">
             <div className="brand-mark">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#B9D90C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -43,8 +43,8 @@ export default async function CandidaturasPage() {
           </div>
         </Link>
         <div style={{ display: "flex", gap: 8 }}>
-          <Link href="/meu-gemeo" className="tool-btn" style={{ textDecoration: "none" }}>
-            ← Voltar pro gêmeo
+          <Link href="/dashboard" className="tool-btn" style={{ textDecoration: "none" }}>
+            ← Voltar ao dashboard
           </Link>
         </div>
       </header>
