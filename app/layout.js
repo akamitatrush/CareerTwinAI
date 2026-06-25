@@ -22,16 +22,17 @@ export default function RootLayout({ children }) {
       <head>
         {/* Aplica o tema do localStorage SINCRONAMENTE antes do paint pra
             evitar flash-of-wrong-theme. Roda em try/catch porque pode falhar
-            em iframes/SSR/Safari privado. Fallback: light (novo default). */}
+            em iframes/SSR/Safari privado. Fallback: 'noir' (default Wave 6 —
+            P&B editorial minimalista, primeira impressão diferenciada). */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  var t = localStorage.getItem('ct_theme') || 'light';
+                  var t = localStorage.getItem('ct_theme') || 'noir';
                   document.documentElement.setAttribute('data-theme', t);
                 } catch (e) {
-                  document.documentElement.setAttribute('data-theme', 'light');
+                  document.documentElement.setAttribute('data-theme', 'noir');
                 }
               })();
             `,

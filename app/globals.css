@@ -205,11 +205,123 @@
 }
 
 /* ===========================================================
+ * NOIR — 3º tema, P&B editorial minimalista (Wave 6 / Galadriel).
+ * Default novo do app. Sem cyan/magenta vibrantes; acentos só em
+ * focus state (cyan dessaturado). Único toque de cor: --alert
+ * (vermelho desaturado pra warnings continuarem legíveis).
+ *
+ * Override APENAS dos tokens semânticos. Tipografia, easing, radius
+ * e tokens decorativos permanecem nos defaults do :root base.
+ * =========================================================== */
+:root[data-theme="noir"] {
+  /* === Background — near-black, evita preto puro pra reduzir contraste duro === */
+  --bg: #0A0A0A;
+  --surface: #141414;
+  --surface-2: #1A1A1A;       /* modais, dropdowns */
+  --surface-3: #1F1F1F;       /* hover */
+
+  /* === Border === */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  /* === Text — hierarquia preservada (faint > muted > soft em luminance) === */
+  --text: #FAFAFA;
+  --text-strong: #FFFFFF;
+  --text-soft: rgba(250, 250, 250, 0.78);
+  --text-muted: rgba(250, 250, 250, 0.65);
+  --text-faint: rgba(250, 250, 250, 0.42);
+  --text-dim: rgba(250, 250, 250, 0.42);
+  --text-subtle: rgba(250, 250, 250, 0.78);  /* alias legado */
+  --scrim: rgba(0, 0, 0, 0.7);
+
+  /* === Primary — white-on-black como "primary" (sem índigo) === */
+  --primary: #FAFAFA;
+  --primary-deep: #E5E5E5;
+  --primary-soft: #1F1F1F;
+  --primary-tint: #2A2A2A;
+  --primary-light: #FFFFFF;
+
+  /* === Accent (aliases legados) === */
+  --accent: #FAFAFA;
+  --accent-soft: #1F1F1F;
+  --accent-text: #0A0A0A;     /* texto escuro sobre accent branco */
+  --accent-deep: #FFFFFF;
+  --accent-wash: #141414;
+
+  /* === Cyan/magenta neutralizados ===
+     Cyan vira focus-state apenas, dessaturado. Magenta vira branco. */
+  --accent-cyan: #6BE2C8;
+  --accent-cyan-deep: #4DCFB3;
+  --accent-cyan-glow: rgba(107, 226, 200, 0.20);
+  --accent-magenta: #FAFAFA;
+  --accent-magenta-soft: rgba(255, 255, 255, 0.06);
+
+  /* === Positive/attention — monocromático === */
+  --positive: #E5E5E5;
+  --positive-deep: #FFFFFF;
+  --positive-soft: #1A1A1A;
+  --positive-tint: #2A2A2A;
+
+  --attention: #A8A8A8;
+  --attention-deep: #FAFAFA;
+  --attention-soft: #1A1A1A;
+  --attention-tint: #2A2A2A;
+
+  /* === Alert — único acento de cor (warnings precisam sobreviver) === */
+  --alert: #FFB4B4;
+  --alert-wash: rgba(255, 180, 180, 0.08);
+
+  --ok: var(--positive);
+  --ok-wash: var(--positive-soft);
+
+  /* === Avatar gradient — P&B em vez de bege/laranja === */
+  --avatar-from: #2A2A2A;
+  --avatar-to: #E5E5E5;
+
+  /* === App glassmorphism — vidro mais opaco (sem cor compete menos com transparência) === */
+  --app-glass-bg: rgba(255, 255, 255, 0.03);
+  --app-glass-border: rgba(255, 255, 255, 0.08);
+  --app-glass-blur: 12px;
+
+  /* === Site tokens — caso noir afete landing (opcional, spec autorizou) ===
+     Mesh neutro, accent reduzido a cyan dessaturado. */
+  --site-bg: #0A0A0A;
+  --site-fg: #FAFAFA;
+  --site-fg-muted: rgba(250, 250, 250, 0.65);
+  --site-fg-dim: rgba(250, 250, 250, 0.42);
+  --site-border: rgba(255, 255, 255, 0.08);
+  --site-border-strong: rgba(255, 255, 255, 0.16);
+  --site-card-bg: rgba(255, 255, 255, 0.03);
+  --site-card-bg-hover: rgba(255, 255, 255, 0.05);
+  --site-glass-blur: 16px;
+  --site-accent: var(--accent-cyan);
+  --site-accent-deep: var(--accent-cyan-deep);
+  --site-accent-glow: var(--accent-cyan-glow);
+  --site-accent-magenta: #FAFAFA;
+  --site-mesh-cyan: rgba(255, 255, 255, 0.04);
+  --site-mesh-magenta: rgba(255, 255, 255, 0.02);
+  --site-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  --site-shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.10) inset;
+
+  /* === Sombras — pretas puras, não cinza === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25), 0 1px 3px 0 rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.40), 0 2px 4px -2px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.50), 0 4px 6px -4px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.60), 0 8px 10px -6px rgba(0, 0, 0, 0.40);
+
+  /* === Focus ring — cyan dessaturado, única exceção ao P&B === */
+  --shadow-focus: 0 0 0 3px var(--accent-cyan-glow);
+
+  --inset-top-light: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* ===========================================================
  * Aliases legados — mantêm classes antigas vivas sem reescrever JSX.
  * Mapeiam os nomes antigos pros novos tokens.
  * =========================================================== */
 :root,
 :root[data-theme="dark"],
+:root[data-theme="noir"],
 :root[data-theme="light"] {
   --ink: var(--text);
   --ink-soft: var(--text-muted);
