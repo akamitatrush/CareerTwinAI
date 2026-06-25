@@ -65,6 +65,14 @@
   --attention-soft: #FEF3E7;
   --attention-tint: #FACA94;
 
+  /* === Negative — error/destructive states.
+     Wave 7 (Galadriel-3): token estava ausente; OutcomeSurveyModal.js:250 já o
+     referenciava com fallback #c00. Adicionado pra cobrir todos os temas. */
+  --negative: #DC2626;      /* red-600 */
+  --negative-deep: #991B1B; /* red-800 */
+  --negative-soft: #FEE2E2; /* red-100 — bg suave em light */
+  --negative-tint: #FCA5A5; /* red-300 */
+
   --avatar-from: #E7B98C;
   --avatar-to: #C98A57;
 
@@ -182,6 +190,12 @@
   --attention-soft: #2E1F0A;     /* era #FEF3E7 (quase branco) → laranja deep wash */
   --attention-tint: #92400E;
 
+  /* === Negative dark — red-400 mais claro pra contrastar com bg dark === */
+  --negative: #F87171;
+  --negative-deep: #DC2626;
+  --negative-soft: #2E0E0E;
+  --negative-tint: #991B1B;
+
   /* === Accent cyan/magenta em dark — luminance ajustada ===
      Cyan continua vibrante, deep um pouco mais claro pra contrastar
      com bg dark. Glow alpha ligeiramente maior. */
@@ -214,15 +228,15 @@
  * e tokens decorativos permanecem nos defaults do :root base.
  * =========================================================== */
 :root[data-theme="noir"] {
-  /* === Background — near-black, evita preto puro pra reduzir contraste duro === */
-  --bg: #0A0A0A;
-  --surface: #141414;
-  --surface-2: #1A1A1A;       /* modais, dropdowns */
-  --surface-3: #1F1F1F;       /* hover */
+  /* === Background — preto puro Cloudwalk editorial === */
+  --bg: #000000;
+  --surface: #0A0A0A;
+  --surface-2: #121212;       /* modais, dropdowns */
+  --surface-3: #1A1A1A;       /* hover */
 
-  /* === Border === */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  /* === Border — finas mas mais visíveis (depend on borders, not shadows) === */
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.22);
 
   /* === Text — hierarquia preservada (faint > muted > soft em luminance) === */
   --text: #FAFAFA;
@@ -248,13 +262,14 @@
   --accent-deep: #FFFFFF;
   --accent-wash: #141414;
 
-  /* === Cyan/magenta neutralizados ===
-     Cyan vira focus-state apenas, dessaturado. Magenta vira branco. */
-  --accent-cyan: #6BE2C8;
-  --accent-cyan-deep: #4DCFB3;
-  --accent-cyan-glow: rgba(107, 226, 200, 0.20);
+  /* === Lime accent Cloudwalk-style ===
+     Verde-amarelo Cloudwalk pra CTA principal + 1-2 destaques/página.
+     Uso EXTREMAMENTE controlado — sem glow gritante. Magenta neutralizado. */
+  --accent-cyan: #C2F542;
+  --accent-cyan-deep: #A8DB28;
+  --accent-cyan-glow: rgba(194, 245, 66, 0.18);
   --accent-magenta: #FAFAFA;
-  --accent-magenta-soft: rgba(255, 255, 255, 0.06);
+  --accent-magenta-soft: rgba(255, 255, 255, 0.04);
 
   /* === Positive/attention — monocromático === */
   --positive: #E5E5E5;
@@ -271,6 +286,12 @@
   --alert: #FFB4B4;
   --alert-wash: rgba(255, 180, 180, 0.08);
 
+  /* === Negative noir — reusa o mesmo rosa-coral do --alert pra consistência === */
+  --negative: #FFB4B4;
+  --negative-deep: #FF8A8A;
+  --negative-soft: rgba(255, 180, 180, 0.08);
+  --negative-tint: rgba(255, 180, 180, 0.18);
+
   --ok: var(--positive);
   --ok-wash: var(--positive-soft);
 
@@ -278,10 +299,10 @@
   --avatar-from: #2A2A2A;
   --avatar-to: #E5E5E5;
 
-  /* === App glassmorphism — vidro mais opaco (sem cor compete menos com transparência) === */
-  --app-glass-bg: rgba(255, 255, 255, 0.03);
+  /* === App glassmorphism — quase sólido, Cloudwalk não usa glass vibrante === */
+  --app-glass-bg: rgba(255, 255, 255, 0.02);
   --app-glass-border: rgba(255, 255, 255, 0.08);
-  --app-glass-blur: 12px;
+  --app-glass-blur: 8px;
 
   /* === Site tokens — caso noir afete landing (opcional, spec autorizou) ===
      Mesh neutro, accent reduzido a cyan dessaturado. */
@@ -291,14 +312,14 @@
   --site-fg-dim: rgba(250, 250, 250, 0.42);
   --site-border: rgba(255, 255, 255, 0.08);
   --site-border-strong: rgba(255, 255, 255, 0.16);
-  --site-card-bg: rgba(255, 255, 255, 0.03);
-  --site-card-bg-hover: rgba(255, 255, 255, 0.05);
-  --site-glass-blur: 16px;
+  --site-card-bg: rgba(255, 255, 255, 0.02);
+  --site-card-bg-hover: rgba(255, 255, 255, 0.04);
+  --site-glass-blur: 10px;
   --site-accent: var(--accent-cyan);
   --site-accent-deep: var(--accent-cyan-deep);
   --site-accent-glow: var(--accent-cyan-glow);
   --site-accent-magenta: #FAFAFA;
-  --site-mesh-cyan: rgba(255, 255, 255, 0.04);
+  --site-mesh-cyan: rgba(194, 245, 66, 0.04);
   --site-mesh-magenta: rgba(255, 255, 255, 0.02);
   --site-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   --site-shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.10) inset;
@@ -6578,5 +6599,31 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   .site-faq-item {
     transition: none;
   }
+}
+
+/* ===========================================================
+ * Cloudwalk-style lime accent — uso EXTREMAMENTE controlado.
+ * Aplique em: CTA principal de hero + 1 destaque por viewport.
+ * Em light/dark, vira accent-cyan normal (compatibilidade).
+ * =========================================================== */
+.cloud-accent {
+  color: var(--accent-cyan);
+}
+
+.cloud-accent-bg {
+  background-color: var(--accent-cyan);
+  color: #000;
+}
+
+.cloud-accent-border {
+  border-color: var(--accent-cyan);
+}
+
+/* Hero brutalist tracking — usar em h-display do site quando quiser
+   Cloudwalk feel. Não default — opt-in. */
+.h-brutal {
+  letter-spacing: -0.05em;
+  font-weight: 700;
+  line-height: 0.92;
 }
 
