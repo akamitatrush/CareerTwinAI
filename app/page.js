@@ -338,10 +338,10 @@ export default function Home() {
 
       <main className="wrap">
         {stage === "input" && (
-          <section className="ct-onb-stage">
+          <section className="ct-onb-stage site-section-mesh">
             <div className="ct-onb-grid">
               {/* Brand panel (esquerda) */}
-              <div className="ct-onb-brand">
+              <div className="ct-onb-brand app-glass">
                 <div className="ct-onb-brand-mark">
                   <div className="ct-onb-brand-mark-icon">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -435,7 +435,8 @@ export default function Home() {
               </div>
 
               {/* Right panel — inputs */}
-              <div className="ct-onb-input">
+              <div className="ct-onb-input app-glass"
+                style={{ boxShadow: "0 8px 24px -6px var(--accent-cyan-glow)" }}>
                 <div className="ct-onb-input-head">
                   <span className="ct-onb-step">ETAPA 1 DE 2 · CONECTAR SUAS FONTES</span>
                   {isLogged && onbState && (
@@ -623,8 +624,8 @@ export default function Home() {
         )}
 
         {stage === "proc" && (
-          <section className="stage">
-            <div className="proc">
+          <section className="stage site-section-mesh">
+            <div className="proc app-glass">
               <div className="proc-ring" />
               <div className="proc-headline">
                 <h2 className="proc-title">{procMessages[procStep]?.title || "Quase lá"}</h2>

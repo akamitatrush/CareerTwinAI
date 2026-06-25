@@ -112,7 +112,7 @@ export default async function DashboardPage() {
         gapsCount={Array.isArray(latest?.gaps) ? latest.gaps.length : 0}
       />
       {/* Header */}
-      <div className="ct-dash-header">
+      <div className="ct-dash-header site-section-mesh">
         <div>
           <p className="ct-dash-eyebrow">Bom te ver de volta,</p>
           <h1 className="ct-dash-title">Olá, {firstName}</h1>
@@ -166,7 +166,7 @@ export default async function DashboardPage() {
 
       {/* HERO: Score Ring + Sub-scores */}
       {latest && (
-        <div className="ct-dash-hero">
+        <div className="ct-dash-hero app-glass">
           <ScoreRingCol
             latest={latest}
             deltaFromFirst={deltaFromFirst}
@@ -231,7 +231,7 @@ export default async function DashboardPage() {
 
 function EmptyState() {
   return (
-    <div className="ct-dash-empty">
+    <div className="ct-dash-empty app-glass">
       <h2>Seu gêmeo ainda está em branco.</h2>
       <p>
         Cole seu currículo e diga o cargo-alvo na <Link href="/">home</Link>{" "}
@@ -325,7 +325,10 @@ function ScoreRingCol({
 
   return (
     <div className="ct-score-col">
-      <div className="ct-score-ring-wrap">
+      <div
+        className="ct-score-ring-wrap"
+        style={{ boxShadow: "0 8px 24px -6px var(--accent-cyan-glow)", borderRadius: "50%" }}
+      >
         <svg
           width="172"
           height="172"
@@ -611,7 +614,7 @@ function ProfileSnapshotCol({ profile, completeness, latest }) {
           {completeness.percent}% completo
         </span>
       </div>
-      <div className="ct-profile-card">
+      <div className="ct-profile-card app-glass">
         <div className="ct-profile-top">
           <div className="ct-profile-avatar">{initial}</div>
           <div>
