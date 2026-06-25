@@ -53,7 +53,7 @@ export default function SiteNav() {
         }}
       >
         <Link
-          href="/site"
+          href="/"
           aria-label="CareerTwin — início"
           style={{
             display: "inline-flex",
@@ -111,8 +111,8 @@ export default function SiteNav() {
           <Link href="/entrar" className="site-btn-secondary" style={btnSecondaryFallback}>
             Entrar
           </Link>
-          <Link href="/" className="site-btn-primary" style={btnPrimaryFallback}>
-            Começar grátis
+          <Link href="/experimentar" className="site-btn-primary" style={btnPrimaryFallback}>
+            Testar grátis
           </Link>
         </div>
 
@@ -166,7 +166,7 @@ export default function SiteNav() {
           </ul>
           <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
             <Link href="/entrar" className="site-btn-secondary" style={{ ...btnSecondaryFallback, textAlign: "center" }}>Entrar</Link>
-            <Link href="/" className="site-btn-primary" style={{ ...btnPrimaryFallback, textAlign: "center" }}>Começar grátis</Link>
+            <Link href="/experimentar" className="site-btn-primary" style={{ ...btnPrimaryFallback, textAlign: "center" }}>Testar grátis</Link>
           </div>
         </div>
       )}

@@ -56,7 +56,7 @@ export default function SiteFooter() {
         >
           <div>
             <Link
-              href="/site"
+              href="/"
               style={{
                 display: "inline-flex",
                 alignItems: "center",

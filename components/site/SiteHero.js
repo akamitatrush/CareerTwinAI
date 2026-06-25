@@ -169,7 +169,7 @@ export default function SiteHero() {
           }}
         >
           <Link
-            href="/"
+            href="/experimentar"
             className="site-btn-primary"
             style={{
               display: "inline-flex",

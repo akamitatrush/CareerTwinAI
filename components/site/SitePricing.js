@@ -20,7 +20,7 @@ const TIERS = [
       "Modo claro/escuro",
     ],
     cta: "Começar grátis",
-    href: "/",
+    href: "/experimentar",
     highlight: false,
   },
   {
