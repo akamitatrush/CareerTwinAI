@@ -136,7 +136,7 @@ function NoTargetState() {
         Sem cargo-alvo, nao da pra montar um plano de carreira. Adicione em{" "}
         <Link href="/conta">/conta</Link>.
       </p>
-      <Link href="/conta" className="btn-primary" style={{ marginTop: 16 }}>
+      <Link href="/conta" className="btn btn-primary" style={{ marginTop: 16 }}>
         Definir cargo-alvo
       </Link>
     </div>

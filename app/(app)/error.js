@@ -33,7 +33,7 @@ export default function AppError({ error, reset }) {
           )}
         </p>
         <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
-          <button onClick={() => reset()} className="btn-primary">
+          <button onClick={() => reset()} className="btn btn-primary">
             Tentar de novo
           </button>
           <Link href="/dashboard" className="btn-ghost">

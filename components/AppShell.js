@@ -97,10 +97,16 @@ function BrandMark({ size = 34, radius = 10 }) {
         height={inner}
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#fff"
+        /* currentColor + style.color = var(--on-primary). Atributos SVG
+           (stroke="...") nao processam var() diretamente; currentColor
+           herda do CSS, e style.color resolve a var por tema.
+           Light/dark: #FFFFFF sobre indigo. Noir: #000000 sobre o gradient
+           branco-cinza (antes era #fff hardcoded — ficava invisivel). */
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        style={{ color: "var(--on-primary)" }}
       >
         <circle cx="9" cy="8" r="3.2" />
         <path d="M3.5 19c.6-3 2.9-4.6 5.5-4.6" />
@@ -232,15 +238,35 @@ export default function AppShell({ children, user }) {
           </div>
 
           <div className="appshell-user">
-            <div className="appshell-avatar" aria-hidden="true">
-              {initial}
-            </div>
-            <div className="appshell-user-info">
-              <div className="appshell-user-name">{userName}</div>
-              <div className="appshell-user-role" title={targetRole}>
-                {targetRole}
+            {/* Link cobre avatar+info; bell fica fora pra nao "engolir" clique
+                no sino. Wave 10 fix — antes era <div> nao-clicavel, sem item
+                "Conta" na nav. Agora vira atalho pra /conta com a11y label. */}
+            <Link
+              href="/conta"
+              className="appshell-user-link"
+              aria-label="Ver minha conta"
+            >
+              {user?.image ? (
+                <img
+                  className="appshell-avatar"
+                  src={user.image}
+                  alt=""
+                  width={36}
+                  height={36}
+                  aria-hidden="true"
+                />
+              ) : (
+                <div className="appshell-avatar" aria-hidden="true">
+                  {initial}
+                </div>
+              )}
+              <div className="appshell-user-info">
+                <div className="appshell-user-name">{userName}</div>
+                <div className="appshell-user-role" title={targetRole}>
+                  {targetRole}
+                </div>
               </div>
-            </div>
+            </Link>
             <NotificationsBell />
           </div>
         </aside>

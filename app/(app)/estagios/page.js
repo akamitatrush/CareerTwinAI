@@ -113,8 +113,8 @@ function DicaBanner() {
       <span>
         <strong style={{ color: "var(--text)" }}>Dica:</strong>{" "}
         Estagio + LinkedIn ativo = 3x mais callbacks. Veja{" "}
-        <Link href="/linkedin" style={{ color: "var(--primary)", fontWeight: 600 }}>
-          /linkedin
+        <Link href="/conta" style={{ color: "var(--primary)", fontWeight: 600 }}>
+          /conta
         </Link>{" "}
         pra otimizar seu perfil.
       </span>

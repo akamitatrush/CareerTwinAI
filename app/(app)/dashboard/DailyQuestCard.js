@@ -97,7 +97,7 @@ export default function DailyQuestCard() {
           type="button"
           onClick={complete}
           disabled={completing}
-          className="btn-primary"
+          className="btn btn-primary"
         >
           {completing ? "Salvando…" : "Marquei como feito"}
         </button>

@@ -1119,7 +1119,10 @@ function DpoContactSection() {
               gap: 8,
               padding: "10px 16px",
               background: "var(--accent-cyan-deep)",
-              color: "#fff",
+              /* var(--accent-on-cyan): noir = #000 sobre lime; light/dark =
+                 #08313F (teal escuro sobre cyan). Antes era #fff hardcoded
+                 — baixo contraste em noir (texto branco em lime claro). */
+              color: "var(--accent-on-cyan, #08313F)",
               border: "1px solid var(--accent-cyan-deep)",
               borderRadius: "var(--radius-pill, 999px)",
               fontFamily: "var(--font-mono, monospace)",
