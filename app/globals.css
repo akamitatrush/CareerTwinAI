@@ -32,8 +32,10 @@
      [data-theme="dark"] nem em [data-theme="light"]. */
   --site-bg: #0A0A0E;
   --site-fg: #FAFAFC;
-  --site-fg-muted: rgba(250, 250, 252, 0.65);
-  --site-fg-dim: rgba(250, 250, 252, 0.45);
+  --site-fg-muted: rgba(250, 250, 252, 0.72);
+  /* Wave 10A — WCAG AA fix. Alpha 0.45 dava ~3.98:1 sobre #0A0A0E (FAIL pra
+     texto normal). 0.58 atinge ~4.6:1. Site eh dark editorial, sempre. */
+  --site-fg-dim: rgba(250, 250, 252, 0.58);
   --site-border: rgba(255, 255, 255, 0.08);
   --site-border-strong: rgba(255, 255, 255, 0.16);
   --site-card-bg: rgba(255, 255, 255, 0.04);
@@ -145,8 +147,12 @@
   --text: #1A1B2E;
   --text-strong: #1A1B2E;
   --text-soft: #4A4D63;   /* era #797585 — escurece p/ corrigir hierarquia (soft mais escuro que faint) */
-  --text-muted: #6B7180;  /* novo nível intermediário entre soft e faint */
-  --text-faint: #9CA0AE;  /* era #6B6679 — agora MAIS CLARO que soft (hierarquia correta) */
+  /* Wave 10A — WCAG AA fix. Antes #6B7180 dava ~4.26:1 sobre #F4F6FA (FAIL).
+     Agora #5A5F6D dá ~5.7:1 (AA pass pra texto normal). */
+  --text-muted: #5A5F6D;
+  /* Wave 10A — WCAG AA fix. Antes #9CA0AE dava ~2.44:1 (FAIL grave).
+     Agora #6A6E7B dá ~4.6:1 (AA pass pra texto normal). */
+  --text-faint: #6A6E7B;
   --text-subtle: #4A4D63; /* alias legado mapeia pro novo --text-soft */
   --scrim: rgba(26, 27, 46, 0.4);
 }
@@ -169,7 +175,11 @@
   --text-strong: #FFFFFF;
   --text-soft: #C9CDD8;
   --text-muted: #8A8FA1;
-  --text-faint: #5C6171;
+  /* Wave 10A — WCAG AA fix. Antes #5C6171 dava ~3.0:1 sobre #0D1117 (FAIL).
+     Agora #8A8FA0 dá ~5.8:1 (AA pass). Mantem hierarquia faint>muted? Nao —
+     em dark, faint vira mais claro que muted intencionalmente (luminance
+     invertido pra preservar legibilidade). Outro anel pode re-balancear. */
+  --text-faint: #8A8FA0;
   --text-subtle: #C9CDD8;  /* alias legado mapeia pro novo --text-soft dark */
   --scrim: rgba(0, 0, 0, 0.6);
 
@@ -314,8 +324,10 @@
      Mesh neutro, accent reduzido a cyan dessaturado. */
   --site-bg: #0A0A0A;
   --site-fg: #FAFAFA;
-  --site-fg-muted: rgba(250, 250, 250, 0.65);
-  --site-fg-dim: rgba(250, 250, 250, 0.42);
+  --site-fg-muted: rgba(250, 250, 250, 0.72);
+  /* Wave 10A — WCAG AA fix. Antes 0.42 dava ~3.6:1 sobre #0A0A0A (FAIL).
+     0.58 atinge ~4.6:1. */
+  --site-fg-dim: rgba(250, 250, 250, 0.58);
   --site-border: rgba(255, 255, 255, 0.08);
   --site-border-strong: rgba(255, 255, 255, 0.16);
   --site-card-bg: rgba(255, 255, 255, 0.02);
@@ -731,7 +743,10 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 
 .btn-primary{
   background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary) 100%);
-  color: #FFF;
+  /* Wave 10A — usa token semantico --on-primary. Noir sobrescreve para #000
+     pq --primary virou #FAFAFA (branco). Antes (#FFF hardcoded) deixava
+     ~25 botoes invisiveis em noir. Fallback #FFF mantem light/dark intactos. */
+  color: var(--on-primary, #FFF);
   border: 1px solid var(--primary-deep);
   box-shadow: var(--shadow-sm), var(--inset-top-light);
 }
@@ -749,7 +764,7 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   transform: scale(0.98) translateY(0);
   box-shadow: var(--shadow-sm), var(--inset-top-light);
 }
-.btn-primary .arw{ color: rgba(255,255,255,.85); }
+.btn-primary .arw{ color: var(--on-primary, rgba(255,255,255,.85)); opacity: 0.85; }
 
 .btn-ghost{
   background: var(--surface);
@@ -1368,7 +1383,9 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   backdrop-filter:blur(3px);
   display:flex; align-items:flex-start; justify-content:center;
   padding:48px 18px;
-  z-index:100;
+  /* z-index 9100: acima do notif drawer (9000/9001), abaixo do achievement
+     toast (9500). Wave 10 fix — modal abria por baixo do drawer aberto. */
+  z-index:9100;
   overflow-y:auto;
   animation:fadein .2s ease;
 }
@@ -1954,6 +1971,32 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Wave 10: a area do user vira <Link href="/conta">. Reproduzimos o flex
+   interno (avatar + info) e damos affordance de hover sem alterar layout. */
+.appshell-user-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border-radius: var(--radius-md);
+  transition: background-color 160ms var(--ease-standard);
+}
+.appshell-user-link:hover,
+.appshell-user-link:focus-visible {
+  background: var(--surface-2, var(--surface));
+  outline: none;
+}
+.appshell-user-link:focus-visible {
+  box-shadow: 0 0 0 2px var(--primary-tint);
+}
+/* user.image fallback: <img> com .appshell-avatar tem que cobrir 100% sem
+   layout-shift dos children (initial). object-fit garante crop centralizado. */
+img.appshell-avatar { object-fit: cover; padding: 0; }
 
 /* Mobile header */
 .appshell-mobile-header {
@@ -2525,13 +2568,18 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   position: absolute;
   left: -9999px;
   top: 0;
-  background: var(--primary);
-  color: #fff;
+  /* Wave 10A — tokenizado pra cobrir noir. Antes: bg=--primary + #fff hardcoded.
+     Em noir --primary=#FAFAFA (quase branco), skip link sumia. Agora usa
+     --text (alta luminance contrast) como bg e --bg como cor — alto contraste
+     garantido nos 3 temas. */
+  background: var(--text);
+  color: var(--bg);
   padding: 10px 16px;
   z-index: 9999;
   text-decoration: none;
   font-weight: 700;
   border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
 }
 .ct-skip-link:focus {
   left: 12px;
@@ -3453,7 +3501,9 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   background:
     radial-gradient(circle at 80% 10%, rgba(186, 186, 240, 0.18) 0%, transparent 50%),
     linear-gradient(165deg, var(--primary-light) 0%, var(--primary) 38%, var(--primary-deep) 75%, #1F1F4F 100%);
-  color: #fff;
+  /* var(--on-primary): light/dark = #fff sobre indigo; noir = #000 sobre o
+     gradient branco-cinza (antes era #fff hardcoded → invisivel em noir). */
+  color: var(--on-primary);
   /* Refresh visual: hero mais alto + padding vertical ampliado pra respirar */
   padding: 56px 38px;
   display: flex;
@@ -5935,8 +5985,17 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   .appshell-nav-item { min-height: 44px; }
   .appshell-mobile-nav-item { min-height: 44px; padding: 10px 14px; }
 
-  /* Theme toggle 38x38 -> 44x44 */
-  .theme-toggle { width: 44px; height: 44px; }
+  /* Theme toggle 38x38 -> 44x44.
+     Wave 10 fix: em mobile, o toggle ficava em top:20px/right:20px e
+     sobrepunha avatar+bell do AppShell mobile header (z-index 5 sticky).
+     Reposicionamos pra bottom-right pra nao conflitar — fica acima do
+     copilot widget mas longe do header. */
+  .theme-toggle {
+    width: 44px;
+    height: 44px;
+    top: auto;
+    bottom: 20px;
+  }
 
   /* Botoes inline (Concluir, Adaptar, Salvar candidatura) — 36px
      visual + padding generoso pro hitbox real ficar >=44px com
@@ -6168,13 +6227,23 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--accent-cyan-deep); font-weight: 600; margin: 0 0 4px;
 }
+/* Wave 10A — H1 sistema unificado com /dashboard, /carreira, /plano.
+   Substitui o legado 26px Spectral fixo (10 paginas usavam essa classe). */
 .ct-page-header-title {
-  font-family: var(--font-display); font-size: 26px; line-height: 1.2;
-  font-weight: 700; letter-spacing: -0.5px; color: var(--text-strong); margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0 0 16px 0;
+  color: var(--text);
 }
 .ct-page-header-sub {
-  font-size: 14.5px; color: var(--text-muted); line-height: 1.55;
-  max-width: 60ch; margin: 6px 0 0;
+  font-size: clamp(16px, 1.6vw, 18px);
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 60ch;
+  margin: 6px 0 0;
 }
 .ct-page-header-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .ct-page-header-meta > * {
@@ -6187,8 +6256,9 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 @media (max-width: 640px) {
   .ct-page-header { gap: 14px; padding: 18px; }
   .ct-page-header-icon { width: 36px; height: 36px; font-size: 16px; border-radius: 10px; }
-  .ct-page-header-title { font-size: 20px; }
-  .ct-page-header-sub { font-size: 13.5px; }
+  /* Wave 10A — mobile mantem clamp do display H1; nao ha fonte fixa. */
+  .ct-page-header-title { font-size: clamp(32px, 9vw, 48px); line-height: 1.08; }
+  .ct-page-header-sub { font-size: 14.5px; }
   .ct-page-header::after { display: none; }
 }
 
