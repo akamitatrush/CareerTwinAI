@@ -76,6 +76,39 @@ export default function CvDetailClient({ cvId }) {
 
   return (
     <>
+      {/* Refresh visual (Sam) — modal com glass + gradient cyan no copy. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .tailor-modal-glass {
+              box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-cyan-glow);
+            }
+            .tailor-modal-glass .ct-tailor-btn-copy {
+              background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+              color: #08313F;
+              border: 1px solid transparent;
+              box-shadow: var(--shadow-md);
+              transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+            }
+            .tailor-modal-glass .ct-tailor-btn-copy:hover {
+              transform: translateY(-1px);
+              box-shadow: var(--shadow-lg), 0 0 0 3px var(--accent-cyan-glow);
+              filter: brightness(1.04);
+            }
+            .tailor-modal-glass .ct-tailor-btn-copy:focus-visible {
+              outline: none;
+              box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-cyan-glow);
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .tailor-modal-glass .ct-tailor-btn-copy,
+              .tailor-modal-glass .ct-tailor-btn-copy:hover {
+                transition: none;
+                transform: none;
+              }
+            }
+          `,
+        }}
+      />
       <button
         onClick={show}
         className="ct-tailor-btn-view"
@@ -92,7 +125,7 @@ export default function CvDetailClient({ cvId }) {
           role="presentation"
         >
           <div
-            className="ct-tailor-modal"
+            className="ct-tailor-modal app-glass tailor-modal-glass"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"

@@ -232,6 +232,49 @@ export default async function ContaPage({ searchParams }) {
 
   return (
     <div className="app-container">
+      {/* Refresh visual (Sam) — overrides locais com gradient cyan + hover lift.
+          Sem tocar globals.css. Usa tokens definidos por Legolas (--accent-cyan,
+          --accent-cyan-deep, --accent-cyan-glow, --app-glass-*, --shadow-md/lg). */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .conta-glass-card {
+              transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+              box-shadow: var(--shadow-md);
+            }
+            .conta-glass-card:hover {
+              transform: scale(1.01);
+              box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-cyan-glow);
+              border-color: var(--accent-cyan-glow);
+            }
+            .conta-glass-card .ct-conta-btn.primary {
+              background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+              color: #08313F;
+              border: 1px solid transparent;
+              box-shadow: var(--shadow-md);
+              transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+            }
+            .conta-glass-card .ct-conta-btn.primary:hover {
+              transform: translateY(-1px);
+              box-shadow: var(--shadow-lg), 0 0 0 3px var(--accent-cyan-glow);
+              filter: brightness(1.04);
+            }
+            .conta-glass-card .ct-conta-btn.primary:focus-visible {
+              outline: none;
+              box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-cyan-glow);
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .conta-glass-card,
+              .conta-glass-card:hover,
+              .conta-glass-card .ct-conta-btn.primary,
+              .conta-glass-card .ct-conta-btn.primary:hover {
+                transition: none;
+                transform: none;
+              }
+            }
+          `,
+        }}
+      />
       {/* Header simples */}
       <div className="ct-gaps-header">
         <div>
@@ -266,7 +309,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             1. Perfil — identidade + nome editavel
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-perfil">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-perfil">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-perfil" className="ct-conta-card-title">
@@ -332,7 +375,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             2. Cargo-alvo
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-cargo">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-cargo">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-cargo" className="ct-conta-card-title">
@@ -372,7 +415,7 @@ export default async function ContaPage({ searchParams }) {
             2.5. Analise IA inline do CV (feature #4 STRATEGY_ROADMAP)
             ============================================================ */}
         {profile?.rawCv && profile.rawCv.length > 100 && (
-          <section className="ct-conta-card" aria-labelledby="conta-cv-ai">
+          <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-cv-ai">
             <div className="ct-conta-card-head">
               <div>
                 <h2 id="conta-cv-ai" className="ct-conta-card-title">
@@ -391,7 +434,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             3. Stats em mosaico
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-stats">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-stats">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-stats" className="ct-conta-card-title">
@@ -429,7 +472,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             3.5. Conquistas — grid de achievements
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-achievements">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-achievements">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-achievements" className="ct-conta-card-title">
@@ -481,7 +524,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             4. Preferencias de notificacao
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-notif">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-notif">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-notif" className="ct-conta-card-title">
@@ -527,7 +570,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             5. Privacidade & dados
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-lgpd">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-lgpd">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-lgpd" className="ct-conta-card-title">
@@ -561,7 +604,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             6. Sessao
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-sessao">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-sessao">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-sessao" className="ct-conta-card-title">

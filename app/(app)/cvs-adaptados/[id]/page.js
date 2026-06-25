@@ -62,6 +62,28 @@ export default async function CvDiffPage({ params }) {
 
   return (
     <main className="app-container" id="main-content">
+      {/* Refresh visual (Sam) — glass + hover lift nos KPI cards do diff. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .diff-kpi-glass {
+              transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+            }
+            .diff-kpi-glass:hover {
+              transform: scale(1.01);
+              box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-cyan-glow);
+              border-color: var(--accent-cyan-glow);
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .diff-kpi-glass,
+              .diff-kpi-glass:hover {
+                transition: none;
+                transform: none;
+              }
+            }
+          `,
+        }}
+      />
       <Link
         href="/cvs-adaptados"
         className="ct-self-back"
@@ -102,25 +124,25 @@ export default async function CvDiffPage({ params }) {
         aria-label="Resumo da comparacao"
         style={{ marginTop: 24, marginBottom: 12 }}
       >
-        <div className="ct-kpi-card">
+        <div className="ct-kpi-card app-glass diff-kpi-glass">
           <div className="ct-kpi-value" style={{ color: "rgb(22,163,74)" }}>
             {stats.added}
           </div>
           <div className="ct-kpi-label">Linhas adicionadas</div>
         </div>
-        <div className="ct-kpi-card">
+        <div className="ct-kpi-card app-glass diff-kpi-glass">
           <div className="ct-kpi-value" style={{ color: "rgb(220,38,38)" }}>
             {stats.removed}
           </div>
           <div className="ct-kpi-label">Linhas removidas</div>
         </div>
-        <div className="ct-kpi-card">
+        <div className="ct-kpi-card app-glass diff-kpi-glass">
           <div className="ct-kpi-value" style={{ color: "rgb(202,138,4)" }}>
             {stats.changed}
           </div>
           <div className="ct-kpi-label">Linhas alteradas</div>
         </div>
-        <div className="ct-kpi-card">
+        <div className="ct-kpi-card app-glass diff-kpi-glass">
           <div className="ct-kpi-value ct-kpi-primary">{pct}%</div>
           <div className="ct-kpi-label">% de mudança</div>
         </div>

@@ -44,7 +44,28 @@ export default function CvDiffView({ original = "", tailored = "" }) {
   const pct = changePercent(stats);
 
   return (
-    <section className="ct-cv-diff" aria-label="Comparacao antes e depois do CV">
+    <section
+      className="ct-cv-diff app-glass cv-diff-glass"
+      aria-label="Comparacao antes e depois do CV"
+      style={{ padding: 16 }}
+    >
+      {/* Refresh visual (Sam) — gradient cyan no toggle ativo. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .cv-diff-glass .ct-tailor-btn-view[aria-pressed="true"] {
+              background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+              color: #08313F;
+              border: 1px solid transparent;
+              box-shadow: var(--shadow-md), 0 0 0 1px var(--accent-cyan-glow);
+            }
+            .cv-diff-glass .ct-tailor-btn-view:focus-visible {
+              outline: none;
+              box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-cyan-glow);
+            }
+          `,
+        }}
+      />
       <div
         className="ct-cv-diff-toolbar"
         role="toolbar"
@@ -307,15 +328,24 @@ function SideRow({ row, index }) {
 
 function rowStyles(type) {
   // Cores soft 18% saturacao — passa WCAG AA com texto escuro padrao.
+  // Refresh visual (Sam): "adicionado" recebe box-shadow cyan glow (var
+  // --accent-cyan-glow); "removido" ganha border-left magenta — sinais
+  // visuais alinhados ao moat dark/glass sem perder semantica de diff.
   if (type === "insert") {
     return {
       left: { background: "transparent" },
-      right: { background: "rgba(34,197,94,0.18)" },
+      right: {
+        background: "rgba(34,197,94,0.18)",
+        boxShadow: "inset 0 0 0 1px var(--accent-cyan-glow), 0 0 12px -2px var(--accent-cyan-glow)",
+      },
     };
   }
   if (type === "delete") {
     return {
-      left: { background: "rgba(239,68,68,0.18)" },
+      left: {
+        background: "rgba(239,68,68,0.18)",
+        borderLeft: "3px solid #ff2dd1",
+      },
       right: { background: "transparent" },
     };
   }
@@ -404,6 +434,16 @@ function Unified({ ops }) {
             : op.type === "delete"
             ? "rgba(239,68,68,0.18)"
             : "transparent";
+        // Refresh visual (Sam): insert ganha glow cyan, delete border magenta.
+        const extraStyle =
+          op.type === "insert"
+            ? {
+                boxShadow:
+                  "inset 0 0 0 1px var(--accent-cyan-glow), 0 0 10px -2px var(--accent-cyan-glow)",
+              }
+            : op.type === "delete"
+            ? { borderLeft: "3px solid #ff2dd1" }
+            : null;
         return (
           <div
             key={i}
@@ -416,6 +456,7 @@ function Unified({ ops }) {
               wordBreak: "break-word",
               display: "flex",
               gap: 8,
+              ...(extraStyle || {}),
             }}
           >
             <span

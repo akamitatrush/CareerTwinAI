@@ -87,7 +87,56 @@ export default function CvAnalyzer({ cv, role }) {
   }
 
   return (
-    <div className="ct-cv-analyzer">
+    <div className="ct-cv-analyzer app-glass cv-analyzer-glass">
+      {/* Refresh visual (Sam) — gradient cyan no botao primario + hover lift.
+          Sem tocar globals.css. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .cv-analyzer-glass {
+              padding: 16px;
+              transition: box-shadow 200ms ease, border-color 200ms ease;
+            }
+            .cv-analyzer-glass:hover {
+              box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-cyan-glow);
+              border-color: var(--accent-cyan-glow);
+            }
+            .cv-analyzer-glass .ct-conta-btn.primary {
+              background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+              color: #08313F;
+              border: 1px solid transparent;
+              box-shadow: var(--shadow-md);
+              transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+            }
+            .cv-analyzer-glass .ct-conta-btn.primary:hover:not(:disabled) {
+              transform: translateY(-1px);
+              box-shadow: var(--shadow-lg), 0 0 0 3px var(--accent-cyan-glow);
+              filter: brightness(1.04);
+            }
+            .cv-analyzer-glass .ct-conta-btn.primary:focus-visible {
+              outline: none;
+              box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-cyan-glow);
+            }
+            .cv-analyzer-glass .ct-cv-line {
+              transition: transform 200ms ease, box-shadow 200ms ease;
+            }
+            .cv-analyzer-glass .ct-cv-line:hover {
+              transform: scale(1.005);
+              box-shadow: 0 0 0 1px var(--accent-cyan-glow);
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .cv-analyzer-glass,
+              .cv-analyzer-glass .ct-conta-btn.primary,
+              .cv-analyzer-glass .ct-cv-line,
+              .cv-analyzer-glass .ct-conta-btn.primary:hover,
+              .cv-analyzer-glass .ct-cv-line:hover {
+                transition: none;
+                transform: none;
+              }
+            }
+          `,
+        }}
+      />
       <div className="ct-cv-analyzer-head">
         <div>
           <h3 className="ct-cv-analyzer-title">Analise IA do seu CV</h3>
