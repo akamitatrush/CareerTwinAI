@@ -2,14 +2,27 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isAdminEmail } from "@/lib/admin-access";
+import {
+  isAdminAuthenticated,
+  verifyAdminPassword,
+  setAdminCookie,
+  clearAdminCookie,
+  adminPasswordConfigured,
+} from "@/lib/admin-session";
 
-// Pagina /admin — visao de uso pra owners. Mesma logica do /api/admin/usage
-// mas SSR direto (sem fetch publico). Owner-only via OWNER_EMAILS env.
+// Pagina /admin — visao de uso pro founder. Defesa em CAMADAS:
+//
+//  Camada 1: session logada (Auth.js)
+//  Camada 2: email em ADMIN_EMAILS env
+//  Camada 3: senha em ADMIN_PASSWORD via cookie HTTP-only signed (7 dias)
+//
+// Sem qualquer camada → form de senha ou redirect, sem expor /admin existe.
 //
 // Acesso:
 //  - Nao logado → redirect /entrar
-//  - Logado mas nao-owner → redirect /dashboard
-//  - Owner → render
+//  - Logado mas nao-admin email → redirect /dashboard
+//  - Admin email mas sem cookie → form de senha
+//  - Admin email + cookie valido → render
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin — Uso do produto" };
@@ -41,10 +54,138 @@ function fmtRelative(d) {
   return `${days}d atrás`;
 }
 
-export default async function AdminPage() {
+// Server action: valida senha admin. Tudo server-side, sem JS no cliente.
+// Re-valida session + email (defesa) — sem isso atacante poderia POST direto
+// na action mesmo deslogado. Server actions sao endpoint POST publico por
+// default, entao toda action sensivel re-valida do zero.
+async function adminLoginAction(formData) {
+  "use server";
+  const session = await auth();
+  if (!session?.user?.email) {
+    redirect("/entrar");
+  }
+  if (!isAdminEmail(session.user.email)) {
+    redirect("/dashboard");
+  }
+  const password = formData.get("password");
+  if (!verifyAdminPassword(password)) {
+    // Sem leak de "errou senha" no GET — só re-render do form (search param).
+    // Em prod adicionar audit log AQUI quando AuditLog suportar action custom.
+    redirect("/admin?err=1");
+  }
+  await setAdminCookie();
+  redirect("/admin");
+}
+
+async function adminLogoutAction() {
+  "use server";
+  await clearAdminCookie();
+  redirect("/admin");
+}
+
+function AdminLoginForm({ error }) {
+  const passwordSet = adminPasswordConfigured();
+  return (
+    <main id="main-content" className="app-container" style={{ maxWidth: 480, margin: "60px auto" }}>
+      <header className="ct-page-header">
+        <div className="ct-page-header-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0110 0v4" />
+          </svg>
+        </div>
+        <div className="ct-page-header-content">
+          <div className="ct-page-header-eyebrow">ADMIN · ACESSO RESTRITO</div>
+          <h1 className="ct-page-header-title">Senha necessária</h1>
+          <p className="ct-page-header-sub">
+            Email autorizado + segunda camada de senha. Sessão admin dura 7 dias.
+          </p>
+        </div>
+      </header>
+
+      {!passwordSet ? (
+        <div className="ct-empty-state-v2">
+          <div className="ct-empty-state-v2-icon" aria-hidden="true">⚠</div>
+          <div className="ct-empty-state-v2-title">ADMIN_PASSWORD não configurado</div>
+          <div className="ct-empty-state-v2-desc">
+            Configure a env var <code>ADMIN_PASSWORD</code> no Vercel pra ativar a
+            camada de senha. Sem isso, nenhum acesso é permitido (fail-closed).
+          </div>
+        </div>
+      ) : (
+        <form action={adminLoginAction} style={{ marginTop: 24 }}>
+          <label htmlFor="password" style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: "var(--text)" }}>
+            Senha admin
+          </label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            required
+            autoFocus
+            autoComplete="current-password"
+            style={{
+              width: "100%",
+              padding: "12px 14px",
+              fontSize: 14,
+              fontFamily: "var(--font-mono, monospace)",
+              border: "1px solid var(--border)",
+              borderRadius: 8,
+              background: "var(--surface)",
+              color: "var(--text)",
+              marginBottom: 12,
+            }}
+          />
+          {error && (
+            <div style={{
+              fontSize: 13,
+              color: "var(--danger, #c0392b)",
+              marginBottom: 12,
+              padding: "8px 12px",
+              background: "rgba(192, 57, 43, 0.08)",
+              borderRadius: 6,
+              border: "1px solid rgba(192, 57, 43, 0.2)",
+            }}>
+              Senha incorreta. Tenta de novo.
+            </div>
+          )}
+          <button
+            type="submit"
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              fontSize: 14,
+              fontWeight: 700,
+              background: "var(--accent-cyan-deep)",
+              color: "#fff",
+              border: "0",
+              borderRadius: 8,
+              cursor: "pointer",
+            }}
+            className="ct-accent-glow"
+          >
+            Entrar
+          </button>
+          <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 14, textAlign: "center" }}>
+            Sessão expira em 7 dias. Cookie HTTP-only signed com AUTH_SECRET.
+          </p>
+        </form>
+      )}
+    </main>
+  );
+}
+
+export default async function AdminPage({ searchParams }) {
   const session = await auth();
   if (!session?.user?.email) redirect("/entrar");
   if (!isAdminEmail(session.user.email)) redirect("/dashboard");
+
+  // Camada 3: senha. Se nao tem cookie valido, mostra form.
+  const authed = await isAdminAuthenticated();
+  if (!authed) {
+    const params = await searchParams;
+    return <AdminLoginForm error={params?.err === "1"} />;
+  }
 
   const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000);
 
@@ -123,9 +264,27 @@ export default async function AdminPage() {
           <h1 className="ct-page-header-title">Quem testou e o que fizeram</h1>
           <p className="ct-page-header-sub">
             Visão de uso da equipe autorizada (OWNER_EMAILS) + total do produto.
-            Acesso restrito por ADMIN_EMAILS — apenas você vê isso.
+            Acesso restrito por ADMIN_EMAILS + senha — apenas você vê isso.
           </p>
         </div>
+        <form action={adminLogoutAction} style={{ marginLeft: "auto", alignSelf: "flex-start" }}>
+          <button
+            type="submit"
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "6px 12px",
+              background: "transparent",
+              border: "1px solid var(--border)",
+              borderRadius: 6,
+              color: "var(--text-muted)",
+              cursor: "pointer",
+            }}
+            title="Encerrar sessão admin"
+          >
+            Sair do admin
+          </button>
+        </form>
       </header>
 
       {/* KPIs principais */}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isAdminEmail } from "@/lib/admin-access";
+import { isAdminAuthenticated } from "@/lib/admin-session";
 
 // GET /api/admin/usage — visao de uso do produto. Owner-only (gated por
 // OWNER_EMAILS). Retorna contagens + atividade recente dos ultimos 14 dias.
@@ -27,6 +28,12 @@ export async function GET() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   if (!isAdminEmail(session.user.email)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+  // Camada 3: senha. Sem cookie valido, mesma resposta de "forbidden" —
+  // sem expor que existe um passo de senha (defense via obscurity leve).
+  const authed = await isAdminAuthenticated();
+  if (!authed) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
