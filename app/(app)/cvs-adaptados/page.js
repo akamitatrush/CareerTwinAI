@@ -94,6 +94,13 @@ function CvCard({ cv }) {
       </p>
       <div className="ct-tailor-card-foot">
         <CvDetailClient cvId={cv.id} />
+        <Link
+          href={`/cvs-adaptados/${cv.id}`}
+          className="ct-tailor-btn-view"
+          style={{ marginLeft: 8 }}
+        >
+          Ver diff
+        </Link>
       </div>
     </div>
   );
