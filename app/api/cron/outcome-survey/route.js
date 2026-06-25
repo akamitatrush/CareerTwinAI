@@ -10,9 +10,10 @@
 // surveys/mes (~6.6% da cota free). Prioriza users mais antigos primeiro
 // (orderBy firstDiagnosisAt asc) — eles tem mais milestones pendentes.
 //
-// SEGURANCA: header x-cron-secret (mesmo padrao de digest/redact-cv).
-// timingSafeEqual constant-time. Falha silenciosa em emails individuais —
-// 1 user com erro nao derruba o batch. Audit OUTCOME_SURVEY_SENT por user.
+// SEGURANCA: verifyCronAuth aceita Authorization Bearer (Vercel Cron default)
+// E x-cron-secret (manual/legado). Comparacao constant-time. Falha silenciosa
+// em emails individuais — 1 user com erro nao derruba o batch. Audit
+// OUTCOME_SURVEY_SENT por user.
 //
 // PRIVACIDADE: subject/email NAO incluem PII alem do firstName (publico no
 // proprio email). Link aponta pra /dashboard?survey=30d|60d|90d, server
@@ -20,9 +21,9 @@
 // sem PII vai pro Outcome.evidence (campo opcional, user que digita).
 
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { audit } from "@/lib/audit";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,17 +40,6 @@ const MILESTONES = [
   { kind: "SIXTY_DAYS", minDays: 60, maxDays: 90 },
   { kind: "NINETY_DAYS", minDays: 90, maxDays: 180 },
 ];
-
-function safeCompare(a, b) {
-  if (!a || !b) return false;
-  const A = Buffer.from(String(a));
-  const B = Buffer.from(String(b));
-  if (A.length !== B.length) {
-    timingSafeEqual(A, Buffer.alloc(A.length));
-    return false;
-  }
-  return timingSafeEqual(A, B);
-}
 
 function escapeHtml(s) {
   return String(s || "")
@@ -143,17 +133,16 @@ export async function GET(req) {
 }
 
 async function handle(req) {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) {
+  const authz = verifyCronAuth(req);
+  if (!authz.ok) {
+    if (authz.code === "CRON_NOT_CONFIGURED") {
+      return NextResponse.json(
+        { error: "Cron nao configurado.", code: authz.code },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      { error: "Cron nao configurado.", code: "CRON_NOT_CONFIGURED" },
-      { status: 500 }
-    );
-  }
-  const got = req.headers.get("x-cron-secret") || "";
-  if (!safeCompare(got, expected)) {
-    return NextResponse.json(
-      { error: "Acesso negado a este cron job.", code: "FORBIDDEN" },
+      { error: "Acesso negado a este cron job.", code: authz.code },
       { status: 403 }
     );
   }

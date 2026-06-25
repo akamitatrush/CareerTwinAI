@@ -146,9 +146,12 @@ async function handler(req) {
   }
 
   // Modo logado: persiste em Profile + Consent (LGPD).
-  // TTL 90 dias: rawCvExpiresAt cobre TANTO rawCv quanto linkedinRaw — cron
-  // redact-cv apaga ambos quando expira. Sem isso, linkedinRaw fica indefinido
-  // (LGPD violation — security reaudit 2026-06-23 issue #1).
+  // TTL 90 dias: linkedinRawExpiresAt e dedicado ao linkedinRaw (separado de
+  // rawCvExpiresAt — cada raw tem ciclo proprio). Cron redact-cv apaga
+  // linkedinRaw quando linkedinRawExpiresAt < now e marca linkedinRawRedactedAt.
+  // Antes desse fix (red-team 2026-06-25 P0), apenas rawCvExpiresAt era setado
+  // aqui — se o user nunca enviasse CV, o linkedinRaw ficava indefinido pq o
+  // cron filtrava por rawCvExpiresAt < now. LGPD violation.
   if (userId) {
     try {
       const ttlExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
@@ -162,8 +165,8 @@ async function handler(req) {
           skills: result.perfil.skills || [],
           linkedinRaw: text,
           linkedinJson: result.perfil,
-          rawCvExpiresAt: ttlExpiresAt,
-          rawCvRedactedAt: null,
+          linkedinRawExpiresAt: ttlExpiresAt,
+          linkedinRawRedactedAt: null,
         },
         update: {
           nome: result.perfil.nome || undefined,
@@ -172,8 +175,8 @@ async function handler(req) {
           skills: result.perfil.skills?.length ? result.perfil.skills : undefined,
           linkedinRaw: text,
           linkedinJson: result.perfil,
-          rawCvExpiresAt: ttlExpiresAt,
-          rawCvRedactedAt: null,
+          linkedinRawExpiresAt: ttlExpiresAt,
+          linkedinRawRedactedAt: null,
         },
       });
       const payloadHash = createHash("sha256").update(text).digest("hex");

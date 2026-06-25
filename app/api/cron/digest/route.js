@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { searchJobs } from "@/lib/jobs";
 import { extractSkills, matchScore } from "@/lib/skills-taxonomy";
 import { sendDigestEmail } from "@/lib/email";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Cron protegido por CRON_SECRET (header `x-cron-secret`).
-// Configurar em Vercel: Project Settings → Cron Jobs → /api/cron/digest a cada
-// segunda 09:00 BRT, com header x-cron-secret=<secret>.
+// Cron protegido por CRON_SECRET. Aceita Authorization: Bearer (default da
+// Vercel Cron) E x-cron-secret (manual/legado). Helper verifyCronAuth faz
+// comparacao constant-time. Configurar em Vercel: Project Settings → Cron
+// Jobs → /api/cron/digest a cada segunda 09:00 BRT.
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const MIN_MATCH = 60;
@@ -21,22 +22,6 @@ const MAX_VAGAS_DIGEST = 5;
 // rodadas; cada rodada custa ~2-3s (LLM-bound). Total: ~40-60s vs ~500s antes.
 const BATCH_SIZE = 10;
 
-// Constant-time compare via crypto nativo. Antes tinhamos safeCompare custom
-// que reimplementava timing-safe mal (length check fora do loop vazava length).
-function safeCompare(a, b) {
-  if (!a || !b) return false;
-  const A = Buffer.from(String(a));
-  const B = Buffer.from(String(b));
-  if (A.length !== B.length) {
-    // timingSafeEqual exige mesmo length — fazer pad inline vaza length, entao
-    // simulamos comparando com um buffer do mesmo tamanho que A (zerado).
-    // Sempre retorna false, mas tempo gasto e consistente.
-    timingSafeEqual(A, Buffer.alloc(A.length));
-    return false;
-  }
-  return timingSafeEqual(A, B);
-}
-
 export async function POST(req) {
   return handle(req);
 }
@@ -46,18 +31,16 @@ export async function GET(req) {
 }
 
 async function handle(req) {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) {
+  const authz = verifyCronAuth(req);
+  if (!authz.ok) {
+    if (authz.code === "CRON_NOT_CONFIGURED") {
+      return NextResponse.json(
+        { error: "Cron de digest não configurado no servidor.", code: authz.code },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      { error: "Cron de digest não configurado no servidor.", code: "CRON_NOT_CONFIGURED" },
-      { status: 500 }
-    );
-  }
-  // Secret SOMENTE via header — query string vaza em logs/referer/cache.
-  const got = req.headers.get("x-cron-secret") || "";
-  if (!safeCompare(got, expected)) {
-    return NextResponse.json(
-      { error: "Acesso negado a este cron job.", code: "FORBIDDEN" },
+      { error: "Acesso negado a este cron job.", code: authz.code },
       { status: 403 }
     );
   }

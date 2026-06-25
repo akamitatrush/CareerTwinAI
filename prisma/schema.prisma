@@ -114,6 +114,13 @@ model Profile {
 
   // LinkedIn (texto colado, parseado pra estrutura).
   linkedinRaw  String? @db.Text
+  // LGPD storage limitation: linkedinRaw tambem expira em 90 dias.
+  // Coluna dedicada (separada de rawCvExpiresAt) porque linkedin e CV podem
+  // ser atualizados em momentos distintos — cada um carrega seu proprio TTL.
+  // Cron redact-cv apaga linkedinRaw quando linkedinRawExpiresAt < now e
+  // marca linkedinRawRedactedAt. linkedinJson (estruturado) fica.
+  linkedinRawExpiresAt  DateTime?
+  linkedinRawRedactedAt DateTime?
   linkedinJson Json?
 
   // Portfolio (GitHub username + projetos extraidos + sites pessoais).
@@ -530,6 +537,7 @@ enum AuditAction {
   BILLING_PAYMENT_FAILED
   CV_UPLOADED
   CV_DELETED
+  LINKEDIN_RAW_REDACTED
   SECURITY_RATE_LIMIT_HIT
   SECURITY_BUDGET_EXCEEDED
   SECURITY_INVALID_WEBHOOK

@@ -20,8 +20,9 @@
 //     (3000). Se base de usuarios crescer, levantar take e/ou mover pra Pro.
 //
 // Seguranca (OWASP):
-//   - A01 (Access Control): cron secret no header x-cron-secret + timingSafeEqual.
-//     Mesmo padrao do digest/redact-cv/outcome-survey.
+//   - A01 (Access Control): cron secret via verifyCronAuth (lib/cron-auth.js).
+//     Aceita Authorization Bearer (default Vercel Cron) E x-cron-secret
+//     (manual/legado). Comparacao constant-time. Mesmo helper em todos os crons.
 //   - A03 (Injection): output do LLM e validado (parseJSON), clampado em tamanho,
 //     e renderizado como TEXTO no email (escapeHtml). System prompt isolado do
 //     conteudo do user (perfilJson e dado, nao instrucao). Fallback deterministico
@@ -34,13 +35,13 @@
 //     Notificacao in-app body clampado em 200 chars pra preview.
 
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { completeJSON } from "@/lib/llm";
 import { searchJobs } from "@/lib/jobs";
 import { audit } from "@/lib/audit";
 import { sendBriefingEmail } from "@/lib/email";
 import { notify, NotificationTemplates } from "@/lib/notifications";
+import { verifyCronAuth } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,19 +52,6 @@ export const maxDuration = 300; // Pro plan — daily roda LLM por user, ~3-5s/u
 const MAX_USERS_PER_RUN = 50;
 const DEBOUNCE_HOURS = 18;
 
-// Constant-time compare (mesma forma de digest/redact-cv — node crypto nativo).
-// Length-padding pra evitar timing leak quando lengths divergem.
-function safeCompare(a, b) {
-  if (!a || !b) return false;
-  const A = Buffer.from(String(a));
-  const B = Buffer.from(String(b));
-  if (A.length !== B.length) {
-    timingSafeEqual(A, Buffer.alloc(A.length));
-    return false;
-  }
-  return timingSafeEqual(A, B);
-}
-
 export async function POST(req) {
   return handle(req);
 }
@@ -73,18 +61,16 @@ export async function GET(req) {
 }
 
 async function handle(req) {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) {
+  const authz = verifyCronAuth(req);
+  if (!authz.ok) {
+    if (authz.code === "CRON_NOT_CONFIGURED") {
+      return NextResponse.json(
+        { error: "Cron de briefing nao configurado.", code: authz.code },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      { error: "Cron de briefing nao configurado.", code: "CRON_NOT_CONFIGURED" },
-      { status: 500 }
-    );
-  }
-  // Secret SOMENTE via header (query string vaza em logs/referer/cache).
-  const got = req.headers.get("x-cron-secret") || "";
-  if (!safeCompare(got, expected)) {
-    return NextResponse.json(
-      { error: "Acesso negado a este cron job.", code: "FORBIDDEN" },
+      { error: "Acesso negado a este cron job.", code: authz.code },
       { status: 403 }
     );
   }
@@ -337,4 +323,4 @@ Retorne EXATAMENTE este JSON (sem markdown, sem prefixo):
 }
 
 // Exportado pra testes — nao usar fora.
-export const _internal = { safeCompare, generateBriefing, DEBOUNCE_HOURS, MAX_USERS_PER_RUN };
+export const _internal = { generateBriefing, DEBOUNCE_HOURS, MAX_USERS_PER_RUN };
