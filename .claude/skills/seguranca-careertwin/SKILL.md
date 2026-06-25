@@ -180,3 +180,34 @@ const data = ScoreSchema.parse(JSON.parse(clean)); // valida shape antes de usar
 - [ ] Erros genéricos ao cliente; detalhe só no servidor; cabeçalhos de segurança presentes.
 - [ ] Rotas de IA com rate limit; sem regex catastrófica.
 - [ ] `npm audit` sem vulnerabilidade alta pendente.
+
+---
+
+## Histórico de auditorias (registrar a cada Wave de segurança)
+
+### 2026-06-25 — Audit OWASP 2025 + LGPD (Sauron + Galadriel + Saruman)
+
+Tripla audit cruzada Red Team / Blue Team / Arquitetura. Resultados em
+`docs/security/`:
+- `red-team-audit-2026-06-25.md` (Sauron — ofensivo, OWASP Top 10:2025 + LLM Top 10:2025 + Agentic AI 2026)
+- `blue-team-controls-2026-06-25.md` (Galadriel — defensivo / gap ASVS 5.0)
+- `architecture-review-2026-06-25.md` (Saruman — estrutural)
+
+**Achados P0 abertos (action items LGPD/security):**
+1. Verificar se cron `redact-cv` está rodando em prod — Vercel envia
+   `Authorization: Bearer`, endpoint espera `x-cron-secret`. Se quebrado,
+   CVs persistindo > 90 dias = violação LGPD Art. 16.
+2. `Profile.linkedinRaw` sem `rawCvExpiresAt` — cron redact-cv ignora.
+3. `app/api/courses/click/route.js:35` aceita `javascript:` URL via
+   `z.string().url()` permissivo. Trocar por `safeExternalUrl`.
+4. `KnowledgeChunk_embedding_idx` dropado em migration
+   `20260625045109_add_funnel_and_welcome` — restaurar.
+
+**Pontos fortes registrados** (manter):
+- `lib/safe-fetch.js` IP-pinning anti-DNS-rebinding (exemplar).
+- `enforceUsage` atômico em Serializable transaction.
+- IDOR-by-default (userId SEMPRE de session, com Zod `.strict()`).
+- 9/9 prompts LLM com `sanitize()` + delimiters `"""..."""` + instrução opaca.
+- Magic-link rate-limit em `lib/auth.js` com fallback Upstash/mem.
+
+Reconsultar esses docs antes de fazer mudanças em rotas/auth/Prisma/LLM/upload.
