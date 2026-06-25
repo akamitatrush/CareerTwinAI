@@ -193,21 +193,32 @@ Tripla audit cruzada Red Team / Blue Team / Arquitetura. Resultados em
 - `blue-team-controls-2026-06-25.md` (Galadriel — defensivo / gap ASVS 5.0)
 - `architecture-review-2026-06-25.md` (Saruman — estrutural)
 
-**Achados P0 abertos (action items LGPD/security):**
-1. Verificar se cron `redact-cv` está rodando em prod — Vercel envia
-   `Authorization: Bearer`, endpoint espera `x-cron-secret`. Se quebrado,
-   CVs persistindo > 90 dias = violação LGPD Art. 16.
-2. `Profile.linkedinRaw` sem `rawCvExpiresAt` — cron redact-cv ignora.
-3. `app/api/courses/click/route.js:35` aceita `javascript:` URL via
-   `z.string().url()` permissivo. Trocar por `safeExternalUrl`.
-4. `KnowledgeChunk_embedding_idx` dropado em migration
-   `20260625045109_add_funnel_and_welcome` — restaurar.
+**Achados P0 — TODOS RESOLVIDOS na Wave 5 (2026-06-25):**
+1. ✅ Cron auth Bearer+x-cron-secret — fix `7203b69` (Éowyn). Descoberta:
+   eram TODOS os 6 crons, não só redact-cv. Helper `lib/cron-auth.js`.
+2. ✅ `linkedinRaw` TTL 90d — fix `7203b69`. Schema + migration
+   `20260629200000_add_linkedin_raw_ttl` + cron + `/api/linkedin/parse`.
+3. ✅ `courses/click` javascript: XSS — fix `a8b2e75` (Faramir).
+   `safeExternalUrl` + `safeHref` no NotificationsBell.
+4. ✅ HNSW index restaurado — fix `1317381` (Treebeard). Migration
+   `20260629100000_restore_knowledge_embedding_idx`.
+
+**ARMADILHA OPERACIONAL DESCOBERTA (importante):** Prisma não mapeia
+índices em colunas `Unsupported("vector(1024)")`. Toda `prisma migrate
+dev` futura VAI tentar dropar o `KnowledgeChunk_embedding_idx` de novo.
+Manter este índice em SQL bruto como permanent fixture até Prisma
+suportar HNSW nativamente. **Se uma migration nova contiver
+`DROP INDEX "KnowledgeChunk_embedding_idx"`, REMOVA ESSA LINHA antes
+de commitar** — é regressão da Wave 5.
 
 **Pontos fortes registrados** (manter):
 - `lib/safe-fetch.js` IP-pinning anti-DNS-rebinding (exemplar).
+- `lib/cron-auth.js` aceita Bearer + x-cron-secret + timingSafeEqual.
 - `enforceUsage` atômico em Serializable transaction.
 - IDOR-by-default (userId SEMPRE de session, com Zod `.strict()`).
 - 9/9 prompts LLM com `sanitize()` + delimiters `"""..."""` + instrução opaca.
 - Magic-link rate-limit em `lib/auth.js` com fallback Upstash/mem.
+- `safeExternalUrl` (Zod refinement) em `lib/validators.js` + `safeHref`
+  (render-time) em `lib/url-safe.js` — usar em qualquer URL externa.
 
 Reconsultar esses docs antes de fazer mudanças em rotas/auth/Prisma/LLM/upload.
