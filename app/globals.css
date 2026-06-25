@@ -25,6 +25,36 @@
   --accent-magenta: #B924FF;
   --accent-magenta-soft: rgba(185, 36, 255, 0.18);
 
+  /* === Site landing premium tokens (Cloudwalk/Apple BR vibe) ===
+     Tokens fixos — a landing pública /site é SEMPRE dark editorial,
+     independente do data-theme do app. Design intencional: glassmorphism
+     + accent cyan/magenta + mesh radial sutil. NÃO reescrever em
+     [data-theme="dark"] nem em [data-theme="light"]. */
+  --site-bg: #0A0A0E;
+  --site-fg: #FAFAFC;
+  --site-fg-muted: rgba(250, 250, 252, 0.65);
+  --site-fg-dim: rgba(250, 250, 252, 0.45);
+  --site-border: rgba(255, 255, 255, 0.08);
+  --site-border-strong: rgba(255, 255, 255, 0.16);
+  --site-card-bg: rgba(255, 255, 255, 0.04);
+  --site-card-bg-hover: rgba(255, 255, 255, 0.06);
+  --site-glass-blur: 20px;
+  --site-accent: var(--accent-cyan);
+  --site-accent-deep: var(--accent-cyan-deep);
+  --site-accent-glow: var(--accent-cyan-glow);
+  --site-accent-magenta: var(--accent-magenta);
+  --site-mesh-cyan: rgba(112, 255, 221, 0.10);
+  --site-mesh-magenta: rgba(185, 36, 255, 0.08);
+  --site-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  --site-shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(112, 255, 221, 0.25) inset;
+
+  /* === App glassmorphism tokens (reuso em /app) ===
+     Versão "light" do glass — usado dentro do app autenticado em cards
+     premium quando a página tem mesh/gradient de fundo. */
+  --app-glass-bg: rgba(255, 255, 255, 0.04);
+  --app-glass-border: rgba(255, 255, 255, 0.08);
+  --app-glass-blur: 16px;
+
   --positive: #15A871;
   --positive-deep: #0E7B53;
   --positive-soft: #E0F5EC;
@@ -6084,5 +6114,357 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 @media (prefers-reduced-motion: reduce) {
   .ct-pulse-cyan { animation: none; }
   .ct-accent-glow { transition: none; }
+}
+
+/* ===========================================================
+ * Site landing premium — classes utilitárias
+ * ---------------------------------------------------------
+ * Usadas SOMENTE em /site (landing pública) e em alguns
+ * showcases internos (/transparencia, /privacidade) que
+ * compartilham a estética dark editorial / glassmorphism.
+ * NÃO usar dentro do app autenticado (/app) — lá temos o
+ * sistema light/dark do data-theme.
+ * =========================================================== */
+
+/* --- Layout primitives --- */
+.site-container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .site-container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+.site-section {
+  padding-top: 120px;
+  padding-bottom: 120px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .site-section {
+    padding-top: 96px;
+    padding-bottom: 96px;
+  }
+}
+
+.site-section-mesh {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 20% 20%, var(--site-mesh-cyan), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, var(--site-mesh-magenta), transparent 60%);
+  background-repeat: no-repeat;
+}
+
+/* --- Cards (glassmorphism) --- */
+.site-card-glass {
+  background: var(--site-card-bg);
+  -webkit-backdrop-filter: blur(var(--site-glass-blur));
+  backdrop-filter: blur(var(--site-glass-blur));
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  box-shadow: var(--site-shadow-card);
+  transition: background 250ms var(--ease-out-quart),
+              border-color 250ms var(--ease-out-quart),
+              box-shadow 250ms var(--ease-out-quart),
+              transform 250ms var(--ease-out-quart);
+}
+
+.site-card-glass:hover {
+  background: var(--site-card-bg-hover);
+  border-color: var(--site-border-strong);
+  box-shadow: var(--site-shadow-card-hover);
+}
+
+.site-card-glass-accent {
+  background: var(--site-card-bg);
+  -webkit-backdrop-filter: blur(var(--site-glass-blur));
+  backdrop-filter: blur(var(--site-glass-blur));
+  border: 1px solid var(--site-accent-glow);
+  border-radius: 16px;
+  box-shadow: var(--site-shadow-card);
+  transition: background 250ms var(--ease-out-quart),
+              border-color 250ms var(--ease-out-quart),
+              box-shadow 250ms var(--ease-out-quart);
+}
+
+.site-card-glass-accent:hover {
+  background: var(--site-card-bg-hover);
+  border-color: var(--site-accent);
+  box-shadow: var(--site-shadow-card-hover);
+}
+
+/* --- Buttons --- */
+.site-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--site-accent) 0%, var(--site-accent-deep) 100%);
+  color: #08313F;
+  padding: 16px 32px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 200ms var(--ease-out-quart),
+              box-shadow 200ms var(--ease-out-quart),
+              filter 200ms var(--ease-out-quart);
+  box-shadow: 0 8px 24px rgba(112, 255, 221, 0.20);
+}
+
+.site-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(112, 255, 221, 0.32);
+  filter: brightness(1.04);
+}
+
+.site-btn-primary:active {
+  transform: translateY(0);
+}
+
+.site-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--site-border-strong);
+  color: var(--site-fg);
+  padding: 16px 32px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  font-family: var(--font-body);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 200ms var(--ease-out-quart),
+              border-color 200ms var(--ease-out-quart),
+              transform 200ms var(--ease-out-quart);
+}
+
+.site-btn-secondary:hover {
+  background: var(--site-card-bg-hover);
+  border-color: var(--site-fg-muted);
+  transform: translateY(-1px);
+}
+
+/* --- Typography (display + hierarchy) --- */
+.site-h-display {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(56px, 9vw, 144px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: var(--site-fg);
+  margin: 0;
+}
+
+.site-h1 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--site-fg);
+  margin: 0;
+}
+
+.site-h2 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(32px, 4.5vw, 56px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--site-fg);
+  margin: 0;
+}
+
+.site-h3 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--site-fg);
+  margin: 0;
+}
+
+.site-body-lg {
+  font-family: var(--font-body);
+  font-size: clamp(18px, 1.6vw, 22px);
+  color: var(--site-fg-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.site-body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--site-fg-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.site-body-sm {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--site-fg-dim);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --- Scroll-reveal (toggle via IntersectionObserver -> .is-visible) --- */
+.site-fade-up {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 700ms ease, transform 700ms ease;
+  will-change: opacity, transform;
+}
+
+.site-fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Cursor glow (follows pointer; positioned by JS via CSS vars) --- */
+.site-cursor-glow {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 600px;
+  height: 600px;
+  margin-left: -300px;
+  margin-top: -300px;
+  z-index: 1;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, var(--site-accent-glow) 0%, transparent 60%);
+  transform: translate3d(var(--cursor-x, 50vw), var(--cursor-y, 50vh), 0);
+  transition: opacity 400ms ease;
+}
+
+/* --- Top navigation --- */
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(10, 10, 14, 0.72);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--site-border);
+}
+
+/* --- Pricing card featured variant --- */
+.site-pricing-card-featured {
+  background: var(--site-card-bg-hover);
+  -webkit-backdrop-filter: blur(var(--site-glass-blur));
+  backdrop-filter: blur(var(--site-glass-blur));
+  border: 1px solid var(--site-accent);
+  border-radius: 16px;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.40),
+    0 0 0 1px var(--site-accent-glow) inset,
+    0 0 60px var(--site-accent-glow);
+  transform: scale(1.04);
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .site-pricing-card-featured {
+    transform: scale(1);
+  }
+}
+
+/* --- FAQ item (semantic <details>) --- */
+.site-faq-item {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--site-border);
+  transition: background 200ms var(--ease-out-quart);
+}
+
+.site-faq-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.site-faq-item > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--site-fg);
+  letter-spacing: -0.01em;
+}
+
+.site-faq-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-faq-item[open] > summary {
+  color: var(--site-accent);
+}
+
+/* --- Step number (huge gradient outlined digit) --- */
+.site-step-number {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(80px, 12vw, 160px);
+  font-weight: 800;
+  line-height: 1;
+  color: transparent;
+  background-image: linear-gradient(135deg, var(--site-accent) 0%, var(--site-accent-magenta) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  letter-spacing: -0.04em;
+  display: inline-block;
+}
+
+/* --- App glassmorphism util (reuso dentro de /app) --- */
+.app-glass {
+  background: var(--app-glass-bg);
+  -webkit-backdrop-filter: blur(var(--app-glass-blur));
+  backdrop-filter: blur(var(--app-glass-blur));
+  border: 1px solid var(--app-glass-border);
+  border-radius: var(--radius-lg);
+}
+
+/* --- Reduced motion: respeita prefers-reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .site-fade-up {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .site-cursor-glow {
+    display: none;
+    transition: none;
+  }
+  .site-card-glass,
+  .site-card-glass-accent,
+  .site-btn-primary,
+  .site-btn-secondary,
+  .site-faq-item {
+    transition: none;
+  }
 }
 
