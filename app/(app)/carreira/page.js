@@ -91,7 +91,7 @@ export default async function CarreiraPage() {
 
 function NoTargetState() {
   return (
-    <div className="ct-dash-empty">
+    <div className="ct-dash-empty app-glass">
       <h2>Defina seu cargo-alvo primeiro</h2>
       <p>
         Sem cargo-alvo, nao da pra montar um plano de carreira. Adicione em{" "}
@@ -106,7 +106,7 @@ function NoTargetState() {
 
 function NoPathState({ role, allPaths }) {
   return (
-    <div className="ct-dash-empty">
+    <div className="ct-dash-empty app-glass">
       <h2>Ainda nao temos roadmap pra &ldquo;{role}&rdquo;</h2>
       <p>Estamos curando paths para mais cargos. Por enquanto, paths disponiveis:</p>
       <ul className="ct-career-paths-list">
