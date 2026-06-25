@@ -31,6 +31,11 @@ model User {
   // desliga digestEnabled, ambos cron (weekly + daily) param de enviar.
   lastDailyBriefingAt DateTime?
 
+  // Welcome email — setado quando sendWelcomeEmail() despacha com sucesso.
+  // Garante idempotencia: se ja enviou, no-op (mesmo se o cliente bater no
+  // /api/auth/welcome-sent multiplas vezes). Null = ainda nao foi enviado.
+  welcomeEmailSentAt DateTime?
+
   accounts      Account[]
   sessions      Session[]
   profile       Profile?
