@@ -32,7 +32,7 @@ export default function EvidenceItem({ evidence, kindLabel }) {
   }
 
   return (
-    <article className="ct-evidence-card">
+    <article className="ct-evidence-card app-glass">
       <div className="ct-evidence-head">
         <div>
           <span className="ct-evidence-kind">{kindLabel}</span>

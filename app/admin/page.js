@@ -113,7 +113,11 @@ function AdminLoginForm({ error }) {
           </div>
         </div>
       ) : (
-        <form action={adminLoginAction} style={{ marginTop: 24 }}>
+        <form
+          action={adminLoginAction}
+          className="app-glass"
+          style={{ marginTop: 24, padding: 24 }}
+        >
           <label htmlFor="password" style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 8, color: "var(--text)" }}>
             Senha admin
           </label>
@@ -124,16 +128,18 @@ function AdminLoginForm({ error }) {
             required
             autoFocus
             autoComplete="current-password"
+            className="admin-pw-input"
             style={{
               width: "100%",
               padding: "12px 14px",
               fontSize: 14,
               fontFamily: "var(--font-mono, monospace)",
-              border: "1px solid var(--border)",
+              border: "1px solid var(--app-glass-border, var(--border))",
               borderRadius: 8,
-              background: "var(--surface)",
+              background: "var(--app-glass-bg, var(--surface))",
               color: "var(--text)",
               marginBottom: 12,
+              transition: "box-shadow .15s, border-color .15s",
             }}
           />
           {error && (
@@ -156,11 +162,12 @@ function AdminLoginForm({ error }) {
               padding: "12px 16px",
               fontSize: 14,
               fontWeight: 700,
-              background: "var(--accent-cyan-deep)",
-              color: "#fff",
+              background: "linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%)",
+              color: "#08313F",
               border: "0",
               borderRadius: 8,
               cursor: "pointer",
+              boxShadow: "0 4px 14px -2px var(--accent-cyan-glow)",
             }}
             className="ct-accent-glow"
           >
@@ -169,6 +176,13 @@ function AdminLoginForm({ error }) {
           <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 14, textAlign: "center" }}>
             Sessão expira em 7 dias. Cookie HTTP-only signed com AUTH_SECRET.
           </p>
+          <style>{`
+            .admin-pw-input:focus{
+              outline: none;
+              border-color: var(--accent-cyan-deep);
+              box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+            }
+          `}</style>
         </form>
       )}
     </main>
@@ -334,13 +348,13 @@ export default async function AdminPage({ searchParams }) {
             </div>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <div className="app-glass" style={{ overflowX: "auto", padding: 0 }}>
             <table style={{
               width: "100%",
               borderCollapse: "collapse",
               fontSize: 13.5,
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
+              background: "transparent",
+              border: "0",
               borderRadius: 8,
               overflow: "hidden",
             }}>

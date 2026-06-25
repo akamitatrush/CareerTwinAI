@@ -46,9 +46,46 @@ export default async function EvidenciasPage() {
 
       <EvidenceForm />
 
+      <style>{`
+        .ct-evidence-form.app-glass{ padding: 24px; }
+        .ct-evidence-field input:focus,
+        .ct-evidence-field textarea:focus,
+        .ct-evidence-field select:focus{
+          outline: none;
+          border-color: var(--accent-cyan-deep);
+          box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+        }
+        .ct-evidence-btn-primary{
+          background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%) !important;
+          color: #08313F !important;
+          border: 0 !important;
+          font-weight: 700;
+          box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);
+          transition: box-shadow .15s, transform .15s;
+        }
+        .ct-evidence-btn-primary:hover:not(:disabled){
+          box-shadow: 0 6px 20px -2px var(--accent-cyan-glow), 0 0 0 3px var(--accent-cyan-glow);
+          transform: translateY(-1px);
+        }
+        .ct-evidence-btn-primary:focus-visible{
+          outline: none;
+          box-shadow: 0 4px 14px -2px var(--accent-cyan-glow), 0 0 0 3px var(--accent-cyan-glow);
+        }
+        .ct-evidence-add-btn{
+          border: 1.5px dashed color-mix(in srgb, var(--accent-cyan-deep) 55%, var(--border));
+          transition: border-color .15s, box-shadow .15s, color .15s;
+        }
+        .ct-evidence-add-btn:hover{
+          border-color: var(--accent-cyan-deep);
+          color: var(--accent-cyan-deep);
+          box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+        }
+        .ct-dash-empty.app-glass{ padding: 28px; }
+      `}</style>
+
       <div style={{ marginTop: 28 }}>
         {items.length === 0 ? (
-          <div className="ct-dash-empty">
+          <div className="ct-dash-empty app-glass">
             <h2>Nenhuma evidência ainda</h2>
             <p>
               Adicione projetos, cases, publicações e certificações pra

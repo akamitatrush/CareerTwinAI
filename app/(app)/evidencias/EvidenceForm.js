@@ -117,7 +117,7 @@ export default function EvidenceForm() {
   }
 
   return (
-    <form className="ct-evidence-form" onSubmit={submit} aria-label="Adicionar evidência">
+    <form className="ct-evidence-form app-glass" onSubmit={submit} aria-label="Adicionar evidência">
       <div className="ct-evidence-form-head">
         <h2>Nova evidência</h2>
         <button
