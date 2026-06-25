@@ -250,7 +250,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
             background: "rgba(220,80,80,.08)",
             border: "1px solid rgba(220,80,80,.25)",
             borderRadius: "var(--radius-sm)",
-            color: "#B33",
+            color: "var(--negative, #B33)",
             fontSize: 13,
           }}
         >
@@ -266,7 +266,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
             background: "rgba(80,200,150,.10)",
             border: "1px solid rgba(80,200,150,.3)",
             borderRadius: "var(--radius-sm)",
-            color: "#0A7A55",
+            color: "var(--positive, #0A7A55)",
             fontSize: 13,
           }}
         >
@@ -285,7 +285,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
             background: submitting
               ? "var(--text)"
               : "linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-deep, var(--accent-cyan)) 100%)",
-            color: "#fff",
+            color: "var(--accent-on-cyan, #08313F)",
             fontWeight: 700,
             fontSize: 14,
             cursor: submitting ? "wait" : "pointer",

@@ -86,7 +86,7 @@ export default async function EvidenciasPage() {
         }
         .ct-evidence-btn-primary{
           background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%) !important;
-          color: #08313F !important;
+          color: var(--accent-on-cyan, #08313F);
           border: 0 !important;
           font-weight: 700;
           box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);

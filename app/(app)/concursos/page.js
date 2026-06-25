@@ -178,7 +178,7 @@ function FiltersForm({ uf, nivel, area }) {
         type="submit"
         style={{
           background: "linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-deep, var(--primary)) 100%)",
-          color: "#fff",
+          color: "var(--accent-on-cyan, #08313F)",
           border: 0,
           borderRadius: 8,
           padding: "9px 18px",
@@ -361,7 +361,7 @@ export default async function ConcursosPage({ searchParams }) {
                 style={{
                   marginTop: 6,
                   background: "var(--primary)",
-                  color: "#fff",
+                  color: "var(--on-primary, #fff)",
                   border: 0,
                   borderRadius: 8,
                   padding: "9px 18px",

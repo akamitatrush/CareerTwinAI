@@ -55,7 +55,7 @@ export default function CvDiffView({ original = "", tailored = "" }) {
           __html: `
             .cv-diff-glass .ct-tailor-btn-view[aria-pressed="true"] {
               background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
-              color: #08313F;
+              color: var(--accent-on-cyan, #08313F);
               border: 1px solid transparent;
               box-shadow: var(--shadow-md), 0 0 0 1px var(--accent-cyan-glow);
             }

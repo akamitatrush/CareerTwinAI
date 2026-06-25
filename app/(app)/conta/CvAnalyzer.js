@@ -103,7 +103,7 @@ export default function CvAnalyzer({ cv, role }) {
             }
             .cv-analyzer-glass .ct-conta-btn.primary {
               background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
-              color: #08313F;
+              color: var(--accent-on-cyan, #08313F);
               border: 1px solid transparent;
               box-shadow: var(--shadow-md);
               transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
