@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notify, NotificationTemplates } from "@/lib/notifications";
+import { grantAchievement } from "@/lib/achievements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,6 +74,32 @@ export async function POST(_req, ctx) {
         gapId: updated.id,
       }),
     });
+
+    // Achievements: conta gaps concluidos do user e concede milestones
+    // 1/5/10. count escopado por userId via snapshot.userId (sem IDOR).
+    // Falha silenciosa — gap ja foi marcado como done.
+    try {
+      const totalCompleted = await prisma.gap.count({
+        where: {
+          snapshot: { userId: session.user.id },
+          completedAt: { not: null },
+        },
+      });
+      if (totalCompleted === 1) {
+        await grantAchievement(session.user.id, "FIRST_GAP_COMPLETED", {
+          gapId: updated.id,
+        });
+      }
+      if (totalCompleted === 5) {
+        await grantAchievement(session.user.id, "FIVE_GAPS_COMPLETED");
+      }
+      if (totalCompleted === 10) {
+        await grantAchievement(session.user.id, "TEN_GAPS_COMPLETED");
+      }
+    } catch (e) {
+      console.error("gaps.complete: achievements falhou", e?.message);
+    }
+
     return NextResponse.json({ ok: true, ...updated });
   } catch {
     return NextResponse.json({ error: "internal" }, { status: 500 });

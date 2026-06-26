@@ -2,20 +2,51 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONFastWithUsage } from "@/lib/llm";
 import { promptLinkedinParse } from "@/lib/prompts";
 import { LinkedinParseBody, LinkedinShape } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { trackTokenUsage, checkDailyBudget, getUserPlan } from "@/lib/billing/enforce";
+import { audit } from "@/lib/audit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req) {
+async function handler(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
   const limit = await guardLLM(req, { name: "linkedin", userId, perMinuteAnon: 2, perMinuteUser: 8 });
   if (!limit.ok) return tooMany(limit);
+
+  // Wave 11: cost amplification defense. Sem feature counter mensal, mas tem
+  // cap diario USD aggregate. Anon nao tem userId => budget retorna ok=true
+  // (rate-limit acima ja cobre anonimos).
+  let userPlan = null;
+  if (userId) {
+    userPlan = (await getUserPlan(userId)).id;
+    const budget = await checkDailyBudget(userId, userPlan);
+    if (!budget.ok) {
+      await audit({
+        userId,
+        action: "SECURITY_BUDGET_EXCEEDED",
+        target: `User:${userId}`,
+        req,
+        meta: { feature: "linkedin", used: budget.used, cap: budget.cap },
+      });
+      return NextResponse.json(
+        {
+          error: "Você atingiu o limite diário de uso de IA. Volte amanhã ou faça upgrade.",
+          code: "BUDGET_EXCEEDED",
+          used: budget.used,
+          cap: budget.cap,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+  }
 
   let body;
   try {
@@ -55,14 +86,21 @@ export async function POST(req) {
   const { text } = parsed.data;
 
   let result;
+  let llmUsage = null;
   try {
-    const raw = await completeJSON(promptLinkedinParse(text), {
+    // Haiku 4.5: parsing de texto LinkedIn -> JSON e trabalho leve, nao precisa
+    // de Sonnet. 3-5x mais rapido + 1/4 do custo. Cache default ON — mesmo texto
+    // colado novamente bate cache (idempotente, 1h TTL).
+    const { result: raw, usage } = await completeJSONFastWithUsage(promptLinkedinParse(text), {
       route: "linkedin.parse",
       userId,
     });
+    llmUsage = usage;
     const valid = LinkedinShape.safeParse(raw);
     if (!valid.success) {
       console.error("linkedin: shape invalido", valid.error?.issues?.slice(0, 3));
+      // Tokens ja gastos — track antes de retornar 502.
+      if (userId && llmUsage) await trackTokenUsage(userId, "linkedin", llmUsage);
       return NextResponse.json(
         {
           error: "Não consegui estruturar seu LinkedIn. Cole novamente apenas as seções Sobre, Experiência, Formação e Skills.",
@@ -83,9 +121,40 @@ export async function POST(req) {
     );
   }
 
+  // Token tracking + post-budget audit (Wave 11). Falha silenciosa.
+  if (userId && llmUsage) {
+    await trackTokenUsage(userId, "linkedin", llmUsage);
+    try {
+      const budgetAfter = await checkDailyBudget(userId, userPlan);
+      if (!budgetAfter.ok) {
+        await audit({
+          userId,
+          action: "SECURITY_BUDGET_EXCEEDED",
+          target: `User:${userId}`,
+          req,
+          meta: {
+            feature: "linkedin",
+            used: budgetAfter.used,
+            cap: budgetAfter.cap,
+            phase: "post-llm",
+          },
+        });
+      }
+    } catch (e) {
+      console.error("linkedin: post-budget check falhou", e?.message);
+    }
+  }
+
   // Modo logado: persiste em Profile + Consent (LGPD).
+  // TTL 90 dias: linkedinRawExpiresAt e dedicado ao linkedinRaw (separado de
+  // rawCvExpiresAt — cada raw tem ciclo proprio). Cron redact-cv apaga
+  // linkedinRaw quando linkedinRawExpiresAt < now e marca linkedinRawRedactedAt.
+  // Antes desse fix (red-team 2026-06-25 P0), apenas rawCvExpiresAt era setado
+  // aqui — se o user nunca enviasse CV, o linkedinRaw ficava indefinido pq o
+  // cron filtrava por rawCvExpiresAt < now. LGPD violation.
   if (userId) {
     try {
+      const ttlExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
       await prisma.profile.upsert({
         where: { userId },
         create: {
@@ -96,6 +165,8 @@ export async function POST(req) {
           skills: result.perfil.skills || [],
           linkedinRaw: text,
           linkedinJson: result.perfil,
+          linkedinRawExpiresAt: ttlExpiresAt,
+          linkedinRawRedactedAt: null,
         },
         update: {
           nome: result.perfil.nome || undefined,
@@ -104,6 +175,8 @@ export async function POST(req) {
           skills: result.perfil.skills?.length ? result.perfil.skills : undefined,
           linkedinRaw: text,
           linkedinJson: result.perfil,
+          linkedinRawExpiresAt: ttlExpiresAt,
+          linkedinRawRedactedAt: null,
         },
       });
       const payloadHash = createHash("sha256").update(text).digest("hex");
@@ -130,3 +203,5 @@ export async function POST(req) {
     perfil: result.perfil,
   });
 }
+
+export const POST = withApiGuard(handler);

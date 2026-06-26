@@ -32,6 +32,7 @@ vi.mock("@/lib/db", () => {
 
 vi.mock("@/lib/llm", () => ({
   completeJSON: vi.fn(),
+  completeJSONWithUsage: vi.fn(),
 }));
 
 vi.mock("@/lib/prompts", () => ({
@@ -48,6 +49,9 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/billing/enforce", () => ({
   enforceUsage: vi.fn(async () => ({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" })),
+  // Wave 11: trackTokenUsage + checkDailyBudget
+  trackTokenUsage: vi.fn(async () => undefined),
+  checkDailyBudget: vi.fn(async () => ({ ok: true, used: 0, cap: 100 })),
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
@@ -77,11 +81,21 @@ vi.mock("@/lib/scoring/subscores", () => ({
 }));
 
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSON, completeJSONWithUsage } from "@/lib/llm";
 import { audit } from "@/lib/audit";
 import { auth } from "@/lib/auth";
-import { enforceUsage } from "@/lib/billing/enforce";
+import {
+  enforceUsage,
+  trackTokenUsage,
+  checkDailyBudget,
+} from "@/lib/billing/enforce";
 import { guardLLM } from "@/lib/rate-limit";
+
+// Helper pra emitir o shape novo de completeJSONWithUsage ({ result, usage }).
+const withUsage = (result) => ({
+  result,
+  usage: { tokensIn: 100, tokensOut: 50, costUsd: 0 },
+});
 
 // LLM diag shape válido (mínimo) — extraído depois de DiagShape.safeParse.
 const validDiag = {
@@ -130,10 +144,15 @@ beforeEach(async () => {
     return await Promise.all(cb);
   });
   completeJSON.mockReset();
+  completeJSONWithUsage.mockReset();
   audit.mockReset();
   auth.mockReset();
   enforceUsage.mockReset();
   enforceUsage.mockResolvedValue({ ok: true, remaining: 99, limit: 100, plan: "pro_monthly" });
+  trackTokenUsage.mockReset();
+  trackTokenUsage.mockResolvedValue(undefined);
+  checkDailyBudget.mockReset();
+  checkDailyBudget.mockResolvedValue({ ok: true, used: 0, cap: 100 });
   guardLLM.mockReset();
   guardLLM.mockResolvedValue({ ok: true });
 
@@ -251,7 +270,7 @@ describe("POST /api/profile/refresh — fluxo de sucesso", () => {
       overall: previousOverall,
       gaps: completedGaps,
     });
-    completeJSON.mockResolvedValue(validDiag);
+    completeJSONWithUsage.mockResolvedValue(withUsage(validDiag));
     prisma.scoreSnapshot.create.mockResolvedValue({
       id: "snap-new",
       overall: 72,
@@ -339,10 +358,82 @@ describe("POST /api/profile/refresh — fluxo de sucesso", () => {
     const r = await POST(makeReq({ applyCompletedSkills: true }));
     expect(r.status).toBe(200);
     const data = await r.json();
-    // Score sobe — quanto exatamente depende do computeAllSubScores base,
-    // mas com 18 pts capados em 20, a soma deve refletir aumento real.
-    expect(data.score).toBeGreaterThan(0);
-    expect(data.delta).toBeGreaterThan(0);
+    // Base computed.overall=72 (mock). Bonus aplicado = 10 + 8 = 18 pts (sob
+    // o cap de 25 total e 15 por dimensao). Overall recalculado:
+    //   aderencia: 70+10=80 (0.4) + relevancia: 75+8=83 (0.3) + otim: 80 (0.2)
+    //   + exp: 65 (0.1) = 32 + 24.9 + 16 + 6.5 = 79.4 -> 79.
+    expect(data.score).toBe(79);
+    expect(data.delta).toBe(19); // 79 - 60
+  });
+
+  it("Fix bug do loop: gap SEM impactoPontos/impactoDimensao ainda gera bonus default", async () => {
+    // Gaps de snapshots antigos podiam vir sem impactoPontos/impactoDimensao
+    // (LLM inconsistente). Bug: bloco "if (g.impactoDimensao && g.impactoPontos)"
+    // pulava esses gaps -> projectedGains continuava 0 -> bonus 0 -> overall
+    // base do computeAllSubScores nao subia -> score parecia nao mudar.
+    // Fix: default DEFAULT_BONUS_PTS=5 em DEFAULT_BONUS_DIM=relevancia_habilidades.
+    setupOk({
+      previousOverall: 60,
+      existingSkills: ["python"],
+      completedGaps: [
+        { habilidade: "Algo Antigo", completedAt: new Date() }, // sem impacto*
+        { habilidade: "Outra Skill", completedAt: new Date() }, // sem impacto*
+      ],
+    });
+    const r = await POST(makeReq({ applyCompletedSkills: true }));
+    expect(r.status).toBe(200);
+    const data = await r.json();
+    // Default: 5 pts cada -> 10 pts em relevancia_habilidades (sob cap 15).
+    // relevancia base = 75 + 10 = 85. Overall recalc:
+    //   70*0.4 + 85*0.3 + 80*0.2 + 65*0.1 = 28 + 25.5 + 16 + 6.5 = 76.
+    expect(data.score).toBe(76);
+    expect(data.delta).toBe(16); // 76 - 60 (subiu em vez de ficar igual)
+  });
+
+  it("dimensao invalida no gap cai pra default relevancia_habilidades", async () => {
+    // Defesa: se gap tem impactoDimensao com string fora do enum (DB legacy,
+    // bug de migracao, LLM com escape), nao explode — usa default.
+    setupOk({
+      previousOverall: 60,
+      completedGaps: [
+        {
+          habilidade: "skill X",
+          completedAt: new Date(),
+          impactoDimensao: "dimensao_inexistente",
+          impactoPontos: 7,
+        },
+      ],
+    });
+    const r = await POST(makeReq({ applyCompletedSkills: true }));
+    expect(r.status).toBe(200);
+    const data = await r.json();
+    // 7 pts -> relevancia_habilidades (default). 75 + 7 = 82.
+    // 70*0.4 + 82*0.3 + 80*0.2 + 65*0.1 = 28 + 24.6 + 16 + 6.5 = 75.1 -> 75.
+    expect(data.score).toBe(75);
+  });
+
+  it("cap total 25 pts: 3 gaps de 10 pts em dimensoes diferentes geram bonus de 25 (nao 30)", async () => {
+    // Cap impede gaming. Quando soma supera MAX_TOTAL_BONUS, aplica os primeiros
+    // gains ate o cap (ordem deterministica por gain desc).
+    setupOk({
+      previousOverall: 60,
+      completedGaps: [
+        { habilidade: "a", completedAt: new Date(), impactoDimensao: "aderencia_vagas", impactoPontos: 10 },
+        { habilidade: "b", completedAt: new Date(), impactoDimensao: "relevancia_habilidades", impactoPontos: 10 },
+        { habilidade: "c", completedAt: new Date(), impactoDimensao: "otimizacao_perfil", impactoPontos: 10 },
+      ],
+    });
+    const r = await POST(makeReq({ applyCompletedSkills: true }));
+    expect(r.status).toBe(200);
+    const data = await r.json();
+    // Total bonus aplicado = 25 (cap). Distribuicao deterministica:
+    //   ordem por gain desc (todos 10) -> aplica 10 em aderencia, 10 em relevancia,
+    //   5 em otimizacao (cap esgotado).
+    //   aderencia: 70+10=80 (0.4)=32, relevancia: 75+10=85 (0.3)=25.5,
+    //   otimizacao: 80+5=85 (0.2)=17, experiencia: 65 (0.1)=6.5
+    //   total = 32 + 25.5 + 17 + 6.5 = 81.
+    expect(data.score).toBe(81);
+    expect(data.delta).toBe(21);
   });
 
   it("applyCompletedSkills=true dedup case-insensitive (não duplica 'Python' se 'python' existe)", async () => {
@@ -370,12 +461,13 @@ describe("POST /api/profile/refresh — fluxo de sucesso", () => {
     expect(callArgs.userId).toBe("u1");
     expect(callArgs.action).toBe("PROFILE_UPDATED");
     expect(callArgs.target).toBe("ScoreSnapshot:snap-new");
-    // Meta sem PII raw — apenas metadados.
+    // Meta sem PII raw — apenas metadados. Bonus default 5 pts (gap sem
+    // impactoPontos) cai em relevancia_habilidades, recalcula overall.
     expect(callArgs.meta).toMatchObject({
       reason: "refresh_diagnosis",
       previousOverall: 60,
-      newOverall: 72,
-      delta: 12,
+      newOverall: 75,
+      delta: 15,
       appliedSkillsCount: 1,
       applyCompletedSkills: true,
     });
@@ -396,7 +488,7 @@ describe("POST /api/profile/refresh — fluxo de sucesso", () => {
       senioridade: null,
     });
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
-    completeJSON.mockResolvedValue(validDiag);
+    completeJSONWithUsage.mockResolvedValue(withUsage(validDiag));
     prisma.scoreSnapshot.create.mockResolvedValue({ id: "snap-1", overall: 72 });
     const r = await POST(makeReq({}));
     expect(r.status).toBe(200);
@@ -418,7 +510,9 @@ describe("POST /api/profile/refresh — defesas LLM", () => {
     });
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
     // Shape inválido — gaps deveria ser array, mas mandamos string.
-    completeJSON.mockResolvedValue({ perfil: {}, sub_scores_explicacoes: {}, gaps: "string-bad" });
+    completeJSONWithUsage.mockResolvedValue(
+      withUsage({ perfil: {}, sub_scores_explicacoes: {}, gaps: "string-bad" })
+    );
     const r = await POST(makeReq({}));
     expect(r.status).toBe(502);
     const data = await r.json();
@@ -438,7 +532,7 @@ describe("POST /api/profile/refresh — defesas LLM", () => {
       skills: [],
     });
     prisma.scoreSnapshot.findFirst.mockResolvedValue(null);
-    completeJSON.mockRejectedValue(new Error("timeout"));
+    completeJSONWithUsage.mockRejectedValue(new Error("timeout"));
     const r = await POST(makeReq({}));
     expect(r.status).toBe(502);
     const data = await r.json();

@@ -26,6 +26,16 @@ model User {
   lastDigestAt  DateTime?
   digestEnabled Boolean   @default(true)
 
+  // Daily briefing — cron-daily-briefing checa pra nao mandar 2x em 18h.
+  // Compartilha o flag digestEnabled (1 toggle, 2 cadencias). Quando user
+  // desliga digestEnabled, ambos cron (weekly + daily) param de enviar.
+  lastDailyBriefingAt DateTime?
+
+  // Welcome email — setado quando sendWelcomeEmail() despacha com sucesso.
+  // Garante idempotencia: se ja enviou, no-op (mesmo se o cliente bater no
+  // /api/auth/welcome-sent multiplas vezes). Null = ainda nao foi enviado.
+  welcomeEmailSentAt DateTime?
+
   accounts      Account[]
   sessions      Session[]
   profile       Profile?
@@ -41,6 +51,9 @@ model User {
   usageMeters   UsageMeter[]
   billingEvents BillingEvent[]
   auditLogs     AuditLog[]
+  outcomes      Outcome[]
+  achievements  Achievement[]
+  dailyQuests   DailyQuest[]
 }
 
 model Account {
@@ -101,6 +114,13 @@ model Profile {
 
   // LinkedIn (texto colado, parseado pra estrutura).
   linkedinRaw  String? @db.Text
+  // LGPD storage limitation: linkedinRaw tambem expira em 90 dias.
+  // Coluna dedicada (separada de rawCvExpiresAt) porque linkedin e CV podem
+  // ser atualizados em momentos distintos — cada um carrega seu proprio TTL.
+  // Cron redact-cv apaga linkedinRaw quando linkedinRawExpiresAt < now e
+  // marca linkedinRawRedactedAt. linkedinJson (estruturado) fica.
+  linkedinRawExpiresAt  DateTime?
+  linkedinRawRedactedAt DateTime?
   linkedinJson Json?
 
   // Portfolio (GitHub username + projetos extraidos + sites pessoais).
@@ -285,6 +305,8 @@ enum NotificationKind {
   DIGEST_SENT
   APPLICATION_STATUS
   WELCOME
+  DAILY_BRIEFING
+  ACHIEVEMENT_UNLOCKED
 }
 
 // Resultado de mini-assessments de autoconhecimento (DISC-lite, Valores, Ikigai).
@@ -439,12 +461,15 @@ model UsageMeter {
 // users, somente os do customer dono. userId nullable pra eventos pre-customer
 // (signup pendente) e onDelete:SetNull preserva auditoria quando user e apagado
 // (LGPD: deixar rastro de cobrancas e legitimo).
+//
+// payload nullable: cron /api/cron/redact-billing limpa payload > 12 meses
+// (LGPD storage limitation). stripeEventId+type+processedAt continuam pra audit.
 model BillingEvent {
   id            String   @id @default(cuid())
   userId        String?
   stripeEventId String   @unique
   type          String
-  payload       Json
+  payload       Json?
   processedAt   DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -512,7 +537,152 @@ enum AuditAction {
   BILLING_PAYMENT_FAILED
   CV_UPLOADED
   CV_DELETED
+  LINKEDIN_RAW_REDACTED
   SECURITY_RATE_LIMIT_HIT
   SECURITY_BUDGET_EXCEEDED
   SECURITY_INVALID_WEBHOOK
+  OUTCOME_REPORTED
+  OUTCOME_SURVEY_SENT
+  OUTCOME_SURVEY_DECLINED
+  DAILY_BRIEFING_SENT
+}
+
+// Outcome: dataset proprietario pra calcular mediana real de contratados.
+// Daniel + Bianca (Tera) cobraram esse dado. Sem outcomes, lib/metrics/median-stub
+// e vaporware (HIRED_MEDIAN = 78 hardcoded). Cron de survey pergunta aos users
+// 30/60/90 dias apos primeiro snapshot ("como esta a busca?"). Quando >=50
+// outcomes HIRED, mediana stub vira mediana real do scoreAtTime.
+//
+// scoreAtTime + roleAtTime capturados no momento do reporte — correlaciona
+// score historico com outcome (foi contratado com 65? 80? quais skills tinha?).
+// surveyKind discrimina survey programado (30d/60d/90d) de self-reported (user
+// decidiu reportar fora do milestone). evidence e texto livre OPCIONAL — sem
+// PII obrigatorio, user descreve em prosa "consegui no Magalu, 2 meses".
+//
+// Cascade no userId pra "apagar minha conta" levar outcomes junto. Indices:
+//  - (userId, occurredAt): timeline pessoal (debug, perfil do user).
+//  - (kind, occurredAt): agregacao pra mediana real (groupBy kind, sample
+//    do scoreAtTime).
+model Outcome {
+  id              String      @id @default(cuid())
+  userId          String
+  kind            OutcomeKind
+  occurredAt      DateTime    @default(now())
+
+  // Snapshot do score no momento do reporte (do latest ScoreSnapshot do user
+  // no momento do POST). Imutavel apos criacao — historiza pra correlacionar
+  // score -> outcome mesmo que o user faca novo diagnostico depois.
+  scoreAtTime     Int?
+  roleAtTime      String?
+
+  // Contexto opcional. monthsSearching e int (clamped 0-60 no validator).
+  // evidence e texto livre limitado (max 2000 chars) — SEM PII obrigatorio.
+  monthsSearching Int?
+  evidence        String?     @db.Text
+
+  // Discrimina survey programado (cron) de self-reported (user inicia).
+  surveyKind      SurveyKind?
+
+  createdAt       DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([kind, occurredAt])
+}
+
+enum OutcomeKind {
+  HIRED                  // contratado pra cargo-alvo
+  HIRED_DIFFERENT        // contratado pra cargo diferente
+  NOT_HIRED              // continua procurando (decisao explicita)
+  STILL_LOOKING          // ativo, sem decisao
+  PAUSED                 // pausou busca (mudanca de vida, estudo)
+  DECLINED_TO_ANSWER     // user pulou survey (registra pra nao perguntar de novo)
+}
+
+enum SurveyKind {
+  THIRTY_DAYS
+  SIXTY_DAYS
+  NINETY_DAYS
+  SELF_REPORTED
+}
+
+// ============ Achievements (gamificacao sutil — feature #8 do STRATEGY_ROADMAP) ============
+
+// Achievement: conquistas pontuais do user (primeiro diagnostico, 5 lacunas fechadas,
+// score 80+, etc). Idempotente via unique (userId, kind) — segundo grant do mesmo
+// kind retorna P2002 e ja sai com alreadyEarned. meta e Json opcional pra carregar
+// contexto (ex: scoreAtTime, gapId). Cascade no userId pra "apagar minha conta"
+// limpar junto. Indice (userId, earnedAt) atende a listagem cronologica em /conta.
+model Achievement {
+  id       String          @id @default(cuid())
+  userId   String
+  kind     AchievementKind
+  earnedAt DateTime        @default(now())
+  meta     Json?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind])
+  @@index([userId, earnedAt])
+}
+
+enum AchievementKind {
+  FIRST_DIAGNOSIS
+  FIRST_GAP_COMPLETED
+  FIVE_GAPS_COMPLETED
+  TEN_GAPS_COMPLETED
+  FIRST_TAILOR
+  FIRST_APPLICATION
+  FIRST_INTERVIEW
+  PROFILE_100_PERCENT
+  ALL_ASSESSMENTS_COMPLETED
+  STREAK_7_DAYS
+  STREAK_30_DAYS
+  SCORE_70
+  SCORE_80
+  SCORE_90
+  FIRST_REFRESH
+  FIRST_EVIDENCE
+  COURSE_COMPLETED
+}
+
+// ============ Daily Quest (habit loop — feature #10 do STRATEGY_ROADMAP) ============
+
+// DailyQuest: 1 acao curta sugerida AO DIA com base no estado do user. Razao
+// concreta pra voltar. Lazy creation no GET (cria so quando o user pede) —
+// sem cron, sem job em background. Unique (userId, questDate) garante 1 por
+// dia (questDate e DATE sem hora). Cascade no userId pra "apagar minha conta"
+// limpar junto. Indice (userId, completedAt) atende a listagem de historico
+// e a heuristica de "kinds ja feitas nos ultimos 7 dias" (evita repeticao).
+//
+// NAO acoplado ao Achievement system — Wave 15 cobre conquistas automaticas.
+// Aqui mantemos simples: marcar como feito so registra completedAt + rewardPoints
+// (UI mostra confirmacao; nao explode em notificacao).
+model DailyQuest {
+  id               String    @id @default(cuid())
+  userId           String
+  questDate        DateTime  @db.Date // dia (sem hora) — unique por user/dia
+  kind             QuestKind
+  title            String
+  description      String    @db.Text
+  estimatedMinutes Int       @default(5)
+  rewardPoints     Int       @default(5)
+  completedAt      DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questDate])
+  @@index([userId, completedAt])
+}
+
+enum QuestKind {
+  CV_BULLET_REWRITE
+  LINKEDIN_HEADLINE
+  EVIDENCE_ADD
+  SKILL_RESEARCH
+  INTERVIEW_PREP
+  NETWORK_OUTREACH
+  MARKET_RESEARCH
+  REFLECTION
 }

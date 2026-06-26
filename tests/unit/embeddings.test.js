@@ -45,7 +45,10 @@ describe("embedTexts — selecao de provedor", () => {
   it("cai pra OpenAI se Voyage falhar e OPENAI_API_KEY existir", async () => {
     process.env.VOYAGE_API_KEY = "voy-test";
     process.env.OPENAI_API_KEY = "sk-test";
+    // Voyage tenta com retry (maxAttempts=2) — em 5xx, falha as 2 tentativas
+    // e CAI pra OpenAI. Por isso 3 mocks: 2x Voyage 500, 1x OpenAI sucesso.
     mockFetch
+      .mockResolvedValueOnce({ ok: false, status: 500, text: async () => "boom" })
       .mockResolvedValueOnce({ ok: false, status: 500, text: async () => "boom" })
       .mockResolvedValueOnce({
         ok: true,
@@ -54,7 +57,11 @@ describe("embedTexts — selecao de provedor", () => {
     const { embedTexts } = await import("@/lib/embeddings");
     const r = await embedTexts(["test"]);
     expect(r.length).toBe(1);
-    expect(mockFetch.mock.calls[1][0]).toContain("openai.com");
+    // A ultima chamada e na OpenAI; intermediaria(s) sao Voyage.
+    const lastCall = mockFetch.mock.calls.at(-1);
+    expect(lastCall[0]).toContain("openai.com");
+    // Sanity: Voyage foi chamado pelo menos uma vez.
+    expect(mockFetch.mock.calls[0][0]).toContain("voyageai.com");
   });
 
   it("usa OpenAI direto se so OPENAI_API_KEY existir", async () => {

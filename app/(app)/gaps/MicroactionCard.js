@@ -2,6 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { safeHref } from "@/lib/url-safe";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
+import SrcChip from "@/components/SrcChip";
 
 /**
  * Card expandido de microacao (ato 3 da /gaps).
@@ -34,6 +38,7 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
   async function toggle() {
     setBusy(true);
     setError("");
+    const wasdone = done;
     try {
       const method = done ? "DELETE" : "POST";
       const res = await fetch(`/api/gaps/${gap.id}/complete`, { method });
@@ -42,6 +47,14 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
         throw new Error(data.error || "Falhou");
       }
       setDone(!done);
+      if (wasdone) {
+        track(EVENTS.GAP_UNCOMPLETED, { gap_id: gap.id });
+      } else {
+        track(EVENTS.GAP_COMPLETED, {
+          gap_id: gap.id,
+          impacto_pontos: gap.impactoPontos || 0,
+        });
+      }
       startTransition(() => router.refresh());
     } catch (e) {
       setError(e.message || "Tenta de novo");
@@ -50,19 +63,42 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
     }
   }
 
-  // Remove citacao "[fonte: ...]" do final do "porque" (ruido visual aqui).
+  // Wave 10 — EXTRAI a fonte ("[Curriculo]"/"[Mercado]"/"[Base de Vagas]"/
+  // "[RAG]"/"[BLS]") do final do "porque" e renderiza como chip (<SrcChip>).
+  // Antes: a citacao era simplesmente removida (commit antigo: "ruido visual
+  // aqui"), quebrando o moat #1 (transparencia radical / score auditavel).
+  // Agora preservamos a fonte sem poluir o texto.
+  const porqueFonteMatch = gap.porque
+    ? gap.porque.match(/\[([^\]]+)\]\s*$/)
+    : null;
+  const porqueFonte = porqueFonteMatch
+    ? `[${porqueFonteMatch[1].trim()}]`
+    : null;
   const porqueLimpo = gap.porque
-    ? gap.porque.replace(/\s*\[(.+?)\]\s*$/, "")
+    ? gap.porque.replace(/\s*\[[^\]]+\]\s*$/, "").trim()
     : "";
 
   const impactPts = gap.impactoPontos || 4;
   const cardClass =
-    "ct-microaction-card" +
+    "ct-microaction-card app-glass" +
     (done ? " done" : "") +
     (priority === "top" && !done ? " priority-top" : "");
 
+  // Top prioridade ainda em aberto = borda esquerda cyan + glow lateral.
+  // Done = card mais discreto (sem glow). Default = sombra padrao.
+  const isTopOpen = priority === "top" && !done;
+  const cardStyle = isTopOpen
+    ? {
+        borderLeft: "3px solid var(--accent-cyan)",
+        boxShadow:
+          "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }
+    : done
+      ? { boxShadow: "var(--shadow-md)" }
+      : { boxShadow: "var(--shadow-md)" };
+
   return (
-    <article className={cardClass}>
+    <article className={cardClass} style={cardStyle}>
       <div className="ct-microaction-leftrail">
         <button
           type="button"
@@ -88,7 +124,13 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
           </div>
           <div className="ct-microaction-head-right">
             {priority === "top" && !done && (
-              <span className="ct-microaction-priority" title="Maior impacto no score">
+              <span
+                className="ct-microaction-priority"
+                title="Maior impacto no score"
+                style={{
+                  filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))",
+                }}
+              >
                 top prioridade
               </span>
             )}
@@ -101,7 +143,10 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
         {porqueLimpo && (
           <div className="ct-microaction-block">
             <span className="ct-microaction-block-label">Por que importa</span>
-            <p className="ct-microaction-why">{porqueLimpo}</p>
+            <p className="ct-microaction-why">
+              {porqueLimpo}
+              <SrcChip src={porqueFonte} />
+            </p>
           </div>
         )}
 
@@ -120,29 +165,43 @@ export default function MicroactionCard({ gap, courses = [], priority }) {
               </span>
             </div>
             <div className="ct-microaction-courses-grid">
-              {courses.map((c) => (
-                <a
-                  key={c.id}
-                  href={c.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ct-microaction-course"
-                >
-                  <div className="ct-microaction-course-head">
-                    <span className="ct-microaction-course-provider">
-                      {c.provider}
+              {courses.map((c) => {
+                // safeHref: defesa em camadas (catalogo curado mas validamos
+                // antes de renderizar pra blindar contra payload futuro).
+                const href = safeHref(c.url);
+                if (!href) return null;
+                return (
+                  <a
+                    key={c.id}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ct-microaction-course"
+                    onClick={() =>
+                      track(EVENTS.COURSE_CLICKED, {
+                        course_id: c.id,
+                        skill: gap?.habilidade?.slice(0, 60) || "",
+                        provider: c.provider || "",
+                        free: !!c.free,
+                      })
+                    }
+                  >
+                    <div className="ct-microaction-course-head">
+                      <span className="ct-microaction-course-provider">
+                        {c.provider}
+                      </span>
+                      {c.free && (
+                        <span className="ct-microaction-course-free">grátis</span>
+                      )}
+                    </div>
+                    <span className="ct-microaction-course-title">{c.title}</span>
+                    <span className="ct-microaction-course-meta">
+                      {c.duration} · {c.level} · {c.language}
                     </span>
-                    {c.free && (
-                      <span className="ct-microaction-course-free">grátis</span>
-                    )}
-                  </div>
-                  <span className="ct-microaction-course-title">{c.title}</span>
-                  <span className="ct-microaction-course-meta">
-                    {c.duration} · {c.level} · {c.language}
-                  </span>
-                  <span className="ct-microaction-course-cta">Ver curso ↗</span>
-                </a>
-              ))}
+                    <span className="ct-microaction-course-cta">Ver curso ↗</span>
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}

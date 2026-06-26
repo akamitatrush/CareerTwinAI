@@ -17,6 +17,28 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Ignora MAJOR upgrades que sabemos quebrar build/produto.
+    # Prisma 7: removeu `url` de datasource (precisa prisma.config.ts).
+    #   Reavaliar quando estabilizar + tivermos tempo de migrar.
+    # Next 15: app router mudancas + React 19 RC.
+    # next-auth 6: aguarda stable saido do beta.
+    ignore:
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/client"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "next-auth"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@auth/prisma-adapter"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "stripe"
+        update-types: ["version-update:semver-major"]
     labels:
       - "deps"
       - "automated"

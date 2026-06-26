@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { eraseUserData } from "@/lib/data-export";
+import { audit } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,17 @@ async function toggleDigestAction(formData) {
     where: { id: session.user.id },
     data: { digestEnabled: enabled },
   });
+  // Audit log — preference change. LGPD: meta sem PII, so o flag.
+  const h = headers();
+  const actorIp =
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
+  await audit({
+    userId: session.user.id,
+    action: "PROFILE_UPDATED",
+    actorIp,
+    target: `User:${session.user.id}`,
+    meta: { field: "digestEnabled", value: enabled, source: "meus-dados" },
+  });
   redirect("/meus-dados");
 }
 
@@ -74,7 +86,7 @@ export default async function MeusDadosPage({ searchParams }) {
   return (
     <main className="wrap" style={{ maxWidth: 760, paddingTop: 24 }}>
       <div className="topbar-inner" style={{ marginBottom: 24 }}>
-        <Link href="/meu-gemeo" style={{ textDecoration: "none" }}>
+        <Link href="/dashboard" style={{ textDecoration: "none" }}>
           <div className="brand">
             <div>
               <div className="brand-name">Meus dados</div>
@@ -82,7 +94,7 @@ export default async function MeusDadosPage({ searchParams }) {
             </div>
           </div>
         </Link>
-        <Link href="/meu-gemeo" className="tool-btn" style={{ textDecoration: "none" }}>← Meu gêmeo</Link>
+        <Link href="/dashboard" className="tool-btn" style={{ textDecoration: "none" }}>← Voltar ao dashboard</Link>
       </div>
 
       <h1 className="hero" style={{ fontSize: 32 }}>Seus dados, sob seu controle.</h1>
@@ -92,7 +104,7 @@ export default async function MeusDadosPage({ searchParams }) {
         compartilhado, e o "apagar tudo" remove de verdade — não fica em sombra.
       </p>
 
-      <div className="sec">
+      <div className="sec app-glass meus-dados-sec">
         <div className="sec-head">
           <span className="sec-no">01</span>
           <h2 className="sec-title">O que está salvo</h2>
@@ -120,7 +132,7 @@ export default async function MeusDadosPage({ searchParams }) {
             <b>Candidaturas no funil:</b> {appsCount}
             {appsCount === 0 && (
               <span style={{ opacity: 0.7, marginLeft: 6 }}>
-                — funil vazio. Salve vagas em <Link href="/meu-gemeo">Meu gêmeo</Link> ou crie em <Link href="/candidaturas">Candidaturas</Link>.
+                — funil vazio. Salve vagas no <Link href="/oportunidades">Radar</Link> ou crie em <Link href="/candidaturas">Candidaturas</Link>.
               </span>
             )}
           </li>
@@ -143,7 +155,7 @@ export default async function MeusDadosPage({ searchParams }) {
         </ul>
       </div>
 
-      <div className="sec">
+      <div className="sec app-glass meus-dados-sec">
         <div className="sec-head">
           <span className="sec-no">⎘</span>
           <h2 className="sec-title">Email semanal de vagas</h2>
@@ -168,7 +180,7 @@ export default async function MeusDadosPage({ searchParams }) {
         </form>
       </div>
 
-      <div className="sec">
+      <div className="sec app-glass meus-dados-sec">
         <div className="sec-head">
           <span className="sec-no">02</span>
           <h2 className="sec-title">Fontes que alimentaram seu gêmeo</h2>
@@ -200,16 +212,21 @@ export default async function MeusDadosPage({ searchParams }) {
         )}
       </div>
 
-      <div className="sec">
+      <div className="sec app-glass meus-dados-sec">
         <div className="sec-head">
           <span className="sec-no">03</span>
           <h2 className="sec-title">Baixar uma cópia</h2>
           <p className="sec-sub">JSON com tudo que está em seu nome no banco — usuário, perfil, snapshots, consentimentos.</p>
         </div>
-        <a className="btn btn-primary" href="/api/me/export">Baixar meus dados (JSON)</a>
+        <a
+          className="btn btn-primary meus-dados-cta"
+          href="/api/me/export"
+        >
+          Baixar meus dados (JSON)
+        </a>
       </div>
 
-      <div className="sec" style={{ borderTop: "1px solid var(--alert)", paddingTop: 16 }}>
+      <div className="sec app-glass meus-dados-sec meus-dados-danger" style={{ borderTop: "1px solid var(--alert)", paddingTop: 16 }}>
         <div className="sec-head">
           <span className="sec-no" style={{ color: "var(--alert)" }}>04</span>
           <h2 className="sec-title">Apagar tudo</h2>
@@ -228,7 +245,15 @@ export default async function MeusDadosPage({ searchParams }) {
             autoComplete="off"
             maxLength={20}
             placeholder="APAGAR"
-            style={{ padding: 10, borderRadius: 8 }}
+            className="meus-dados-confirm-input"
+            style={{
+              padding: 10,
+              borderRadius: 8,
+              border: "1px solid var(--app-glass-border, var(--border))",
+              background: "var(--app-glass-bg, var(--surface))",
+              color: "var(--ink, var(--text))",
+              transition: "box-shadow .15s, border-color .15s",
+            }}
           />
           {erroConfirmar && (
             <div className="err">Confirmação não bateu. Digite exatamente APAGAR.</div>
@@ -238,6 +263,39 @@ export default async function MeusDadosPage({ searchParams }) {
           </button>
         </form>
       </div>
+
+      <style>{`
+        .meus-dados-sec{
+          /* .app-glass cuida de bg/blur/border — só refinamos padding/spacing */
+          padding: 22px 24px;
+          margin-top: 24px;
+        }
+        .meus-dados-sec:first-of-type{ margin-top: 28px; }
+        .meus-dados-danger{
+          border-top: 1px solid var(--alert) !important;
+        }
+        .meus-dados-confirm-input:focus{
+          outline: none;
+          border-color: var(--accent-cyan-deep);
+          box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+        }
+        .meus-dados-cta{
+          background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+          color: #08313F;
+          border: 0;
+          font-weight: 700;
+          box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);
+          transition: box-shadow .15s, transform .15s;
+        }
+        .meus-dados-cta:hover{
+          box-shadow: 0 6px 20px -2px var(--accent-cyan-glow), 0 0 0 3px var(--accent-cyan-glow);
+          transform: translateY(-1px);
+        }
+        .meus-dados-cta:focus-visible{
+          outline: none;
+          box-shadow: 0 4px 14px -2px var(--accent-cyan-glow), 0 0 0 3px var(--accent-cyan-glow);
+        }
+      `}</style>
     </main>
   );
 }

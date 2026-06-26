@@ -33,10 +33,39 @@ export default async function EvidenciasPage() {
 
   return (
     <main className="app-container" id="main-content">
-      <div className="ct-gaps-header">
+      {/* Header — Arwen uplift: mesh sutil + typography ambicioso + spacing
+          generoso. Sem eyebrow porque a pagina ja tem contexto claro (titulo
+          explica o que e). */}
+      <div
+        className="ct-gaps-header site-section-mesh"
+        style={{
+          paddingTop: "clamp(56px, 9vw, 96px)",
+          paddingBottom: "clamp(32px, 5vw, 64px)",
+          marginBottom: "clamp(32px, 5vw, 64px)",
+        }}
+      >
         <div>
-          <h1 className="ct-gaps-title">Evidências de competência</h1>
-          <p className="ct-gaps-sub">
+          <h1
+            className="ct-gaps-title"
+            style={{
+              fontSize: "clamp(40px, 6vw, 80px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+              marginBottom: "16px",
+            }}
+          >
+            Evidências de competência
+          </h1>
+          <p
+            className="ct-gaps-sub"
+            style={{
+              fontSize: "clamp(16px, 1.4vw, 19px)",
+              lineHeight: 1.55,
+              color: "var(--text-muted)",
+              maxWidth: "62ch",
+            }}
+          >
             Demonstre suas skills com casos, projetos e métricas reais.
             Recrutador acredita em <strong>evidência específica</strong>, não em
             declaração genérica.
@@ -46,9 +75,46 @@ export default async function EvidenciasPage() {
 
       <EvidenceForm />
 
+      <style>{`
+        .ct-evidence-form.app-glass{ padding: 24px; }
+        .ct-evidence-field input:focus,
+        .ct-evidence-field textarea:focus,
+        .ct-evidence-field select:focus{
+          outline: none;
+          border-color: var(--accent-cyan-deep);
+          box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+        }
+        .ct-evidence-btn-primary{
+          background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%) !important;
+          color: var(--accent-on-cyan, #08313F);
+          border: 0 !important;
+          font-weight: 700;
+          box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);
+          transition: box-shadow .15s, transform .15s;
+        }
+        .ct-evidence-btn-primary:hover:not(:disabled){
+          box-shadow: 0 6px 20px -2px var(--accent-cyan-glow), 0 0 0 3px var(--accent-cyan-glow);
+          transform: translateY(-1px);
+        }
+        .ct-evidence-btn-primary:focus-visible{
+          outline: none;
+          box-shadow: 0 4px 14px -2px var(--accent-cyan-glow), 0 0 0 3px var(--accent-cyan-glow);
+        }
+        .ct-evidence-add-btn{
+          border: 1.5px dashed color-mix(in srgb, var(--accent-cyan-deep) 55%, var(--border));
+          transition: border-color .15s, box-shadow .15s, color .15s;
+        }
+        .ct-evidence-add-btn:hover{
+          border-color: var(--accent-cyan-deep);
+          color: var(--accent-cyan-deep);
+          box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+        }
+        .ct-dash-empty.app-glass{ padding: 28px; }
+      `}</style>
+
       <div style={{ marginTop: 28 }}>
         {items.length === 0 ? (
-          <div className="ct-dash-empty">
+          <div className="ct-dash-empty app-glass">
             <h2>Nenhuma evidência ainda</h2>
             <p>
               Adicione projetos, cases, publicações e certificações pra

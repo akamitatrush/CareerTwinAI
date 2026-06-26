@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Modal from "./Modal";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 export default function InterviewModal({ role, gaps, onClose }) {
   const [q, setQ] = useState(null);
@@ -34,6 +36,9 @@ export default function InterviewModal({ role, gaps, onClose }) {
   }, [role, gaps, asked]);
 
   useEffect(() => {
+    track(EVENTS.INTERVIEW_STARTED, {
+      gaps_count: Array.isArray(gaps) ? gaps.length : 0,
+    });
     nextQuestion();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -54,6 +59,10 @@ export default function InterviewModal({ role, gaps, onClose }) {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || "Falha ao avaliar.");
       setEvalResult(d);
+      track(EVENTS.INTERVIEW_COMPLETED, {
+        nota: Number(d?.nota) || 0,
+        metodo: String(d?.metodo || ""),
+      });
     } catch (e) {
       setErr(e.message);
     } finally {

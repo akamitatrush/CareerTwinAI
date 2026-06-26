@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 /**
  * Card de microacao com fluxo cliente de "concluir / desfazer".
@@ -36,6 +38,10 @@ export default function ActionCardClient({ gap, index }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Falhou");
       setDone(true);
+      track(EVENTS.GAP_COMPLETED, {
+        gap_id: gap.id,
+        impacto_pontos: gap.impactoPontos || 0,
+      });
       // router.refresh recalcula gaps no server (filtro completedAt) sem
       // tirar a UI do ar. Falha aqui nao reverte estado: ver comentario topo.
       startTransition(() => router.refresh());
@@ -58,6 +64,7 @@ export default function ActionCardClient({ gap, index }) {
         throw new Error(data.error || "Falhou");
       }
       setDone(false);
+      track(EVENTS.GAP_UNCOMPLETED, { gap_id: gap.id });
       startTransition(() => router.refresh());
     } catch (e) {
       setError(e.message || "Tenta de novo");

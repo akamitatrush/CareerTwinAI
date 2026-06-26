@@ -170,7 +170,7 @@ export default function EntrarPage({ searchParams }) {
           </p>
         </section>
 
-        <aside className="entrar-col-card" aria-label="Por que criar conta">
+        <aside className="entrar-col-card app-glass" aria-label="Por que criar conta">
           <p
             style={{
               fontFamily: "var(--mono)",
@@ -280,13 +280,34 @@ export default function EntrarPage({ searchParams }) {
           font-family:var(--sans);
           font-size:14.5px;
           color:var(--ink);
-          background:var(--surface);
-          border:1px solid var(--rule);
-          border-radius:4px;
+          background:var(--app-glass-bg, var(--surface));
+          border:1px solid var(--app-glass-border, var(--rule));
+          border-radius:8px;
           padding:13px 14px;
+          transition: box-shadow .15s, border-color .15s;
         }
-        .entrar-form input:focus{outline:none; border-color:var(--ink); box-shadow:0 0 0 3px var(--accent-wash);}
-        .entrar-form .btn-primary{justify-self:start;}
+        .entrar-form input:focus{
+          outline:none;
+          border-color:var(--accent-cyan-deep);
+          box-shadow:0 0 0 3px var(--accent-cyan-glow);
+        }
+        .entrar-form .btn-primary{
+          justify-self:start;
+          background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+          color: #08313F;
+          border: 0;
+          font-weight: 700;
+          box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);
+          transition: box-shadow .15s, transform .15s;
+        }
+        .entrar-form .btn-primary:hover{
+          box-shadow: 0 6px 20px -2px var(--accent-cyan-glow), 0 0 0 3px var(--accent-cyan-glow);
+          transform: translateY(-1px);
+        }
+        .entrar-form .btn-primary:focus-visible{
+          outline: none;
+          box-shadow: 0 4px 14px -2px var(--accent-cyan-glow), 0 0 0 3px var(--accent-cyan-glow);
+        }
 
         .btn-linkedin{
           width:100%;
@@ -328,8 +349,16 @@ export default function EntrarPage({ searchParams }) {
         .entrar-dev input{
           padding:10px;
           border-radius:8px;
-          border:1px solid var(--rule);
+          border:1px solid var(--app-glass-border, var(--rule));
+          background: var(--app-glass-bg, var(--surface));
+          color: var(--ink);
           font-family:var(--sans);
+          transition: box-shadow .15s, border-color .15s;
+        }
+        .entrar-dev input:focus{
+          outline:none;
+          border-color:var(--accent-cyan-deep);
+          box-shadow:0 0 0 3px var(--accent-cyan-glow);
         }
 
         .entrar-footer{
@@ -346,9 +375,7 @@ export default function EntrarPage({ searchParams }) {
         .entrar-footer a{color:var(--ink-soft); font-weight:600;}
 
         .entrar-col-card{
-          background:var(--surface);
-          border:1px solid var(--rule);
-          border-radius:6px;
+          /* .app-glass cuida de background/border/blur/radius — aqui só layout */
           padding:28px 28px 24px;
           position:sticky;
           top:32px;

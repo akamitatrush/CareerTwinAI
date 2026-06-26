@@ -90,13 +90,14 @@ Query: "como faço CV pra vaga de PM senior?"
 
 | Camada | Arquivo | Responsabilidade |
 |---|---|---|
-| **Embedding** | `lib/embeddings.js` | Voyage AI (default) ou OpenAI (fallback). Timeout 8s. 1024 dims. |
-| **Storage** | `prisma/schema.prisma` model `KnowledgeChunk` | pgvector com `Unsupported("vector(1024)")` + HNSW index cosine |
+| **Embedding** | `lib/embeddings.js` | Voyage AI (default) ou OpenAI (fallback). Timeout 8s. 1024 dims. `embedQuery(text)` usa `input_type=query`; `embedTexts(arr)` indexa com `input_type=document`. |
+| **Storage** | `prisma/schema.prisma` model `KnowledgeChunk` | pgvector com `Unsupported("vector(1024)")`. Leitura/escrita via `$queryRaw` com cast `::vector` (Prisma não tem mapping nativo). |
 | **Knowledge source** | `lib/knowledge/career-best-practices.json` | 159 chunks curados, fonte de verdade |
-| **Ingestion** | `scripts/ingest-knowledge.mjs` | Lê JSON → embed → upsert no DB. Idempotente via `contentHash` sha256. |
-| **Retrieval** | `lib/knowledge/retrieval.js` | Hybrid vector + keyword com RRF fusion |
-| **Injection** | `lib/prompts.js` (`promptDiag`, `promptInterviewQuestion`) | Pega top 3 + formata como contexto + injeta no prompt |
-| **Eval** | `tests/eval/rag/` | 50 queries com ground truth, Recall@k + MRR + NDCG |
+| **Ingestion** | `scripts/ingest-knowledge.mjs` | Lê JSON → embed → upsert no DB. Idempotente via `contentHash` sha256 (primeiros 32 hex chars). |
+| **Retrieval** | `lib/knowledge/retrieval.js` | Hybrid vector + keyword com RRF fusion. Função `retrieveKnowledge` é **async** (espera embedding API + DB). |
+| **Injection** | `lib/prompts.js` (`promptDiag`, `promptInterviewQuestion`) | Pega top 3 + formata como `[source] content` e injeta no bloco `CONTEXTO CURADO` do prompt. LLM é instruída a fundamentar SEM copiar literal. |
+| **Eval** | `tests/eval/rag/run-eval.mjs` + `queries.json` | 50 queries com ground truth, Recall@k + MRR + NDCG. Roda em ~1s (BM25 in-memory) ou ~30s (com vector contra DB ingerido). |
+| **Modelos LLM consumidores** | `/api/analyze` + `/api/profile/refresh` (Sonnet 4.6) e `/api/interview` action=question (**Haiku 4.5** — Wave 17) | Inject contexto RAG → LLM responde ancorado. |
 
 ### Decisão: Voyage AI vs OpenAI vs local
 
@@ -198,14 +199,14 @@ Cada chunk **deve**:
 
 ### Eval framework
 
-- **50 queries** com ground truth manual (chunk IDs esperados nos top 5)
+- **50 queries** (49 ativas, 1 marked `pending` — eval pula) com ground truth manual (chunk IDs esperados nos top 5)
 - **Métricas:**
   - **Recall@3** — % de queries onde pelo menos 1 chunk esperado está nos top 3
   - **Recall@5** — idem top 5
   - **MRR** — Mean Reciprocal Rank. 1.0 = sempre na 1a posição
   - **NDCG@5** — qualidade do ranking (1.0 = ideal)
-- **Threshold gate:** Recall@3 ≥ 70% senão CI falha
-- **Distribuição:** 20 easy + 19 medium + 11 hard; 6 topics cobertos
+- **Threshold gate:** Recall@3 ≥ 70% senão CI falha (`exit 1`)
+- **Distribuição (active queries):** 20 easy + 19 medium + 10 hard; 6 topics cobertos (cv 10, linkedin 10, interview 10, transition 10, soft-skills 6, salary 3)
 
 ### Resultados atuais (keyword-only, vector pendente de ingestão)
 
@@ -220,26 +221,31 @@ Cada chunk **deve**:
 
 ### Resultados por dificuldade
 
-| Difficulty | Count | Recall@3 | MRR |
-|---|---|---|---|
-| easy | 20 | 90.0% | 0.854 |
-| medium | 19 | 94.7% | 0.890 |
-| hard | 10 | 100.0% | 0.833 |
+| Difficulty | Count | Recall@3 | Recall@5 | MRR |
+|---|---|---|---|---|
+| easy | 20 | 90.0% | 95.0% | 0.854 |
+| medium | 19 | 94.7% | 100.0% | 0.890 |
+| hard | 10 | 100.0% | 100.0% | 0.833 |
 
 **Insight:** queries `hard` performam melhor que `easy`. Por quê? `hard` envolve conceitos técnicos específicos (RRF, STAR, BLUF) que têm match de keyword único. `easy` é mais coloquial ("como faço CV") e tem mais ambiguidade.
 
 ### Resultados por topic
 
-| Topic | Recall@3 | MRR |
-|---|---|---|
-| cv | 100% | 1.000 |
-| linkedin | 90% | 0.783 |
-| interview | 90% | 0.758 |
-| transition | 100% | 1.000 |
-| soft-skills | 100% | 0.917 |
-| salary | 75% | 0.667 |
+| Topic | Count | Recall@3 | MRR |
+|---|---|---|---|
+| cv | 10 | 100.0% | 1.000 |
+| linkedin | 10 | 90.0% | 0.783 |
+| interview | 10 | 90.0% | 0.758 |
+| transition | 10 | 90.0% | 0.858 |
+| soft-skills | 6 | 100.0% | 1.000 |
+| salary | 3 | 100.0% | 0.778 |
 
 **LinkedIn e interview underperformam** porque chunks dentro desses topics são muito similares (todos sobre "perfil", "atividade"). Vector embeddings vão resolver isso.
+
+**Worst queries hoje** (Recall@3 = 0):
+- `q-li-009` (easy/linkedin): "preciso postar coisa no linkedin pra ser visto" → esperado `linkedin-activity-engagement`, retornou chunks de headline/connections/endorsements.
+- `q-int-001` (easy/interview): "tecnica pra responder pergunta comportamental em entrevista de emprego" → esperado `interview-star-framework`, mas ele aparece no top 5 (não no top 3).
+- `q-tr-003` (medium/transition): "quais skills levo comigo quando mudo de area" → esperado `transition-transferable-skills`, aparece no top 5.
 
 ### Expectativa pós-Voyage AI
 
@@ -273,7 +279,8 @@ Checklist OWASP aplicado:
 | Fail-closed em erro | Vector lane retorna `null` → cai pra keyword. Não expõe stack ao cliente. |
 | Logs sem PII | Só mensagens de erro do provider. Nunca o conteúdo da query do usuário. |
 | Prisma `Unsupported` força raw queries | Não há accidental exposure via API automática |
-| Rate limit em endpoints LLM | Existente (`guardLLM` em `lib/rate-limit.js`) protege também o uso do RAG indireto |
+| Rate limit em endpoints LLM | Existente (`guardLLM` em `lib/rate-limit.js`) protege também o uso do RAG indireto. Upstash Redis em PROD (Wave 11+). |
+| Cache LLM (Wave 17) | `lib/llm-cache.js` em Upstash Redis, key = SHA-256(model\|system\|user). TTL 1h limita janela de cache poisoning. Não cacheia rotas RAG-heavy user-specific (analyze/refresh) — sempre roda fresco. Cache liga em `/api/interview` action=question (Haiku 4.5 com RAG, input mais determinístico). |
 
 ---
 
@@ -420,38 +427,42 @@ Itens **não** implementados (decisão consciente — não vale o custo agora):
 
 ### O que foi entregue
 
-✅ Voyage AI client com fallback OpenAI
-✅ pgvector schema + migration no Neon
-✅ Ingestion script idempotente
-✅ Hybrid retrieval (vector + keyword) com RRF
-✅ Graceful fallback (funciona sem chave)
-✅ 159 chunks curados (vs 30 antes), foco BR
-✅ Eval framework com 50 queries + threshold gate
-✅ 7 testes unit novos (embeddings)
-✅ Atualização dos prompts (`promptDiag`, `promptInterviewQuestion`)
-✅ Documentação técnica + business (este doc)
-✅ 320 testes passando, build clean
+- Voyage AI client com fallback OpenAI
+- pgvector schema + migration no Neon
+- Ingestion script idempotente
+- Hybrid retrieval (vector + keyword) com RRF (k=60)
+- Graceful fallback em camadas (funciona sem chave, sem DB, sem provider — keyword-only)
+- 159 chunks curados (vs 30 antes), foco BR
+- Eval framework com 50 queries (49 ativas, 1 pending) + threshold gate em CI
+- 7 testes unit novos (embeddings)
+- Atualização dos prompts (`promptDiag`, `promptInterviewQuestion`)
+- Cache LLM em Upstash Redis (Wave 17) — beneficia rotas Haiku 4.5 com RAG quando input é determinístico
+- Documentação técnica + business (este doc)
 
 ### O que falta pra ativar 100%
 
 - [ ] Configurar `VOYAGE_API_KEY` no Vercel (manual)
 - [ ] Rodar `npm run ingest:knowledge` contra Neon prod (manual ou cron)
 
-### Métricas atuais
+### Métricas atuais (validadas via `npm run eval:rag` em 2026-06-23)
 
-- **Recall@3:** 93.9% (PASSED)
+- **Recall@3:** 93.9% (PASSED, threshold 70%)
+- **Recall@5:** 98.0%
 - **MRR:** 0.864
-- **Latência:** 0.4ms (keyword); ~250ms esperado pós-ingestão
-- **Custo:** ~$0.004/mês
+- **NDCG@5:** 0.852
+- **Latência:** 0.4ms (keyword); ~250ms esperado pós-ingestão (Voyage API + DB)
+- **Errors:** 0
+- **Custo:** ~$0.004/mês (free tier cobre)
 
 ### Próximos passos (não bloqueantes)
 
-1. Configurar VOYAGE_API_KEY → rodar ingestão → re-rodar eval
+1. Configurar VOYAGE_API_KEY → rodar ingestão → re-rodar eval (esperativa: Recall@3 sobe pra 96-98%)
 2. Se Recall@3 não subir pra >95%, investigar qualidade dos chunks (alguns podem estar mal escritos pra embedding)
-3. Adicionar 30-50 chunks novos baseados em queries que falharam no eval atual
+3. Adicionar 30-50 chunks novos baseados em queries que falharam no eval atual (`q-li-009`, `q-int-001`, `q-tr-003`)
+4. Avaliar rerank via Cohere/Voyage Rerank quando MRR plateaur
 
 ---
 
-**Versão deste doc:** 1.0
-**Última atualização:** 2026-06-23
-**Autor:** Sergio Henrique da Silva + Claude (Wave 9 RAG Real)
+**Versão deste doc:** 1.1
+**Última atualização:** 2026-06-23 (auditoria pós-Wave 17)
+**Autor:** Sergio Henrique da Silva + Claude (Wave 9 RAG Real, revisado em Wave 17)

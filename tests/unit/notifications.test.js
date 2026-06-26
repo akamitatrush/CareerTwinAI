@@ -101,6 +101,17 @@ describe("NotificationTemplates", () => {
     expect(t.title.length).toBeGreaterThan(0);
     expect(t.link).toBe("/dashboard");
   });
+
+  it("dailyBriefing tem kind/title/body/link", () => {
+    const t = NotificationTemplates.dailyBriefing({
+      subject: "Sergio, 3 vagas novas hoje",
+      summary: "Bom dia. Score 72. Vaga: PM de IA @ Acme.",
+    });
+    expect(t.kind).toBe("DAILY_BRIEFING");
+    expect(t.title).toContain("Sergio");
+    expect(t.body).toContain("PM de IA");
+    expect(t.link).toBe("/dashboard");
+  });
 });
 
 describe("notify()", () => {

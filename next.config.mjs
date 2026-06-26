@@ -16,6 +16,15 @@ const nextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async redirects() {
+    // /site era a rota original do landing premium (Aragorn). Promovemos pra /
+    // via route group (landing). Estes redirects evitam 404 em links externos
+    // que ainda apontem pra /site (compartilhamentos, marketing, e-mails).
+    return [
+      { source: "/site", destination: "/", permanent: true },
+      { source: "/site/:path*", destination: "/:path*", permanent: true },
+    ];
+  },
 };
 
 let exported = nextConfig;

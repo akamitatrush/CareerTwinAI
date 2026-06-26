@@ -1,9 +1,17 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { audit } from "@/lib/audit";
+import {
+  ACHIEVEMENTS_META,
+  ACHIEVEMENT_KINDS,
+  MAX_POINTS,
+} from "@/lib/achievements";
+import CvAnalyzer from "./CvAnalyzer";
 
 // Forca render dinamico — depende de auth() (cookies) e Prisma.
 export const dynamic = "force-dynamic";
@@ -30,6 +38,16 @@ function genericError(path = "/conta") {
   redirect(`${path}?erro=1`);
 }
 
+// Extrai IP do request via next/headers (LGPD: sera hasheado no audit()).
+// Server actions nao recebem req nativamente — `headers()` da o equivalente.
+function getActorIpFromHeaders(h) {
+  return (
+    h.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    h.get("x-real-ip") ||
+    null
+  );
+}
+
 // --------------------------------------------------------------------------
 // Server actions
 // --------------------------------------------------------------------------
@@ -45,6 +63,16 @@ async function updateNameAction(formData) {
     await prisma.user.update({
       where: { id: session.user.id },
       data: { name: parsed.data.name },
+    });
+    // Audit log — LGPD: registra quem mudou o que, sem o valor (privacy).
+    // Meta inclui so o campo afetado, nao o conteudo.
+    const h = headers();
+    await audit({
+      userId: session.user.id,
+      action: "PROFILE_UPDATED",
+      actorIp: getActorIpFromHeaders(h),
+      target: `User:${session.user.id}`,
+      meta: { field: "name" },
     });
   } catch {
     genericError();
@@ -69,6 +97,15 @@ async function updateTargetRoleAction(formData) {
       update: { targetRole: role || null },
       create: { userId: session.user.id, targetRole: role || null },
     });
+    // Audit log — LGPD: registra mudanca, sem revelar o cargo (privacy).
+    const h = headers();
+    await audit({
+      userId: session.user.id,
+      action: "PROFILE_UPDATED",
+      actorIp: getActorIpFromHeaders(h),
+      target: `Profile:${session.user.id}`,
+      meta: { field: "targetRole", cleared: !role },
+    });
   } catch {
     genericError();
   }
@@ -90,6 +127,15 @@ async function toggleDigestAction(formData) {
     await prisma.user.update({
       where: { id: session.user.id },
       data: { digestEnabled: enabled },
+    });
+    // Audit log — preference change. Meta inclui novo valor (bool, sem PII).
+    const h = headers();
+    await audit({
+      userId: session.user.id,
+      action: "PROFILE_UPDATED",
+      actorIp: getActorIpFromHeaders(h),
+      target: `User:${session.user.id}`,
+      meta: { field: "digestEnabled", value: enabled },
     });
   } catch {
     genericError();
@@ -129,33 +175,56 @@ export default async function ContaPage({ searchParams }) {
   const userId = session.user.id;
 
   // Tudo escopado por userId vindo da sessao (sem IDOR).
-  const [user, profile, snapshotsCount, applicationsCount, latestSnapshot] =
-    await Promise.all([
-      prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          name: true,
-          email: true,
-          emailVerified: true,
-          image: true,
-          createdAt: true,
-          digestEnabled: true,
-        },
-      }),
-      prisma.profile.findUnique({
-        where: { userId },
-        select: { targetRole: true, nome: true },
-      }),
-      prisma.scoreSnapshot.count({ where: { userId } }),
-      prisma.application.count({ where: { userId } }),
-      prisma.scoreSnapshot.findFirst({
-        where: { userId },
-        orderBy: { createdAt: "desc" },
-        select: { overall: true, createdAt: true },
-      }),
-    ]);
+  const [
+    user,
+    profile,
+    snapshotsCount,
+    applicationsCount,
+    latestSnapshot,
+    earnedAchievements,
+  ] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        email: true,
+        emailVerified: true,
+        image: true,
+        createdAt: true,
+        digestEnabled: true,
+      },
+    }),
+    prisma.profile.findUnique({
+      where: { userId },
+      // rawCv lido aqui pra alimentar CvAnalyzer (analise IA inline). LGPD:
+      // rawCv ja escopado por userId (sem IDOR), e o cron de redaction apaga
+      // apos 90d (rawCvExpiresAt). Render server-side; CvAnalyzer recebe como
+      // prop e nunca refaz fetch — Profile.rawCv nunca vai pro browser
+      // exceto pro proprio dono.
+      select: { targetRole: true, nome: true, rawCv: true },
+    }),
+    prisma.scoreSnapshot.count({ where: { userId } }),
+    prisma.application.count({ where: { userId } }),
+    prisma.scoreSnapshot.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: { overall: true, createdAt: true },
+    }),
+    prisma.achievement.findMany({
+      where: { userId },
+      orderBy: { earnedAt: "desc" },
+      select: { kind: true, earnedAt: true },
+    }),
+  ]);
 
   if (!user) redirect("/entrar");
+
+  // Achievements: agrega kinds desbloqueados pra render do grid.
+  const earnedKinds = new Set(earnedAchievements.map((a) => a.kind));
+  const earnedPoints = earnedAchievements.reduce(
+    (sum, a) => sum + (ACHIEVEMENTS_META[a.kind]?.points || 0),
+    0,
+  );
 
   const erro = searchParams?.erro === "1";
   const displayName = profile?.nome || user.name || "";
@@ -163,6 +232,49 @@ export default async function ContaPage({ searchParams }) {
 
   return (
     <div className="app-container">
+      {/* Refresh visual (Sam) — overrides locais com gradient cyan + hover lift.
+          Sem tocar globals.css. Usa tokens definidos por Legolas (--accent-cyan,
+          --accent-cyan-deep, --accent-cyan-glow, --app-glass-*, --shadow-md/lg). */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .conta-glass-card {
+              transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+              box-shadow: var(--shadow-md);
+            }
+            .conta-glass-card:hover {
+              transform: scale(1.01);
+              box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-cyan-glow);
+              border-color: var(--accent-cyan-glow);
+            }
+            .conta-glass-card .ct-conta-btn.primary {
+              background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+              color: var(--accent-on-cyan, #08313F);
+              border: 1px solid transparent;
+              box-shadow: var(--shadow-md);
+              transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+            }
+            .conta-glass-card .ct-conta-btn.primary:hover {
+              transform: translateY(-1px);
+              box-shadow: var(--shadow-lg), 0 0 0 3px var(--accent-cyan-glow);
+              filter: brightness(1.04);
+            }
+            .conta-glass-card .ct-conta-btn.primary:focus-visible {
+              outline: none;
+              box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-cyan-glow);
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .conta-glass-card,
+              .conta-glass-card:hover,
+              .conta-glass-card .ct-conta-btn.primary,
+              .conta-glass-card .ct-conta-btn.primary:hover {
+                transition: none;
+                transform: none;
+              }
+            }
+          `,
+        }}
+      />
       {/* Header simples */}
       <div className="ct-gaps-header">
         <div>
@@ -197,7 +309,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             1. Perfil — identidade + nome editavel
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-perfil">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-perfil">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-perfil" className="ct-conta-card-title">
@@ -263,7 +375,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             2. Cargo-alvo
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-cargo">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-cargo">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-cargo" className="ct-conta-card-title">
@@ -300,9 +412,29 @@ export default async function ContaPage({ searchParams }) {
         </section>
 
         {/* ============================================================
+            2.5. Analise IA inline do CV (feature #4 STRATEGY_ROADMAP)
+            ============================================================ */}
+        {profile?.rawCv && profile.rawCv.length > 100 && (
+          <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-cv-ai">
+            <div className="ct-conta-card-head">
+              <div>
+                <h2 id="conta-cv-ai" className="ct-conta-card-title">
+                  Seu CV sob a lente da IA
+                </h2>
+                <p className="ct-conta-card-sub">
+                  A IA marca os bullets fracos do seu curriculo e propoe
+                  reescrita. Voce decide aceitar (copiar) ou descartar cada uma.
+                </p>
+              </div>
+            </div>
+            <CvAnalyzer cv={profile.rawCv} role={profile?.targetRole || ""} />
+          </section>
+        )}
+
+        {/* ============================================================
             3. Stats em mosaico
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-stats">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-stats">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-stats" className="ct-conta-card-title">
@@ -338,17 +470,70 @@ export default async function ContaPage({ searchParams }) {
         </section>
 
         {/* ============================================================
+            3.5. Conquistas — grid de achievements
+            ============================================================ */}
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-achievements">
+          <div className="ct-conta-card-head">
+            <div>
+              <h2 id="conta-achievements" className="ct-conta-card-title">
+                Conquistas
+              </h2>
+              <p className="ct-conta-card-sub">
+                {earnedKinds.size} de {ACHIEVEMENT_KINDS.length} desbloqueadas
+                {" · "}
+                {earnedPoints} pontos
+                {earnedPoints < MAX_POINTS ? ` de ${MAX_POINTS}` : ""}
+              </p>
+            </div>
+            <span className="ct-achievements-points" aria-hidden="true">
+              {earnedPoints} pts
+            </span>
+          </div>
+
+          <div className="ct-achievements-grid" role="list">
+            {ACHIEVEMENT_KINDS.map((kind) => {
+              const earned = earnedKinds.has(kind);
+              const meta = ACHIEVEMENTS_META[kind];
+              return (
+                <div
+                  key={kind}
+                  role="listitem"
+                  className={
+                    "ct-achievement-card" + (earned ? " earned" : " locked")
+                  }
+                  aria-label={
+                    earned
+                      ? `${meta.title} (desbloqueada)`
+                      : `${meta.title} (bloqueada)`
+                  }
+                >
+                  <span className="ct-achievement-icon" aria-hidden="true">
+                    {earned ? meta.icon : "🔒"}
+                  </span>
+                  <h4 className="ct-achievement-title">{meta.title}</h4>
+                  <p className="ct-achievement-desc">{meta.desc}</p>
+                  <span className="ct-achievement-points">
+                    +{meta.points} pts
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ============================================================
             4. Preferencias de notificacao
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-notif">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-notif">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-notif" className="ct-conta-card-title">
                 Preferências de notificação
               </h2>
               <p className="ct-conta-card-sub">
-                Toda segunda 9h BRT enviamos vagas novas que dão match. Desligue
-                quando quiser.
+                Briefings por email: <b>diários</b> (terça a domingo, 8h BRT)
+                com 3 vagas novas + 1 ação concreta, e <b>retrospectiva semanal</b>{" "}
+                às segundas 9h BRT. Um toggle só, desliga ambos quando quiser.
               </p>
             </div>
           </div>
@@ -373,7 +558,7 @@ export default async function ContaPage({ searchParams }) {
                 style={{ width: 16, height: 16, accentColor: "var(--primary)" }}
               />
               <span style={{ fontSize: 13.5, color: "var(--text)" }}>
-                Receber digest semanal por email
+                Receber briefings e digest por email
               </span>
             </label>
             <button className="ct-conta-btn" type="submit">
@@ -385,7 +570,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             5. Privacidade & dados
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-lgpd">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-lgpd">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-lgpd" className="ct-conta-card-title">
@@ -419,7 +604,7 @@ export default async function ContaPage({ searchParams }) {
         {/* ============================================================
             6. Sessao
             ============================================================ */}
-        <section className="ct-conta-card" aria-labelledby="conta-sessao">
+        <section className="ct-conta-card app-glass conta-glass-card" aria-labelledby="conta-sessao">
           <div className="ct-conta-card-head">
             <div>
               <h2 id="conta-sessao" className="ct-conta-card-title">

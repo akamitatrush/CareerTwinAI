@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import Modal from "./Modal";
+import { track } from "@/components/PostHogProvider";
+import { EVENTS } from "@/lib/analytics/events";
 
 export default function TailorModal({ role, cv, vaga, onClose }) {
   const [data, setData] = useState(null);
@@ -8,6 +10,10 @@ export default function TailorModal({ role, cv, vaga, onClose }) {
 
   useEffect(() => {
     let active = true;
+    track(EVENTS.TAILOR_STARTED, {
+      vaga_titulo: vaga?.titulo?.slice(0, 80) || "",
+      vaga_empresa: vaga?.empresa?.slice(0, 80) || "",
+    });
     (async () => {
       try {
         const r = await fetch("/api/tailor", {
@@ -19,6 +25,9 @@ export default function TailorModal({ role, cv, vaga, onClose }) {
         if (!active) return;
         if (!r.ok) throw new Error(d.error || "Falha ao adaptar.");
         setData(d);
+        track(EVENTS.TAILOR_COMPLETED, {
+          bullets_count: Array.isArray(d?.bullets) ? d.bullets.length : 0,
+        });
       } catch (e) {
         if (active) setErr(e.message);
       } finally {

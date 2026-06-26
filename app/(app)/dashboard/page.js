@@ -5,9 +5,14 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WEIGHTS, SS_META } from "@/lib/score";
 import { computeCompleteness } from "@/lib/metrics/completeness";
-import { HIRED_MEDIAN } from "@/lib/metrics/median-stub";
+import { getRealMedian } from "@/lib/metrics/median-real";
 import ActionCardClient from "./ActionCardClient";
 import RefreshDiagnosisButton from "./RefreshDiagnosisButton";
+import DashboardTracker from "./DashboardTracker";
+import DailyQuestCard from "./DailyQuestCard";
+import DashboardHighlightBanner from "@/components/DashboardHighlightBanner";
+import SkillGraph from "@/components/SkillGraph";
+import { skillsForRole } from "@/lib/skills-taxonomy";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Dashboard — CareerTwin AI" };
@@ -44,7 +49,9 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [profile, snapshots] = await Promise.all([
+  // median e dado agregado (sem PII) — Promise.all paraleliza com queries do user.
+  // getRealMedian tem cache em memoria 1h, entao normalmente nao toca DB.
+  const [profile, snapshots, median] = await Promise.all([
     prisma.profile.findUnique({ where: { userId } }),
     prisma.scoreSnapshot.findMany({
       where: { userId },
@@ -52,6 +59,7 @@ export default async function DashboardPage() {
       take: 30,
       include: { gaps: true, planItems: { orderBy: { semana: "asc" } } },
     }),
+    getRealMedian(),
   ]);
 
   const latest = snapshots[0] || null;
@@ -96,11 +104,50 @@ export default async function DashboardPage() {
 
   return (
     <main id="main-content" className="app-container">
-      {/* Header */}
-      <div className="ct-dash-header">
+      {/* Analytics: dispara dashboard_viewed no client com metricas pre-calc.
+          Sem-PII: so contadores e score (sem habilidades/nome/email). */}
+      <DashboardTracker
+        hasSnapshot={!!latest}
+        score={Number(latest?.overall) || 0}
+        gapsCount={Array.isArray(latest?.gaps) ? latest.gaps.length : 0}
+      />
+      {/* Header — Arwen uplift: typography ambicioso clamp() + spacing generoso.
+          Mantem classes (Galadriel polishing CSS em paralelo) mas adiciona style
+          inline pra garantir vibe Cloudwalk independente do que .ct-dash-title
+          tem hoje. */}
+      <div
+        className="ct-dash-header site-section-mesh"
+        style={{
+          paddingTop: "clamp(48px, 8vw, 96px)",
+          paddingBottom: "clamp(32px, 5vw, 64px)",
+        }}
+      >
         <div>
-          <p className="ct-dash-eyebrow">Bom te ver de volta,</p>
-          <h1 className="ct-dash-title">Olá, {firstName}</h1>
+          <p
+            className="ct-dash-eyebrow"
+            style={{
+              fontSize: "12px",
+              fontWeight: 600,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "var(--accent-cyan-deep)",
+              marginBottom: "14px",
+            }}
+          >
+            Dashboard · Bom te ver de volta
+          </p>
+          <h1
+            className="ct-dash-title"
+            style={{
+              fontSize: "clamp(40px, 6vw, 80px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+              marginBottom: "16px",
+            }}
+          >
+            Olá, {firstName}
+          </h1>
         </div>
         <Link
           href="/conta"
@@ -138,9 +185,20 @@ export default async function DashboardPage() {
       {/* Empty state se sem snapshot */}
       {!latest && <EmptyState />}
 
+      {/* Highlight banner: mensagem contextual baseada no estado do user.
+          So aparece quando ha snapshot — empty state ja tem call-to-action
+          proprio. Variant "microacao" se ha gaps completados (incentivo a
+          recalcular), senao "refresh" (lembrete suave de atualizar). */}
+      {latest && completedGaps.length > 0 && (
+        <DashboardHighlightBanner variant="microacao" count={completedGaps.length} />
+      )}
+      {latest && completedGaps.length === 0 && (
+        <DashboardHighlightBanner variant="refresh" />
+      )}
+
       {/* HERO: Score Ring + Sub-scores */}
       {latest && (
-        <div className="ct-dash-hero">
+        <div className="ct-dash-hero app-glass">
           <ScoreRingCol
             latest={latest}
             deltaFromFirst={deltaFromFirst}
@@ -150,10 +208,43 @@ export default async function DashboardPage() {
             projectedScore={projectedScore}
             projectedGain={projectedGain}
             completedCount={completedGaps.length}
+            median={median}
           />
           <SubScoresCol latest={latest} projectedByDimension={projectedByDimension} />
         </div>
       )}
+
+      {latest && <hr className="ct-section-divider" />}
+
+      {/* Daily quest — feature #10 do roadmap (habit loop). Renderiza so depois
+          do hero pra dar destaque sem competir com o score. Componente faz
+          fetch lazy, retorna null em erro/loading (degrada silenciosamente). */}
+      {latest && <DailyQuestCard />}
+
+      {/* Skill graph — feature #7 do roadmap. Renderiza so quando o user tem
+          snapshot E perfil estruturado com skills (sem isso o grafo fica vazio
+          e nao agrega). targetSkills vem de skillsForRole — lookup hardcoded
+          por enquanto (Fase 3 sera embeddings de JD). */}
+      {latest && Array.isArray(profile?.skills) && profile.skills.length > 0 && (
+        <section
+          className="ct-dash-skill-graph"
+          aria-labelledby="ct-skill-graph-title"
+        >
+          <h2 id="ct-skill-graph-title" className="ct-section-title">
+            Mapa de skills
+          </h2>
+          <p className="ct-section-sub">
+            Visual interativo das suas skills vs o que o cargo-alvo pede.
+          </p>
+          <SkillGraph
+            profileSkills={profile.skills}
+            targetSkills={skillsForRole(profile.targetRole)}
+            role={profile.targetRole}
+          />
+        </section>
+      )}
+
+      {latest && <hr className="ct-section-divider" />}
 
       {/* 2-col: actions + profile snapshot */}
       {latest && (
@@ -172,7 +263,7 @@ export default async function DashboardPage() {
 
 function EmptyState() {
   return (
-    <div className="ct-dash-empty">
+    <div className="ct-dash-empty app-glass">
       <h2>Seu gêmeo ainda está em branco.</h2>
       <p>
         Cole seu currículo e diga o cargo-alvo na <Link href="/">home</Link>{" "}
@@ -250,7 +341,13 @@ function ScoreRingCol({
   projectedScore,
   projectedGain,
   completedCount,
+  median,
 }) {
+  // median pode ser undefined (defesa em depth contra alguem chamar
+  // sem prop). Usa stub default e isStub true.
+  const medianValue = Number(median?.value) || 78;
+  const isStub = median?.isStub !== false; // default true
+  const sampleSize = Number(median?.sampleSize) || 0;
   const score = Math.max(0, Math.min(100, currentScore));
   const projScore = Math.max(0, Math.min(100, projectedScore));
   const CIRC = 2 * Math.PI * 74; // r=74
@@ -260,7 +357,10 @@ function ScoreRingCol({
 
   return (
     <div className="ct-score-col">
-      <div className="ct-score-ring-wrap">
+      <div
+        className="ct-score-ring-wrap"
+        style={{ boxShadow: "0 8px 24px -6px var(--accent-cyan-glow)", borderRadius: "50%" }}
+      >
         <svg
           width="172"
           height="172"
@@ -365,12 +465,12 @@ function ScoreRingCol({
       <div className="ct-mediana">
         <div className="ct-mediana-row">
           <span>Mediana de contratados</span>
-          <span className="ct-mediana-value">{HIRED_MEDIAN}</span>
+          <span className="ct-mediana-value">{medianValue}</span>
         </div>
         <div
           className="ct-mediana-bar"
           role="img"
-          aria-label={`Seu score ${score} comparado com a mediana ${HIRED_MEDIAN}`}
+          aria-label={`Seu score ${score} comparado com a mediana ${medianValue}`}
         >
           <div
             className="ct-mediana-bar-fill"
@@ -378,12 +478,23 @@ function ScoreRingCol({
           />
           <div
             className="ct-mediana-bar-mark"
-            style={{ left: `${HIRED_MEDIAN}%` }}
+            style={{ left: `${medianValue}%` }}
           />
         </div>
         <div className="ct-mediana-foot">
-          Estimativa em construção · você está a{" "}
-          <strong>{Math.max(0, HIRED_MEDIAN - score)} pontos</strong> da mediana.
+          {isStub ? (
+            <>
+              Estimativa em construção · você está a{" "}
+              <strong>{Math.max(0, medianValue - score)} pontos</strong> da
+              mediana.
+            </>
+          ) : (
+            <>
+              Mediana real (N={sampleSize}) · você está a{" "}
+              <strong>{Math.max(0, medianValue - score)} pontos</strong> da
+              mediana de contratados.
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -479,6 +590,11 @@ function NextActionsCol({ latest, allGapsDone, projectedGain }) {
     ? latest.gaps.filter((g) => g.completedAt).length
     : 0;
 
+  // Mostra botao "Atualizar diagnostico" SEMPRE que ha pelo menos 1 acao
+  // concluida (nao precisa esperar todas). UX: user marca 1 -> ja pode
+  // recalcular pra ver o ganho. Antes era so no empty state (todas done).
+  const showRefreshHint = completedCount > 0 && gaps.length > 0;
+
   return (
     <div>
       <div className="ct-actions-head">
@@ -487,6 +603,17 @@ function NextActionsCol({ latest, allGapsDone, projectedGain }) {
         </h2>
         <span className="ct-actions-sub">priorizado por ganho no score</span>
       </div>
+
+      {showRefreshHint && (
+        <div className="ct-actions-refresh-hint">
+          <RefreshDiagnosisButton
+            allGapsDone={false}
+            projectedGain={projectedGain}
+            completedCount={completedCount}
+          />
+        </div>
+      )}
+
       <div className="ct-actions-list">
         {gaps.length === 0 ? (
           <RefreshDiagnosisButton
@@ -519,7 +646,7 @@ function ProfileSnapshotCol({ profile, completeness, latest }) {
           {completeness.percent}% completo
         </span>
       </div>
-      <div className="ct-profile-card">
+      <div className="ct-profile-card app-glass">
         <div className="ct-profile-top">
           <div className="ct-profile-avatar">{initial}</div>
           <div>

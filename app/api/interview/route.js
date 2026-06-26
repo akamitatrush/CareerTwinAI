@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage, completeJSONFastWithUsage } from "@/lib/llm";
 import { promptInterviewQuestion, promptInterviewEval } from "@/lib/prompts";
 import { InterviewBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
-import { enforceUsage } from "@/lib/billing/enforce";
+import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
+import { audit } from "@/lib/audit";
+import { grantAchievement } from "@/lib/achievements";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req) {
+async function handler(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -19,6 +22,7 @@ export async function POST(req) {
   // Enforcement de plano (5 simulacoes/mes no Free). Conta cada chamada
   // (question OU evaluate) — pesa LLM em ambas. enforceUsage AGORA INCREMENTA
   // ATOMICAMENTE — nao chamar trackUsage depois.
+  let userPlan = null;
   if (userId) {
     const lim = await enforceUsage(userId, "interview");
     if (!lim.ok) {
@@ -29,6 +33,28 @@ export async function POST(req) {
           feature: "interview",
           plan: lim.plan,
           limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+    userPlan = lim.plan;
+    // Pre-check budget diario (Wave 11 — cost amplification defense).
+    const budget = await checkDailyBudget(userId, userPlan);
+    if (!budget.ok) {
+      await audit({
+        userId,
+        action: "SECURITY_BUDGET_EXCEEDED",
+        target: `User:${userId}`,
+        req,
+        meta: { feature: "interview", used: budget.used, cap: budget.cap },
+      });
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite diario de uso de IA. Volte amanha ou faca upgrade.",
+          code: "BUDGET_EXCEEDED",
+          used: budget.used,
+          cap: budget.cap,
           upgradeUrl: "/precos",
         },
         { status: 402 }
@@ -83,20 +109,67 @@ export async function POST(req) {
   }
   const body = parsed.data;
 
+  // Helper local pra track + budget audit pos-LLM. Reuso entre question/eval.
+  // Falha silenciosa: tokens ja gastos, nao quebra a resposta.
+  async function trackAndAudit(usage, subroute) {
+    if (!userId || !usage) return;
+    await trackTokenUsage(userId, "interview", usage);
+    try {
+      const budgetAfter = await checkDailyBudget(userId, userPlan);
+      if (!budgetAfter.ok) {
+        await audit({
+          userId,
+          action: "SECURITY_BUDGET_EXCEEDED",
+          target: `User:${userId}`,
+          req,
+          meta: {
+            feature: "interview",
+            subroute,
+            used: budgetAfter.used,
+            cap: budgetAfter.cap,
+            phase: "post-llm",
+          },
+        });
+      }
+    } catch (e) {
+      console.error("interview: post-budget check falhou", e?.message);
+    }
+  }
+
   try {
     if (body.action === "question") {
-      const data = await completeJSON(
+      // Haiku 4.5: gerar pergunta de entrevista e trabalho leve (1 pergunta
+      // estruturada por gap). Sonnet seria overkill. Cache default ON — mesmo
+      // role+gaps+asked bate cache (raro mas possivel em mock repetido).
+      const { result: data, usage } = await completeJSONFastWithUsage(
         await promptInterviewQuestion(body.role, body.gaps, body.asked),
         { route: "interview.question", userId }
       );
       // Uso ja foi contabilizado em enforceUsage acima (fix TOCTOU).
+      await trackAndAudit(usage, "question");
       return NextResponse.json(data);
     }
-    const data = await completeJSON(
+    // EVALUATE fica em Sonnet: avaliar resposta com rigor (STAR, CAR, gaps)
+    // pede modelo top. Tambem skip cache — feedback deve ser sempre fresco
+    // mesmo se user repetir resposta (educativo + raro acontecer).
+    const { result: data, usage } = await completeJSONWithUsage(
       promptInterviewEval(body.role, body.pergunta, body.resposta),
-      { route: "interview.eval", userId }
+      { route: "interview.eval", userId, cache: false }
     );
     // Uso ja foi contabilizado em enforceUsage acima (fix TOCTOU).
+    await trackAndAudit(usage, "eval");
+
+    // Achievement: FIRST_INTERVIEW concedido na primeira avaliacao. Idempotente
+    // via unique (userId, kind) — grants subsequentes caem em alreadyEarned.
+    // Falha silenciosa nao derruba o resultado da simulacao.
+    if (userId) {
+      try {
+        await grantAchievement(userId, "FIRST_INTERVIEW");
+      } catch (e) {
+        console.error("interview: achievement falhou", e?.message);
+      }
+    }
+
     return NextResponse.json(data);
   } catch (e) {
     console.error("interview: LLM falhou", e?.message);
@@ -109,3 +182,5 @@ export async function POST(req) {
     );
   }
 }
+
+export const POST = withApiGuard(handler);

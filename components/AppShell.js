@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import NotificationsBell from "@/components/NotificationsBell";
+import CopilotWidget from "@/components/CopilotWidget";
 
 const NAV = [
   {
@@ -20,6 +21,29 @@ const NAV = [
     href: "/oportunidades",
     label: "Radar de vagas",
     iconPath: "M21 21l-6-6M10 17a7 7 0 110-14 7 7 0 010 14z",
+  },
+  {
+    href: "/concursos",
+    label: "Concursos",
+    iconPath: "M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z",
+  },
+  {
+    href: "/estagios",
+    label: "Estágios",
+    iconPath: "M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M3 7h18l-1 13H4z",
+  },
+  {
+    href: "/funil",
+    label: "Funil de busca",
+    iconPath: "M3 5h18l-7 9v6l-4-2v-4z",
+  },
+  {
+    // Roadmap visual de carreira (feature #5 do STRATEGY_ROADMAP, MVP
+    // deterministico). Fica antes do /plano porque o "plano de carreira"
+    // e a visao macro (12-18 meses), e o /plano e tactico (proximas semanas).
+    href: "/carreira",
+    label: "Plano de carreira",
+    iconPath: "M3 17l6-6 4 4 8-8M14 7h7v7",
   },
   {
     href: "/plano",
@@ -73,10 +97,16 @@ function BrandMark({ size = 34, radius = 10 }) {
         height={inner}
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#fff"
+        /* currentColor + style.color = var(--on-primary). Atributos SVG
+           (stroke="...") nao processam var() diretamente; currentColor
+           herda do CSS, e style.color resolve a var por tema.
+           Light/dark: #FFFFFF sobre indigo. Noir: #000000 sobre o gradient
+           branco-cinza (antes era #fff hardcoded — ficava invisivel). */
+        stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        style={{ color: "var(--on-primary)" }}
       >
         <circle cx="9" cy="8" r="3.2" />
         <path d="M3.5 19c.6-3 2.9-4.6 5.5-4.6" />
@@ -208,15 +238,35 @@ export default function AppShell({ children, user }) {
           </div>
 
           <div className="appshell-user">
-            <div className="appshell-avatar" aria-hidden="true">
-              {initial}
-            </div>
-            <div className="appshell-user-info">
-              <div className="appshell-user-name">{userName}</div>
-              <div className="appshell-user-role" title={targetRole}>
-                {targetRole}
+            {/* Link cobre avatar+info; bell fica fora pra nao "engolir" clique
+                no sino. Wave 10 fix — antes era <div> nao-clicavel, sem item
+                "Conta" na nav. Agora vira atalho pra /conta com a11y label. */}
+            <Link
+              href="/conta"
+              className="appshell-user-link"
+              aria-label="Ver minha conta"
+            >
+              {user?.image ? (
+                <img
+                  className="appshell-avatar"
+                  src={user.image}
+                  alt=""
+                  width={36}
+                  height={36}
+                  aria-hidden="true"
+                />
+              ) : (
+                <div className="appshell-avatar" aria-hidden="true">
+                  {initial}
+                </div>
+              )}
+              <div className="appshell-user-info">
+                <div className="appshell-user-name">{userName}</div>
+                <div className="appshell-user-role" title={targetRole}>
+                  {targetRole}
+                </div>
               </div>
-            </div>
+            </Link>
             <NotificationsBell />
           </div>
         </aside>
@@ -272,6 +322,12 @@ export default function AppShell({ children, user }) {
 
         {children}
       </div>
+
+      {/* Career Copilot — widget flutuante sempre visivel pra users logados.
+          Renderizado aqui (no AppShell), entao so aparece dentro do (app)
+          group, que e auth-gated no layout.js. Public pages (/, /entrar)
+          nao usam AppShell, logo nao mostram o copilot. */}
+      <CopilotWidget user={user} />
     </div>
   );
 }

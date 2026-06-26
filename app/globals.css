@@ -5,22 +5,81 @@
  * =========================================================== */
 
 :root {
-  /* === Paleta nova "Índigo Sereno" — shared entre temas === */
+  /* === Paleta "Índigo Sereno" refinada (Wave A) — defaults p/ light ===
+     IMPORTANTE: estes tokens DEVEM ser reescritos em [data-theme="dark"]
+     abaixo, senão os soft/tint quase-brancos viram fundo de chips
+     sobre surfaces dark (bug arquitetural pré-Wave A). */
   --primary: #4F4FB0;
   --primary-deep: #34357E;
   --primary-soft: #EEEEFB;
-  --primary-tint: #DEDEF4;
-  --primary-light: #6E6EC8;
+  --primary-tint: #C7C7E8;
+  --primary-light: #6B6BC8;
 
-  --positive: #1E9C7E;
-  --positive-deep: #1E7E66;
-  --positive-soft: #ECF6F0;
-  --positive-tint: #CFE8DB;
+  /* === Accent cyan/magenta (refresh visual) ===
+     Tokens novos pra acentos vibrantes (Score Ring glow, banners de
+     destaque, hover/focus). Indigo Sereno continua sendo a marca
+     principal; cyan/magenta são raros e decorativos. */
+  --accent-cyan: #70FFDD;
+  --accent-cyan-deep: #4DCFB3;
+  --accent-cyan-glow: rgba(112, 255, 221, 0.35);
+  --accent-magenta: #B924FF;
+  --accent-magenta-soft: rgba(185, 36, 255, 0.18);
 
-  --attention: #B6822A;
-  --attention-deep: #7A6326;
-  --attention-soft: #FBF6EC;
-  --attention-tint: #F0E4C9;
+  /* === Site landing premium tokens (Cloudwalk/Apple BR vibe) ===
+     Tokens fixos — a landing pública /site é SEMPRE dark editorial,
+     independente do data-theme do app. Design intencional: glassmorphism
+     + accent cyan/magenta + mesh radial sutil. NÃO reescrever em
+     [data-theme="dark"] nem em [data-theme="light"]. */
+  --site-bg: #0A0A0E;
+  --site-fg: #FAFAFC;
+  --site-fg-muted: rgba(250, 250, 252, 0.72);
+  /* Wave 10A — WCAG AA fix. Alpha 0.45 dava ~3.98:1 sobre #0A0A0E (FAIL pra
+     texto normal). 0.58 atinge ~4.6:1. Site eh dark editorial, sempre. */
+  --site-fg-dim: rgba(250, 250, 252, 0.58);
+  --site-border: rgba(255, 255, 255, 0.08);
+  --site-border-strong: rgba(255, 255, 255, 0.16);
+  --site-card-bg: rgba(255, 255, 255, 0.04);
+  --site-card-bg-hover: rgba(255, 255, 255, 0.06);
+  --site-glass-blur: 20px;
+  --site-accent: var(--accent-cyan);
+  --site-accent-deep: var(--accent-cyan-deep);
+  --site-accent-glow: var(--accent-cyan-glow);
+  --site-accent-on: #08313F;  /* texto sobre o accent (CTA primary). Light/dark: teal escuro sobre cyan. */
+  --site-accent-magenta: var(--accent-magenta);
+  --site-mesh-cyan: rgba(112, 255, 221, 0.10);
+  --site-mesh-magenta: rgba(185, 36, 255, 0.08);
+
+  /* Tokens compartilhados app+site para texto sobre fundos accent (Wave 7/8 polish).
+     Light/dark: teal escuro sobre cyan; noir: preto puro sobre lime (Cloudwalk). */
+  --accent-on-cyan: #08313F;
+  --on-primary: #FFFFFF;
+  --site-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  --site-shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(112, 255, 221, 0.25) inset;
+
+  /* === App glassmorphism tokens (reuso em /app) ===
+     Versão "light" do glass — usado dentro do app autenticado em cards
+     premium quando a página tem mesh/gradient de fundo. */
+  --app-glass-bg: rgba(255, 255, 255, 0.04);
+  --app-glass-border: rgba(255, 255, 255, 0.08);
+  --app-glass-blur: 16px;
+
+  --positive: #15A871;
+  --positive-deep: #0E7B53;
+  --positive-soft: #E0F5EC;
+  --positive-tint: #A7E0C7;
+
+  --attention: #D97706;
+  --attention-deep: #92400E;
+  --attention-soft: #FEF3E7;
+  --attention-tint: #FACA94;
+
+  /* === Negative — error/destructive states.
+     Wave 7 (Galadriel-3): token estava ausente; OutcomeSurveyModal.js:250 já o
+     referenciava com fallback #c00. Adicionado pra cobrir todos os temas. */
+  --negative: #DC2626;      /* red-600 */
+  --negative-deep: #991B1B; /* red-800 */
+  --negative-soft: #FEE2E2; /* red-100 — bg suave em light */
+  --negative-tint: #FCA5A5; /* red-300 */
 
   --avatar-from: #E7B98C;
   --avatar-to: #C98A57;
@@ -74,48 +133,230 @@
   --inset-top-light: inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
 }
 
-/* LIGHT é o novo default — aplica em :root sem data-theme E em data-theme="light" */
+/* LIGHT é o novo default — aplica em :root sem data-theme E em data-theme="light"
+   Wave A: bg trocado de bege quente (#F6F5F2) pra cinza-azul neutro frio
+   alinhado com índigo. Surface-2/3 puxados pro cool gray pra ter depth real. */
 :root,
 :root[data-theme="light"] {
-  --bg: #F6F5F2;
+  --bg: #F4F6FA;          /* era #F6F5F2 (bege) — cool gray neutro */
   --surface: #FFFFFF;
-  --surface-2: #FAF9F5;
-  --surface-3: #F2F0EA;
-  --border: #E7E4EC;
-  --border-strong: #DEDBE6;
-  --text: #1F1D33;
-  --text-strong: #1F1D33;
-  --text-muted: #514E5C;
-  --text-soft: #797585;
-  --text-faint: #6B6679; /* A11y AA: ratio ≈ 4.6:1 sobre #FAF9F5 (text normal); subiu de #9893A4 (~2.9:1, FAIL) */
-  --text-subtle: #797585;  /* alias legado — usado em ~32 lugares, mapeia pro novo --text-soft */
-  --scrim: rgba(31, 29, 51, 0.4);
+  --surface-2: #F8FAFC;   /* era #FAF9F5 (bege) — cool gray cool */
+  --surface-3: #EDF1F7;   /* era #F2F0EA — ΔL maior p/ depth real */
+  --border: #E4E7F0;      /* era #E7E4EC (bege tint) */
+  --border-strong: #C9CDD8;
+  --text: #1A1B2E;
+  --text-strong: #1A1B2E;
+  --text-soft: #4A4D63;   /* era #797585 — escurece p/ corrigir hierarquia (soft mais escuro que faint) */
+  /* Wave 10A — WCAG AA fix. Antes #6B7180 dava ~4.26:1 sobre #F4F6FA (FAIL).
+     Agora #5A5F6D dá ~5.7:1 (AA pass pra texto normal). */
+  --text-muted: #5A5F6D;
+  /* Wave 10A — WCAG AA fix. Antes #9CA0AE dava ~2.44:1 (FAIL grave).
+     Agora #6A6E7B dá ~4.6:1 (AA pass pra texto normal). */
+  --text-faint: #6A6E7B;
+  --text-subtle: #4A4D63; /* alias legado mapeia pro novo --text-soft */
+  --scrim: rgba(26, 27, 46, 0.4);
 }
 
 :root[data-theme="dark"] {
-  /* Dark mode mantido como opt-in. Paleta nova adaptada (cinzas frios em vez
-     dos cinzas neutros da v0.6 — combina com o índigo). */
-  --bg: #0A0A12;
-  --surface: #1A1A26;
-  --surface-2: #232333;
-  --surface-3: #2A2A3C;
-  --border: #2E2E40;
-  --border-strong: #3F3F56;
-  --text: #E8E6F0;
+  /* Wave A — REESCRITA COMPLETA dos tokens em dark.
+     Antes: só bg/surface/text eram overridados; primary/positive/attention
+     + 6 soft/tint vinham do :root (calibrados pra light) e geravam
+     manchas brancas em ~146 chips/badges sobre surfaces escuras.
+     Agora: TODOS os tokens de marca + soft/tint são reescritos. */
+
+  /* === Background — preto azulado frio === */
+  --bg: #0D1117;
+  --surface: #161B22;
+  --surface-2: #1F2530;
+  --surface-3: #2A3140;
+
+  /* === Text — hierarquia preservada (faint > muted > soft em luminance) === */
+  --text: #F0F2F6;
   --text-strong: #FFFFFF;
-  --text-muted: #B5B0C4;
-  --text-soft: #9089A3;
-  --text-faint: #908AA8; /* A11y AA: ratio ≈ 4.5:1 sobre #1A1A26 (dark surface); subiu de #6F6A80 (~2.5:1, FAIL) */
-  --text-subtle: #9089A3;  /* alias legado */
+  --text-soft: #C9CDD8;
+  --text-muted: #8A8FA1;
+  /* Wave 10A — WCAG AA fix. Antes #5C6171 dava ~3.0:1 sobre #0D1117 (FAIL).
+     Agora #8A8FA0 dá ~5.8:1 (AA pass). Mantem hierarquia faint>muted? Nao —
+     em dark, faint vira mais claro que muted intencionalmente (luminance
+     invertido pra preservar legibilidade). Outro anel pode re-balancear. */
+  --text-faint: #8A8FA0;
+  --text-subtle: #C9CDD8;  /* alias legado mapeia pro novo --text-soft dark */
   --scrim: rgba(0, 0, 0, 0.6);
 
-  /* Sombras adaptadas pra dark — alpha mais alto porque fundo é escuro,
-     senão sombra some. Mesma estrutura de camadas dupla. */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.35), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.45), 0 8px 10px -6px rgba(0, 0, 0, 0.35);
+  /* === Border === */
+  --border: #2A3140;
+  --border-strong: #3D4555;
+
+  /* === Primary — luminance-adjusted (mais claro pra contrastar com bg dark) === */
+  --primary: #8585D9;
+  --primary-light: #A2A2E5;
+  --primary-deep: #6B6BC8;
+  --primary-soft: #2A2A4F;       /* era #EEEEFB (quase branco em light) → indigo deep wash */
+  --primary-tint: #5C5CA8;       /* era #C7C7E8 — agora tom médio dark */
+
+  /* === Positive — verde mais claro pra dark === */
+  --positive: #34D399;
+  --positive-deep: #10B981;
+  --positive-soft: #16321F;      /* era #E0F5EC (quase branco) → verde deep wash */
+  --positive-tint: #1F6A47;
+
+  /* === Attention — laranja-damasco dark === */
+  --attention: #F59E0B;
+  --attention-deep: #D97706;
+  --attention-soft: #2E1F0A;     /* era #FEF3E7 (quase branco) → laranja deep wash */
+  --attention-tint: #92400E;
+
+  /* === Negative dark — red-400 mais claro pra contrastar com bg dark === */
+  --negative: #F87171;
+  --negative-deep: #DC2626;
+  --negative-soft: #2E0E0E;
+  --negative-tint: #991B1B;
+
+  /* === Accent cyan/magenta em dark — luminance ajustada ===
+     Cyan continua vibrante, deep um pouco mais claro pra contrastar
+     com bg dark. Glow alpha ligeiramente maior. */
+  --accent-cyan: #70FFDD;
+  --accent-cyan-deep: #5BE0C4;
+  --accent-cyan-glow: rgba(112, 255, 221, 0.42);
+  --accent-magenta: #D364FF;
+  --accent-magenta-soft: rgba(211, 100, 255, 0.22);
+
+  /* === Sombras dark — alpha aumentado pra ter depth sobre #0D1117 === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+
+  /* Focus ring: agora --primary-tint em dark é um indigo médio (#5C5CA8)
+     em vez de quase-branco — ring visível mas não fantasmagórico. */
+  --shadow-focus: 0 0 0 3px var(--primary-tint);
+
   --inset-top-light: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ===========================================================
+ * NOIR — 3º tema, P&B editorial minimalista (Wave 6 / Galadriel).
+ * Default novo do app. Sem cyan/magenta vibrantes; acentos só em
+ * focus state (cyan dessaturado). Único toque de cor: --alert
+ * (vermelho desaturado pra warnings continuarem legíveis).
+ *
+ * Override APENAS dos tokens semânticos. Tipografia, easing, radius
+ * e tokens decorativos permanecem nos defaults do :root base.
+ * =========================================================== */
+:root[data-theme="noir"] {
+  /* === Background — preto puro Cloudwalk editorial === */
+  --bg: #000000;
+  --surface: #0A0A0A;
+  --surface-2: #121212;       /* modais, dropdowns */
+  --surface-3: #1A1A1A;       /* hover */
+
+  /* === Border — finas mas mais visíveis (depend on borders, not shadows) === */
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.22);
+
+  /* === Text — hierarquia preservada (faint > muted > soft em luminance) === */
+  --text: #FAFAFA;
+  --text-strong: #FFFFFF;
+  --text-soft: rgba(250, 250, 250, 0.78);
+  --text-muted: rgba(250, 250, 250, 0.65);
+  --text-faint: rgba(250, 250, 250, 0.42);
+  --text-dim: rgba(250, 250, 250, 0.42);
+  --text-subtle: rgba(250, 250, 250, 0.78);  /* alias legado */
+  --scrim: rgba(0, 0, 0, 0.7);
+
+  /* === Primary — white-on-black como "primary" (sem índigo) === */
+  --primary: #FAFAFA;
+  --primary-deep: #E5E5E5;
+  --primary-soft: #1F1F1F;
+  --primary-tint: #2A2A2A;
+  --primary-light: #FFFFFF;
+
+  /* === Accent (aliases legados) === */
+  --accent: #FAFAFA;
+  --accent-soft: #1F1F1F;
+  --accent-text: #0A0A0A;     /* texto escuro sobre accent branco */
+  --accent-deep: #FFFFFF;
+  --accent-wash: #141414;
+
+  /* === Lime accent Cloudwalk-style ===
+     Verde-amarelo Cloudwalk pra CTA principal + 1-2 destaques/página.
+     Uso EXTREMAMENTE controlado — sem glow gritante. Magenta neutralizado. */
+  --accent-cyan: #C2F542;
+  --accent-cyan-deep: #A8DB28;
+  --accent-cyan-glow: rgba(194, 245, 66, 0.18);
+  --accent-magenta: #FAFAFA;
+  --accent-magenta-soft: rgba(255, 255, 255, 0.04);
+
+  /* === Positive/attention — monocromático === */
+  --positive: #E5E5E5;
+  --positive-deep: #FFFFFF;
+  --positive-soft: #1A1A1A;
+  --positive-tint: #2A2A2A;
+
+  --attention: #A8A8A8;
+  --attention-deep: #FAFAFA;
+  --attention-soft: #1A1A1A;
+  --attention-tint: #2A2A2A;
+
+  /* === Alert — único acento de cor (warnings precisam sobreviver) === */
+  --alert: #FFB4B4;
+  --alert-wash: rgba(255, 180, 180, 0.08);
+
+  /* === Negative noir — reusa o mesmo rosa-coral do --alert pra consistência === */
+  --negative: #FFB4B4;
+  --negative-deep: #FF8A8A;
+  --negative-soft: rgba(255, 180, 180, 0.08);
+  --negative-tint: rgba(255, 180, 180, 0.18);
+
+  --ok: var(--positive);
+  --ok-wash: var(--positive-soft);
+
+  /* === Avatar gradient — P&B em vez de bege/laranja === */
+  --avatar-from: #2A2A2A;
+  --avatar-to: #E5E5E5;
+
+  /* === App glassmorphism — quase sólido, Cloudwalk não usa glass vibrante === */
+  --app-glass-bg: rgba(255, 255, 255, 0.02);
+  --app-glass-border: rgba(255, 255, 255, 0.08);
+  --app-glass-blur: 8px;
+
+  /* === Site tokens — caso noir afete landing (opcional, spec autorizou) ===
+     Mesh neutro, accent reduzido a cyan dessaturado. */
+  --site-bg: #0A0A0A;
+  --site-fg: #FAFAFA;
+  --site-fg-muted: rgba(250, 250, 250, 0.72);
+  /* Wave 10A — WCAG AA fix. Antes 0.42 dava ~3.6:1 sobre #0A0A0A (FAIL).
+     0.58 atinge ~4.6:1. */
+  --site-fg-dim: rgba(250, 250, 250, 0.58);
+  --site-border: rgba(255, 255, 255, 0.08);
+  --site-border-strong: rgba(255, 255, 255, 0.16);
+  --site-card-bg: rgba(255, 255, 255, 0.02);
+  --site-card-bg-hover: rgba(255, 255, 255, 0.04);
+  --site-glass-blur: 10px;
+  --site-accent: var(--accent-cyan);
+  --site-accent-deep: var(--accent-cyan-deep);
+  --site-accent-glow: var(--accent-cyan-glow);
+  --site-accent-on: #000000;  /* noir: PRETO PURO sobre lime (Cloudwalk-style, alto contraste). */
+  --site-accent-magenta: #FAFAFA;
+  --site-mesh-cyan: rgba(194, 245, 66, 0.04);
+  --site-mesh-magenta: rgba(255, 255, 255, 0.02);
+
+  /* Override pra noir — texto sobre lime accent precisa ser preto puro */
+  --accent-on-cyan: #000000;
+  --on-primary: #000000;  /* noir: --primary virou #FAFAFA (branco), entao texto sobre primary eh preto */
+  --site-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  --site-shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.10) inset;
+
+  /* === Sombras — pretas puras, não cinza === */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25), 0 1px 3px 0 rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.40), 0 2px 4px -2px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.50), 0 4px 6px -4px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.60), 0 8px 10px -6px rgba(0, 0, 0, 0.40);
+
+  /* === Focus ring — cyan dessaturado, única exceção ao P&B === */
+  --shadow-focus: 0 0 0 3px var(--accent-cyan-glow);
+
+  --inset-top-light: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ===========================================================
@@ -124,6 +365,7 @@
  * =========================================================== */
 :root,
 :root[data-theme="dark"],
+:root[data-theme="noir"],
 :root[data-theme="light"] {
   --ink: var(--text);
   --ink-soft: var(--text-muted);
@@ -501,20 +743,28 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 
 .btn-primary{
   background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary) 100%);
-  color: #FFF;
+  /* Wave 10A — usa token semantico --on-primary. Noir sobrescreve para #000
+     pq --primary virou #FAFAFA (branco). Antes (#FFF hardcoded) deixava
+     ~25 botoes invisiveis em noir. Fallback #FFF mantem light/dark intactos. */
+  color: var(--on-primary, #FFF);
   border: 1px solid var(--primary-deep);
   box-shadow: var(--shadow-sm), var(--inset-top-light);
 }
 .btn-primary:hover{
   background: linear-gradient(180deg, var(--primary) 0%, var(--primary-deep) 100%);
-  box-shadow: var(--shadow-md), var(--inset-top-light);
+  /* Refresh visual: underglow cyan sutil + shadows existentes */
+  box-shadow: 0 0 0 3px var(--accent-cyan-glow), var(--shadow-md), var(--inset-top-light);
   transform: translateY(-1px);
+}
+.btn-primary:focus-visible{
+  /* Refresh visual: focus ring duplo (cyan accent + indigo soft) */
+  box-shadow: 0 0 0 3px var(--accent-cyan-glow), var(--shadow-focus), var(--inset-top-light);
 }
 .btn-primary:active{
   transform: scale(0.98) translateY(0);
   box-shadow: var(--shadow-sm), var(--inset-top-light);
 }
-.btn-primary .arw{ color: rgba(255,255,255,.85); }
+.btn-primary .arw{ color: var(--on-primary, rgba(255,255,255,.85)); opacity: 0.85; }
 
 .btn-ghost{
   background: var(--surface);
@@ -558,6 +808,32 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 .proc-steps .step.done::before{content:"\2713  "; color:var(--accent-deep);}
 .proc-steps .step.doing{opacity:1; color:var(--text);}
 .proc-steps .step.doing::before{content:"\203A  "; color:var(--alert);}
+
+/* SSE granular steps — vindo de /api/analyze?stream=1. Lista compacta dos
+   sub-passos do pipeline pra reduzir o tempo PERCEBIDO durante a fase do LLM.
+   Atualizado em tempo real conforme o backend emite events {type:"step"}. */
+.ct-proc-steps{
+  list-style:none; padding:0;
+  display:flex; flex-direction:column; gap:10px;
+  max-width:420px; margin:20px auto 0;
+}
+.ct-proc-steps li{
+  padding:11px 16px; border-radius:10px;
+  background:var(--surface-2); color:var(--text-soft);
+  font-size:13.5px; line-height:1.35;
+  border:1px solid var(--border);
+  transition:background .25s, color .25s, border-color .25s;
+}
+.ct-proc-steps li.active{
+  background:var(--primary-soft); color:var(--primary-deep);
+  font-weight:600; border-color:var(--primary-deep);
+}
+.ct-proc-steps li.done{
+  background:var(--positive-soft); color:var(--positive-deep);
+  border-color:var(--positive-deep);
+}
+.ct-proc-steps li.done::before{content:"\2713  "; font-weight:700;}
+.ct-proc-steps li.active::before{content:"\203A  "; font-weight:700;}
 
 /* ===========================================================
  * Report header (mirror)
@@ -1107,7 +1383,9 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   backdrop-filter:blur(3px);
   display:flex; align-items:flex-start; justify-content:center;
   padding:48px 18px;
-  z-index:100;
+  /* z-index 9100: acima do notif drawer (9000/9001), abaixo do achievement
+     toast (9500). Wave 10 fix — modal abria por baixo do drawer aberto. */
+  z-index:9100;
   overflow-y:auto;
   animation:fadein .2s ease;
 }
@@ -1693,6 +1971,32 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Wave 10: a area do user vira <Link href="/conta">. Reproduzimos o flex
+   interno (avatar + info) e damos affordance de hover sem alterar layout. */
+.appshell-user-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border-radius: var(--radius-md);
+  transition: background-color 160ms var(--ease-standard);
+}
+.appshell-user-link:hover,
+.appshell-user-link:focus-visible {
+  background: var(--surface-2, var(--surface));
+  outline: none;
+}
+.appshell-user-link:focus-visible {
+  box-shadow: 0 0 0 2px var(--primary-tint);
+}
+/* user.image fallback: <img> com .appshell-avatar tem que cobrir 100% sem
+   layout-shift dos children (initial). object-fit garante crop centralizado. */
+img.appshell-avatar { object-fit: cover; padding: 0; }
 
 /* Mobile header */
 .appshell-mobile-header {
@@ -1959,7 +2263,20 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   position: relative;
   width: 180px;
   height: 180px;
-  filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18));
+  /* Refresh visual: drop-shadow indigo (depth) + drop-shadow cyan (vida própria).
+     O glow cyan pulsa muito sutilmente via scoreGlow (12s loop). */
+  filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18)) drop-shadow(0 0 32px var(--accent-cyan-glow));
+  animation: scoreGlow 12s ease-in-out infinite;
+}
+@keyframes scoreGlow {
+  0%, 100% { filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18)) drop-shadow(0 0 24px rgba(112, 255, 221, 0.18)); }
+  50%      { filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18)) drop-shadow(0 0 38px rgba(112, 255, 221, 0.40)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ct-score-ring-wrap {
+    animation: none;
+    filter: drop-shadow(0 8px 24px rgba(79, 79, 176, 0.18)) drop-shadow(0 0 32px var(--accent-cyan-glow));
+  }
 }
 .ct-score-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .ct-score-big {
@@ -2251,13 +2568,18 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
   position: absolute;
   left: -9999px;
   top: 0;
-  background: var(--primary);
-  color: #fff;
+  /* Wave 10A — tokenizado pra cobrir noir. Antes: bg=--primary + #fff hardcoded.
+     Em noir --primary=#FAFAFA (quase branco), skip link sumia. Agora usa
+     --text (alta luminance contrast) como bg e --bg como cor — alto contraste
+     garantido nos 3 temas. */
+  background: var(--text);
+  color: var(--bg);
   padding: 10px 16px;
   z-index: 9999;
   text-decoration: none;
   font-weight: 700;
   border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
 }
 .ct-skip-link:focus {
   left: 12px;
@@ -2383,6 +2705,56 @@ h1.hero em::after{display:none;} /* sem grifo embaixo: a serifa itálica já car
 .ct-conta-btn.danger:hover { background: var(--attention-soft); }
 .ct-conta-toggle { display: flex; align-items: center; gap: 14px; }
 .ct-conta-foot { font-size: 11.5px; color: var(--text-soft); line-height: 1.5; margin-top: 12px; }
+
+/* ===== Achievements (feature #8 — gamificacao sutil) ============
+   Sistema de conquistas: grid em /conta (cards earned vs locked) +
+   AchievementToast (canto superior direito com confetti CSS).
+   Pure CSS — sem react-confetti / canvas-confetti.
+   ============================================================ */
+
+/* --- Grid de cards no /conta --- */
+.ct-achievements-points { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--positive-deep); white-space: nowrap; }
+.ct-achievements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-top: 4px; }
+.ct-achievement-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; text-align: center; transition: transform 220ms var(--ease-standard), box-shadow 220ms var(--ease-standard), border-color 220ms var(--ease-standard); }
+.ct-achievement-card.earned { border-color: var(--positive-tint); background: linear-gradient(180deg, var(--surface) 0%, var(--positive-soft) 100%); }
+.ct-achievement-card.locked { opacity: 0.55; filter: grayscale(60%); }
+.ct-achievement-card.earned:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.ct-achievement-icon { font-size: 32px; display: block; margin-bottom: 8px; line-height: 1; }
+.ct-achievement-title { font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: var(--text); margin: 0 0 4px; letter-spacing: -.2px; }
+.ct-achievement-desc { font-size: 11.5px; color: var(--text-muted); margin: 0 0 8px; line-height: 1.4; }
+.ct-achievement-points { font-size: 10.5px; font-weight: 800; color: var(--positive-deep); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* --- AchievementToast: canto sup. direito, confetti CSS --- */
+.ct-achievement-toast { position: fixed; top: 24px; right: 24px; z-index: 9500; min-width: 320px; max-width: 400px; background: var(--surface); border: 1px solid var(--positive); border-radius: var(--radius-lg); padding: 18px; box-shadow: var(--shadow-xl); animation: achievementToastIn 0.4s var(--ease-out-quart); overflow: hidden; }
+.ct-achievement-toast.leaving { animation: achievementToastOut 0.3s var(--ease-standard) forwards; }
+@keyframes achievementToastIn { 0% { opacity: 0; transform: translateX(40px) scale(0.95); } 100% { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes achievementToastOut { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(40px); } }
+
+.ct-achievement-toast-content { display: flex; gap: 14px; align-items: flex-start; position: relative; z-index: 1; }
+.ct-achievement-toast-icon { font-size: 32px; flex: none; line-height: 1; }
+.ct-achievement-toast-title { font-size: 10.5px; font-weight: 800; color: var(--positive-deep); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 3px; }
+.ct-achievement-toast-name { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 4px; letter-spacing: -.2px; }
+.ct-achievement-toast-desc { font-size: 12.5px; color: var(--text-muted); margin: 0; line-height: 1.4; }
+.ct-achievement-toast-close { background: transparent; border: 0; cursor: pointer; color: var(--text-muted); font-size: 22px; line-height: 1; padding: 0 4px; flex: none; align-self: flex-start; }
+.ct-achievement-toast-close:hover { color: var(--text); }
+
+/* --- Confetti CSS pure (8 pecas, sem deps) --- */
+.ct-achievement-toast-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.ct-confetti-piece { position: absolute; top: -10px; width: 6px; height: 10px; background: var(--positive); left: calc(var(--i) * 12% + 8%); animation: confettiFall 2s ease-out forwards; animation-delay: calc(var(--i) * 0.05s); transform: rotate(calc(var(--i) * 45deg)); }
+.ct-confetti-piece:nth-child(odd) { background: var(--primary); }
+.ct-confetti-piece:nth-child(3n) { background: var(--attention); }
+@keyframes confettiFall { 0% { top: -10px; opacity: 1; } 100% { top: 200px; opacity: 0; transform: rotate(720deg); } }
+
+/* Reduced motion: respeita pref do user (WCAG 2.3.3) — sem confetti, sem fade in. */
+@media (prefers-reduced-motion: reduce) {
+  .ct-confetti-piece, .ct-achievement-toast, .ct-achievement-toast.leaving { animation: none !important; }
+  .ct-achievement-card { transition: none; }
+}
+
+/* Mobile: toast cobre toda a largura visual com pequena margem. */
+@media (max-width: 600px) {
+  .ct-achievement-toast { top: 16px; right: 12px; left: 12px; max-width: none; min-width: 0; }
+}
 
 /* ===== Card system — depth premium ============================
    Pattern unificado pra todos os cards "clicáveis ou destacados".
@@ -2947,8 +3319,137 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   .ct-microaction-card,
   .ct-microaction-check,
   .ct-microaction-course,
+  .ct-gaps-courses-summary-card,
   .ct-skill-pill { transition: none !important; transform: none !important; }
   .ct-req-freq-bar-fill { transition: none !important; }
+}
+
+/* ===== Cursos sugeridos (secao dedicada no fim do Ato 3) =====
+ * Indice consolidado de cursos curados, agrupado por skill. Reforca a
+ * descoberta da biblioteca pra alem do inline de cada microacao. */
+.ct-gaps-courses-summary {
+  margin-top: 28px;
+  padding: 22px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.ct-gaps-courses-summary-head { margin-bottom: 18px; }
+.ct-gaps-courses-summary-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+.ct-gaps-courses-summary-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.55;
+  max-width: 64ch;
+}
+.ct-gaps-courses-summary-sub strong { color: var(--positive-deep); font-weight: 700; }
+
+.ct-gaps-courses-summary-list { display: flex; flex-direction: column; gap: 20px; }
+.ct-gaps-courses-summary-group {
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+.ct-gaps-courses-summary-group:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+.ct-gaps-courses-summary-skill {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: lowercase;
+  color: var(--primary);
+  margin: 0 0 10px;
+  letter-spacing: -.1px;
+}
+.ct-gaps-courses-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.ct-gaps-courses-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-decoration: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  color: var(--text);
+  transition: border-color 160ms var(--ease-standard),
+              box-shadow 160ms var(--ease-standard),
+              transform 160ms var(--ease-standard);
+}
+.ct-gaps-courses-summary-card:hover {
+  border-color: var(--primary-tint);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.ct-gaps-courses-summary-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.ct-gaps-courses-summary-card-provider {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.ct-gaps-courses-summary-card-free {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--positive-deep);
+  background: var(--positive-soft);
+  border: 1px solid var(--positive-tint);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ct-gaps-courses-summary-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+  letter-spacing: -.1px;
+  margin: 2px 0 0;
+}
+.ct-gaps-courses-summary-card-meta {
+  font-size: 10.5px;
+  color: var(--text-faint);
+  font-weight: 600;
+  margin: 2px 0 0;
+}
+.ct-gaps-courses-summary-card-why {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+.ct-gaps-courses-summary-card-cta {
+  font-size: 11px;
+  color: var(--primary);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+@media (max-width: 720px) {
+  .ct-gaps-courses-summary { padding: 18px 16px; }
+  .ct-gaps-courses-summary-grid { grid-template-columns: 1fr; }
 }
 
 /* ===== Onboarding split-panel — landing hero premium ===== */
@@ -3000,13 +3501,16 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   background:
     radial-gradient(circle at 80% 10%, rgba(186, 186, 240, 0.18) 0%, transparent 50%),
     linear-gradient(165deg, var(--primary-light) 0%, var(--primary) 38%, var(--primary-deep) 75%, #1F1F4F 100%);
-  color: #fff;
-  padding: 42px 38px;
+  /* var(--on-primary): light/dark = #fff sobre indigo; noir = #000 sobre o
+     gradient branco-cinza (antes era #fff hardcoded → invisivel em noir). */
+  color: var(--on-primary);
+  /* Refresh visual: hero mais alto + padding vertical ampliado pra respirar */
+  padding: 56px 38px;
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  min-height: 560px;
+  min-height: 640px;
 }
 .ct-onb-brand::before {
   content: "";
@@ -3028,6 +3532,71 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   filter: blur(12px);
 }
 .ct-onb-brand-mark { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+
+/* Ilustracao decorativa entre o mark e o content. Ocupa o espaco que
+   antes era vazio (margin-top: auto empurrava o content pro bottom).
+   SVG inline, semi-transparente, respira no gradient. */
+.ct-onb-brand-illust {
+  margin-top: 24px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+.ct-onb-brand-illust svg {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  display: block;
+}
+@media (max-width: 900px) {
+  .ct-onb-brand-illust { margin-top: 18px; }
+  .ct-onb-brand-illust svg { max-width: 280px; }
+}
+
+/* Refresh visual: wrapper opcional aplicado pelo Agent B na ilustração
+   pra dar leve flutuação (8s loop, translateY 0 → -4px → 0).
+   Movimento subliminar — não compete com o conteúdo. */
+.ct-onb-illust-animated {
+  animation: ctIllustFloat 8s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+@keyframes ctIllustFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ct-onb-illust-animated { animation: none; }
+}
+
+/* Pills de defensibilidade abaixo da subtitle. Trust pills curtas,
+   icone + label. Glass effect leve sobre o gradient. */
+.ct-onb-brand-pills {
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ct-onb-brand-pills li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #E8E8FA;
+  letter-spacing: -.01em;
+  backdrop-filter: blur(4px);
+}
+.ct-onb-brand-pills svg { color: #C9C9F0; flex: none; }
 .ct-onb-brand-mark-icon {
   width: 34px;
   height: 34px;
@@ -3040,7 +3609,7 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   box-shadow: inset 0 1px 0 0 rgba(255,255,255,0.2);
 }
 .ct-onb-brand-name { font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
-.ct-onb-brand-content { margin-top: auto; position: relative; z-index: 1; }
+.ct-onb-brand-content { margin-top: 28px; position: relative; z-index: 1; }
 .ct-onb-brand-eyebrow {
   font-size: 11px;
   font-weight: 800;
@@ -3078,7 +3647,8 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   max-width: 360px;
 }
 .ct-onb-lgpd {
-  margin-top: 32px;
+  margin-top: auto;
+  padding-top: 28px;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -3149,6 +3719,29 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 .ct-onb-foot { font-size: 11.5px; color: var(--text-soft); line-height: 1.55; margin: 12px 0 0; }
 .ct-onb-foot a { color: var(--primary); font-weight: 600; }
 .ct-onb-builder .err { background: var(--attention-soft); border: 1px solid var(--attention-tint); color: var(--attention-deep); border-radius: var(--radius-sm); padding: 11px 13px; font-size: 13px; }
+
+/* === Onboarding tabs (paste vs chat) — segmented control com pill ativa */
+.ct-onb-mode-tabs { display: flex; gap: 2px; margin-bottom: 4px; background: var(--surface-2); padding: 3px; border-radius: 10px; }
+.ct-onb-mode-tabs button { flex: 1; padding: 8px 12px; border: 0; background: transparent; color: var(--text-soft); font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: background 160ms var(--ease-standard), color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard); font-family: inherit; }
+.ct-onb-mode-tabs button:hover { color: var(--text); }
+.ct-onb-mode-tabs button.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
+.ct-onb-mode-tabs button:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+
+/* === Onboarding chat (modo "Conversar com IA") */
+.ct-onb-chat { display: flex; flex-direction: column; gap: 14px; }
+.ct-onb-chat-progress { font-size: 11.5px; color: var(--text-soft); font-weight: 600; letter-spacing: .02em; }
+.ct-onb-chat-bar { height: 4px; background: var(--surface-2); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+.ct-onb-chat-bar > div { height: 100%; background: var(--primary); transition: width 220ms var(--ease-standard); }
+.ct-onb-chat-question { background: var(--primary-soft); padding: 16px; border-radius: 12px; border-left: 3px solid var(--primary); }
+.ct-onb-chat-question p { font-family: var(--font-display); font-weight: 700; font-size: 15.5px; color: var(--text); margin: 0; line-height: 1.4; }
+.ct-onb-chat-input { width: 100%; padding: 12px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); font-size: 14px; color: var(--text); background: var(--surface); outline: none; transition: border-color 160ms var(--ease-standard), box-shadow 160ms var(--ease-standard); resize: vertical; font-family: var(--font-body); box-shadow: inset 0 1px 2px 0 rgba(15, 23, 42, 0.04); }
+.ct-onb-chat-input::placeholder { color: var(--text-faint); opacity: 0.85; }
+.ct-onb-chat-input:focus { border-color: var(--primary); box-shadow: inset 0 1px 2px 0 rgba(15, 23, 42, 0.04), var(--shadow-focus); }
+.ct-onb-chat-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+.ct-onb-chat-back { background: transparent; border: 0; color: var(--text-soft); font-size: 13px; font-weight: 600; padding: 8px 10px; cursor: pointer; border-radius: var(--radius-sm); font-family: inherit; transition: color 160ms var(--ease-standard), background 160ms var(--ease-standard); }
+.ct-onb-chat-back:hover { color: var(--text); background: var(--surface-2); }
+.ct-onb-chat-back:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.ct-onb-chat-next { margin-left: auto; }
 
 /* ===== AppShell notifications ===== */
 .appshell-notif-btn {
@@ -4587,6 +5180,34 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   margin: 10px 0 0 !important;
 }
 
+/* Toast pos-refresh: confirma movimento real do score. Surge sob role="status"
+   pra leitores de tela anunciarem o delta sem precisar de foco. */
+.ct-refresh-toast {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-light);
+  color: var(--text);
+}
+.ct-refresh-toast.up {
+  background: color-mix(in srgb, var(--positive) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--positive) 35%, transparent);
+}
+.ct-refresh-toast.down {
+  background: color-mix(in srgb, var(--attention) 12%, var(--surface));
+  border-color: color-mix(in srgb, var(--attention) 35%, transparent);
+}
+.ct-refresh-toast strong { color: var(--text); }
+.ct-refresh-toast a {
+  color: var(--primary);
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 160ms var(--ease-standard);
+}
+.ct-refresh-toast a:hover { border-bottom-color: var(--primary); }
+
 .ct-btn-text {
   background: transparent;
   border: 0;
@@ -4691,4 +5312,1399 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 }
 .ct-report-footer-text:hover { color: var(--text); }
 .ct-report-transparency { font-size: 12px; color: var(--text-soft); line-height: 1.55; margin: 0; }
+
+/* ===========================================================
+   Copilot Widget (FAB + drawer flutuante)
+   Sprint 1 do roadmap: presenca de IA conversacional persistente.
+   Fixed positioning bottom-right; mobile collapsa pra fullscreen drawer.
+   z-index 89/90 fica acima de tudo exceto Modal (que usa 100+).
+   =========================================================== */
+.ct-copilot-fab {
+  position: fixed; bottom: 24px; right: 24px; z-index: 90;
+  width: 56px; height: 56px; border-radius: 28px;
+  background: var(--primary); color: white; border: 0;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 220ms var(--ease-standard);
+  /* Refresh visual: pulse cyan a cada 4s — sinaliza presença sem ser intrusivo */
+  animation: copilotPulse 4s ease-in-out infinite;
+}
+@keyframes copilotPulse {
+  0%, 100% { box-shadow: var(--shadow-lg), 0 0 0 0 var(--accent-cyan-glow); }
+  50%      { box-shadow: var(--shadow-lg), 0 0 0 10px rgba(112, 255, 221, 0); }
+}
+.ct-copilot-fab:hover {
+  transform: translateY(-2px) scale(1.04);
+  /* Refresh visual: hover puxa pra cyan-mix + glow accent */
+  background: linear-gradient(140deg, var(--primary) 0%, var(--accent-cyan-deep) 140%);
+  box-shadow: var(--shadow-xl), 0 0 0 4px var(--accent-cyan-glow);
+}
+.ct-copilot-fab:focus-visible { outline: none; box-shadow: var(--shadow-lg), var(--shadow-focus), 0 0 0 4px var(--accent-cyan-glow); }
+.ct-copilot-fab.open {
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  animation: none;
+}
+@media (max-width: 720px) {
+  .ct-copilot-fab { bottom: 18px; right: 18px; width: 48px; height: 48px; }
+}
+
+.ct-copilot-panel {
+  position: fixed; bottom: 92px; right: 24px; z-index: 89;
+  width: 380px; max-width: calc(100vw - 32px);
+  height: 560px; max-height: calc(100vh - 120px);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-xl);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: copilotIn 220ms var(--ease-standard);
+}
+@keyframes copilotIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 720px) {
+  .ct-copilot-panel {
+    right: 8px; bottom: 76px; left: 8px;
+    width: auto; height: calc(100vh - 100px);
+  }
+}
+
+.ct-copilot-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+}
+.ct-copilot-title {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--text);
+}
+.ct-copilot-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--positive); box-shadow: 0 0 8px var(--positive);
+}
+.ct-copilot-close {
+  background: transparent; border: 0; color: var(--text-muted);
+  cursor: pointer; line-height: 1; padding: 6px;
+  border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+  transition: color 160ms, background 160ms;
+}
+.ct-copilot-close:hover { color: var(--text); background: var(--surface-2); }
+
+.ct-copilot-messages {
+  flex: 1; overflow-y: auto; padding: 18px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.ct-copilot-empty { color: var(--text-muted); font-size: 13.5px; line-height: 1.55; }
+.ct-copilot-empty-title {
+  font-family: var(--font-display); font-weight: 700;
+  color: var(--text); font-size: 14.5px; margin: 0 0 6px;
+}
+.ct-copilot-empty-sub { margin: 0 0 14px; }
+.ct-copilot-suggestions { display: flex; flex-direction: column; gap: 8px; }
+.ct-copilot-suggestion {
+  text-align: left; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; font-size: 12.5px; color: var(--text);
+  cursor: pointer; transition: border-color 160ms, background 160ms;
+}
+.ct-copilot-suggestion:hover:not(:disabled) {
+  border-color: var(--primary-tint); background: var(--primary-soft);
+}
+.ct-copilot-suggestion:focus-visible {
+  outline: none; border-color: var(--primary); box-shadow: var(--shadow-focus);
+}
+.ct-copilot-suggestion:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.ct-copilot-msg { display: flex; }
+.ct-copilot-msg.user { justify-content: flex-end; }
+.ct-copilot-msg.assistant { justify-content: flex-start; }
+.ct-copilot-msg-bubble {
+  max-width: 80%; padding: 10px 14px; border-radius: var(--radius-md);
+  font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+.ct-copilot-msg.user .ct-copilot-msg-bubble {
+  background: var(--primary); color: white; border-bottom-right-radius: 4px;
+}
+.ct-copilot-msg.assistant .ct-copilot-msg-bubble {
+  background: var(--surface-2); color: var(--text); border-bottom-left-radius: 4px;
+}
+.ct-copilot-msg.streaming .ct-copilot-msg-bubble { opacity: 0.85; }
+
+.ct-copilot-typing { display: inline-flex; gap: 4px; padding: 12px 14px !important; align-items: center; }
+.ct-copilot-typing span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-faint); animation: copilotBlip 1.4s infinite ease-in-out;
+}
+.ct-copilot-typing span:nth-child(2) { animation-delay: 0.2s; }
+.ct-copilot-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes copilotBlip {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.ct-copilot-err {
+  margin: 0 14px 8px; padding: 8px 12px;
+  background: var(--attention-soft, #FCE9E5); color: var(--attention-deep, #A53B22);
+  border: 1px solid var(--attention-tint, #F5C9BF); border-radius: 8px;
+  font-size: 12px; line-height: 1.4;
+}
+
+.ct-copilot-form {
+  display: flex; gap: 8px; padding: 14px;
+  border-top: 1px solid var(--border);
+}
+.ct-copilot-input {
+  flex: 1; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--text);
+  outline: none; transition: border-color 160ms, box-shadow 160ms;
+}
+.ct-copilot-input:focus { border-color: var(--primary); box-shadow: var(--shadow-focus); }
+.ct-copilot-input:disabled { opacity: 0.55; cursor: not-allowed; }
+.ct-copilot-send {
+  background: var(--primary); color: white; border: 0; border-radius: 10px;
+  width: 40px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 160ms;
+}
+.ct-copilot-send:hover:not(:disabled) { background: var(--primary-deep); }
+.ct-copilot-send:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+.ct-copilot-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-copilot-panel { animation: none; }
+  .ct-copilot-fab { transition: none; animation: none; box-shadow: var(--shadow-lg); }
+  .ct-copilot-fab:hover { transform: none; }
+  .ct-copilot-typing span { animation: none; opacity: 0.6; }
+}
+
+/* === Skill Graph (feature #7 do STRATEGY_ROADMAP) ===
+   Wrapper responsivo do SVG + legenda + tooltip. SVG mantem aspect ratio via
+   viewBox e height auto (preserveAspectRatio default). */
+.ct-skill-graph-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ct-skill-graph-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-item .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-item.have .dot { background: var(--positive); }
+.legend-item.extra .dot { background: var(--primary-soft); border: 1px solid var(--primary); }
+.legend-item.missing .dot { background: var(--attention-soft); border: 1px solid var(--attention); }
+
+/* Tooltip absolute-positioned below the graph. Centralizado via translateX -50%.
+   pointer-events: none deixa hover/focus passar pros nodes embaixo. */
+.ct-skill-graph-tooltip {
+  position: absolute;
+  bottom: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 12.5px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ct-skill-graph-tooltip strong { color: var(--text); }
+.ct-skill-graph-tooltip span { color: var(--text-muted); }
+
+/* Container da secao no /dashboard — segue padrao visual das outras
+   secoes (surface card com sombra leve). margin-bottom da espaco antes
+   das .ct-dash-cols. */
+.ct-dash-skill-graph {
+  margin: 32px 0;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Focus visible nos nodes (SVG <g> com tabIndex=0) — copia o focus-ring
+   global pra navegacao por teclado ficar visivel. */
+.ct-skill-graph-wrap svg g:focus-visible circle {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 0 3px var(--primary-soft));
+}
+
+/* ===========================================================
+   Daily Quest (feature #10 — habit loop)
+   Card destacado no /dashboard mostrando a "missao do dia".
+   Estado .done muda paleta pra positive (verde) — feedback claro
+   de "ja feito hoje".
+   =========================================================== */
+.ct-daily-quest {
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface) 100%);
+  border: 1px solid var(--primary-tint);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+.ct-daily-quest.done {
+  background: var(--positive-soft);
+  border-color: var(--positive-tint);
+}
+.ct-daily-quest-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.ct-daily-quest-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ct-daily-quest-time {
+  font-size: 11px;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+.ct-daily-quest-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+.ct-daily-quest-desc {
+  color: var(--text-muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+.ct-daily-quest-done {
+  font-weight: 700;
+  color: var(--positive-deep);
+  font-size: 13px;
+}
+
+/* ===========================================================
+   CV Analyzer (feature #4 — AI rewriter inline em /conta)
+   Highlight de bullets fracos + sugestao de reescrita. Cores
+   reaproveitam paleta semantica do sistema (positive/primary/attention).
+   =========================================================== */
+.ct-cv-analyzer { margin: 4px 0; }
+.ct-cv-analyzer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.ct-cv-analyzer-title {
+  font-family: var(--font-display, inherit);
+  margin: 0 0 4px;
+  font-size: 17px;
+  color: var(--text);
+}
+.ct-cv-analyzer-sub {
+  color: var(--text-soft);
+  font-size: 13px;
+  margin: 0;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.ct-cv-analyzer-summary {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.ct-summary-chip {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ct-summary-chip.good {
+  background: var(--positive-soft);
+  color: var(--positive-deep);
+}
+.ct-summary-chip.medium {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.ct-summary-chip.weak {
+  background: var(--attention-soft);
+  color: var(--attention-deep);
+}
+
+.ct-cv-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.ct-cv-line {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 3px solid transparent;
+  background: transparent;
+}
+.ct-cv-line.neutral {
+  color: var(--text-soft);
+}
+.ct-cv-line.good {
+  border-left-color: var(--positive);
+}
+.ct-cv-line.medium {
+  border-left-color: var(--primary);
+  background: var(--primary-soft);
+}
+.ct-cv-line.weak {
+  border-left-color: var(--attention);
+  background: var(--attention-soft);
+}
+.ct-cv-line-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ct-cv-line-text {
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.ct-cv-line-issues {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.ct-cv-issue-tag {
+  font-size: 10px;
+  font-weight: 700;
+  background: #fff;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--text-soft);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.ct-cv-suggestion-toggle {
+  margin-top: 6px;
+  background: transparent;
+  border: 0;
+  color: var(--primary);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ct-cv-suggestion-toggle:hover {
+  color: var(--primary-deep, var(--primary));
+}
+.ct-cv-suggestion-box {
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid var(--primary-tint, var(--primary-soft));
+  border-radius: 8px;
+  padding: 12px;
+}
+.ct-cv-suggestion-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 6px;
+}
+.ct-cv-suggestion-text {
+  font-family: var(--font-body, inherit);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+.ct-cv-suggestion-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* ===========================================================
+   Career roadmap (/carreira) — feature #5 STRATEGY_ROADMAP MVP
+   ===========================================================
+   Visual: ol vertical com numero circular + linha conectora,
+   cada milestone em card com skills/acoes/evidencia. Cruza
+   Profile.skills com milestone.skills (have/missing) e mostra
+   progresso por milestone. Determistico, sem LLM.
+*/
+.ct-career-roadmap { margin-top: 24px; }
+.ct-career-roadmap-head {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface) 100%);
+  border: 1px solid var(--primary-tint);
+  border-radius: var(--radius-lg);
+}
+.ct-career-roadmap-head h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+.ct-career-roadmap-timeline {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 14px;
+}
+
+.ct-career-milestones {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ct-career-milestone {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  padding-bottom: 28px;
+}
+.ct-career-milestone-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+.ct-career-milestone-num {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: var(--shadow-md);
+}
+.ct-career-milestone-line {
+  flex: 1;
+  width: 2px;
+  background: var(--border);
+  margin-top: 8px;
+  min-height: 30px;
+}
+
+.ct-career-milestone-content {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+}
+.ct-career-milestone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ct-career-milestone-header h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+.ct-career-milestone-duration {
+  font-size: 12px;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.ct-career-milestone-progress { margin-bottom: 14px; }
+.ct-progress-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.ct-progress-bar {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.ct-progress-bar > div {
+  height: 100%;
+  background: var(--positive);
+  transition: width 280ms;
+}
+
+.ct-career-milestone-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.ct-career-skill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.ct-career-skill.have {
+  background: var(--positive-soft);
+  color: var(--positive-deep);
+}
+.ct-career-skill.missing {
+  background: var(--surface-2);
+  color: var(--text-soft);
+}
+
+.ct-career-milestone-actions { margin-bottom: 14px; }
+.ct-career-milestone-actions h4 {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
+  margin: 0 0 8px;
+}
+.ct-career-milestone-actions ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.ct-career-milestone-actions li { margin-bottom: 4px; }
+
+.ct-career-milestone-evidence {
+  background: var(--attention-soft);
+  border-left: 3px solid var(--attention);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.ct-career-paths-list {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text);
+}
+.ct-career-paths-meta {
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+/* ===========================================================
+ * MOBILE AUDIT — fixes consolidados (2026-06-22)
+ * Foco: WCAG 2.5.5 (touch target >=44px), iOS no-zoom no focus
+ * (font-size >=16px), overflow horizontal, modais com scroll
+ * interno. Breakpoint padrao: 720px. Refinamentos extras: 480px.
+ *
+ * NAO sobrescreve layout desktop. Cada regra esta sob @media —
+ * blocos existentes (linhas 1781, 1796, 2211, 2767, etc.) ficam
+ * intactos; aqui adicionamos *apenas o que falta* (touch sizes,
+ * font-size de input, kanban snap, modal max-height).
+ * =========================================================== */
+
+@media (max-width: 720px) {
+  /* --- iOS no-zoom-on-focus: requer font-size >= 16px em controles
+     que recebem teclado. Targets: inputs textuais, textarea, select.
+     !important pra dominar regras inline/scoped do `<style jsx>` que
+     definem font-size menor (ex.: ct-copilot-input 13px, kanban-card-actions
+     select 11px). Em mobile o ganho de a11y supera o ajuste visual. */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="number"],
+  input:not([type]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* --- Touch targets: botoes primarios/secundarios alcancam 44px
+     (WCAG 2.5.5 AAA / Apple HIG / Material). Usamos min-height +
+     padding mantido pra nao quebrar largura. */
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-secondary {
+    min-height: 44px;
+  }
+
+  /* AppShell nav items (sidebar e mobile-header) — 44px de toque */
+  .appshell-nav-item { min-height: 44px; }
+  .appshell-mobile-nav-item { min-height: 44px; padding: 10px 14px; }
+
+  /* Theme toggle 38x38 -> 44x44.
+     Wave 10 fix: em mobile, o toggle ficava em top:20px/right:20px e
+     sobrepunha avatar+bell do AppShell mobile header (z-index 5 sticky).
+     Reposicionamos pra bottom-right pra nao conflitar — fica acima do
+     copilot widget mas longe do header. */
+  .theme-toggle {
+    width: 44px;
+    height: 44px;
+    top: auto;
+    bottom: 20px;
+  }
+
+  /* Botoes inline (Concluir, Adaptar, Salvar candidatura) — 36px
+     visual + padding generoso pro hitbox real ficar >=44px com
+     padding clicavel ampliado verticalmente. */
+  .ct-action-cta,
+  .ct-job-link,
+  .ct-subscores-link,
+  .ct-link-btn {
+    min-height: 36px;
+    padding: 8px 4px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Microaction "check" (botao de concluir gap) — 32px desktop, 44px mobile */
+  .ct-microaction-check { min-width: 44px; min-height: 44px; }
+
+  /* Modal close (X) — 30px desktop, 40px mobile (perto do 44px sem quebrar layout) */
+  .modal-x { width: 40px; height: 40px; }
+
+  /* --- Overflow: salarios e textos longos nos cards de vaga */
+  .ct-job-card,
+  .ct-job-meta,
+  .ct-job-title { word-break: break-word; overflow-wrap: anywhere; }
+
+  /* --- Modais: max-height + scroll interno pra nao estourar viewport.
+     Modal base ja usa overlay com overflow-y: auto, mas em telas
+     curtas (iPhone SE landscape) o modal-body pode passar de 100vh.
+     Adicionamos max-height calculada com margem de seguranca. */
+  .modal,
+  .ct-refresh-modal,
+  .ct-tailor-modal {
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+  .modal-overlay { padding: 16px; align-items: center; }
+  .ct-tailor-modal-bg { padding: 16px; }
+
+  /* --- Kanban: scroll horizontal com snap pra UX mobile aceitavel.
+     O grid existente ja vira 1 coluna em <=700px (KanbanClient inline
+     style jsx), mas se um agente reverter pra multi-coluna em mobile,
+     este garante snap behavior. */
+  .kanban {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .kanban-col {
+    scroll-snap-align: start;
+    min-width: 260px;
+  }
+
+  /* --- Headers de tela: menos padding vertical, fontes menores */
+  .ct-gaps-header { padding: 12px 0 0; gap: 14px; }
+  .ct-gaps-title { font-size: 24px; }
+  .ct-dash-header { gap: 16px; margin-bottom: 18px; }
+  .ct-dash-title { font-size: 26px; }
+
+  /* --- Filtros do radar: pills com area de toque maior */
+  .ct-filter-pill { font-size: 13px; padding: 10px 14px; min-height: 44px; }
+  .ct-filter-pill-select { font-size: 16px; }
+
+  /* --- Cards: padding reduzido pra ganhar conteudo util */
+  .ct-job-card { padding: 14px 16px; gap: 12px; }
+  .ct-microaction-card { padding: 14px 16px; }
+  .ct-evidence-card { padding: 14px 18px; }
+
+  /* --- AppShell LGPD card: padding reduzido em sidebar mobile-fallback */
+  .appshell-lgpd-card { padding: 12px 14px; }
+
+  /* --- Tabelas: wrap em scroll horizontal opt-in. Componentes que
+     usam .ct-table-wrap devem aproveitar; outros mantem layout. */
+  .ct-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Refinamentos pra iPhone SE 1a gen (320px) e Galaxy Fold dobrado */
+  .ct-dash-title { font-size: 22px; }
+  .ct-gaps-title { font-size: 22px; }
+  .ct-target-pill { font-size: 11px; padding: 8px 12px; }
+  .ct-score-big { font-size: 48px; }
+  .modal-overlay { padding: 8px; }
+  .ct-tailor-modal-bg { padding: 8px; }
+  .modal-head { padding: 18px 18px 12px; }
+  .modal-body { padding: 16px 18px 18px; }
+  /* Kanban: garante coluna unica e largura cheia */
+  .kanban { grid-template-columns: 1fr !important; }
+  .kanban-col { min-width: 0; }
+}
+
+/* ===========================================================
+ * Refresh visual — Banner "Highlight da Semana" + Section divider
+ * Componentes novos pro dashboard. Agent B aplica essas classes;
+ * aqui ficam só os estilos. Acento cyan vibrante decorativo.
+ * =========================================================== */
+.ct-highlight-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-cyan);
+  border-radius: var(--radius-lg);
+  margin: 0 0 24px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+.ct-highlight-banner::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan-glow));
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.ct-highlight-banner-icon {
+  width: 44px; height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a3c34;
+  flex: none;
+  box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);
+}
+
+.ct-highlight-banner-content {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.ct-highlight-banner-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+  letter-spacing: -.2px;
+}
+
+.ct-highlight-banner-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.ct-highlight-banner-cta {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--accent-cyan-deep);
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-cyan-deep);
+  white-space: nowrap;
+  transition: all 180ms var(--ease-standard);
+  flex: none;
+  z-index: 1;
+  background: transparent;
+  cursor: pointer;
+}
+.ct-highlight-banner-cta:hover {
+  background: var(--accent-cyan-deep);
+  color: #fff;
+}
+.ct-highlight-banner-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-cyan-glow);
+}
+
+/* Mobile: stack vertical, CTA full-width */
+@media (max-width: 680px) {
+  .ct-highlight-banner { flex-direction: column; align-items: flex-start; }
+  .ct-highlight-banner-cta { align-self: stretch; text-align: center; }
+}
+
+/* Section divider sutil — gradiente transparente → border → transparente */
+.ct-section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 32px 0;
+  border: 0;
+}
+
+/* ============================================================
+   LEVEL 2 VISUAL REFRESH — /gaps, /oportunidades, /carreira
+   Estende sistema cyan/turquoise (tokens já em :root).
+   Foco: page-header unificado, utilitários de acento, empty
+   state v2, animação accent-pulse sutil e enhances opt-in.
+   ============================================================ */
+
+/* Page header consistente (abaixo do nav, antes do conteúdo) */
+.ct-page-header {
+  display: flex; align-items: flex-start; gap: 18px;
+  padding: 24px 28px; margin-bottom: 24px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-cyan);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  position: relative; overflow: hidden;
+}
+.ct-page-header::after {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan-glow));
+  opacity: 0.45; pointer-events: none;
+}
+.ct-page-header-icon {
+  flex: none; width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  color: #08313F; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 20px; box-shadow: 0 4px 14px -2px var(--accent-cyan-glow);
+  position: relative; z-index: 1;
+}
+.ct-page-header-content { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.ct-page-header-eyebrow {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent-cyan-deep); font-weight: 600; margin: 0 0 4px;
+}
+/* Wave 10A — H1 sistema unificado com /dashboard, /carreira, /plano.
+   Substitui o legado 26px Spectral fixo (10 paginas usavam essa classe). */
+.ct-page-header-title {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0 0 16px 0;
+  color: var(--text);
+}
+.ct-page-header-sub {
+  font-size: clamp(16px, 1.6vw, 18px);
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 60ch;
+  margin: 6px 0 0;
+}
+.ct-page-header-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ct-page-header-meta > * {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-family: var(--font-mono, ui-monospace, monospace);
+  padding: 4px 10px; border-radius: var(--radius-pill);
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-soft);
+}
+
+@media (max-width: 640px) {
+  .ct-page-header { gap: 14px; padding: 18px; }
+  .ct-page-header-icon { width: 36px; height: 36px; font-size: 16px; border-radius: 10px; }
+  /* Wave 10A — mobile mantem clamp do display H1; nao ha fonte fixa. */
+  .ct-page-header-title { font-size: clamp(32px, 9vw, 48px); line-height: 1.08; }
+  .ct-page-header-sub { font-size: 14.5px; }
+  .ct-page-header::after { display: none; }
+}
+
+/* Section pattern opcional — eyebrow + spacing rhythm */
+.ct-page-section { margin: 28px 0; }
+.ct-section-eyebrow {
+  display: inline-block; font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent-cyan-deep); font-weight: 600; margin: 0 0 10px;
+}
+
+/* Utilitários de acento cyan */
+.ct-accent-text { color: var(--accent-cyan-deep); font-weight: 600; }
+.ct-accent-glow { transition: box-shadow 200ms ease, color 200ms ease, transform 200ms ease; }
+.ct-accent-glow:hover { box-shadow: 0 0 0 3px var(--accent-cyan-glow); color: var(--accent-cyan-deep); }
+.ct-accent-glow:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-cyan-glow); }
+.ct-pulse-cyan { animation: ctAccentPulse 7s ease-in-out infinite; will-change: box-shadow; }
+
+@keyframes ctAccentPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-cyan-glow); }
+  50%      { box-shadow: 0 0 0 6px transparent; }
+}
+
+/* Empty state v2 — cyan accent, dashed border, ícone com glow */
+.ct-empty-state-v2 {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: 14px; padding: 56px 32px;
+  background: var(--surface);
+  border: 1.5px dashed color-mix(in srgb, var(--accent-cyan-deep) 55%, var(--border));
+  border-radius: var(--radius-lg); color: var(--text-muted);
+}
+.ct-empty-state-v2 .ct-empty-state-v2-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  color: #08313F; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 28px; box-shadow: 0 8px 24px -6px var(--accent-cyan-glow);
+}
+.ct-empty-state-v2 .ct-empty-state-v2-title {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text); margin: 0;
+}
+.ct-empty-state-v2 .ct-empty-state-v2-desc {
+  font-size: 14px; line-height: 1.55; max-width: 46ch; margin: 0;
+}
+
+@media (max-width: 640px) {
+  .ct-empty-state-v2 { padding: 36px 18px; }
+  .ct-empty-state-v2 .ct-empty-state-v2-icon { width: 52px; height: 52px; font-size: 22px; }
+}
+
+/* Enhances opt-in em classes existentes (sem migrar nada) */
+.ct-progress-bar.ct-progress-bar-high > div,
+.ct-progress-bar > div.ct-progress-bar-high {
+  background: linear-gradient(90deg, var(--accent-cyan-deep), var(--accent-cyan));
+  box-shadow: 0 0 8px var(--accent-cyan-glow);
+}
+.ct-career-milestone-marker.completed .ct-career-milestone-num,
+.ct-career-milestone-marker.is-completed .ct-career-milestone-num,
+.ct-career-milestone.completed .ct-career-milestone-num {
+  background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+  color: #08313F; box-shadow: var(--shadow-md), 0 0 0 4px var(--accent-cyan-glow);
+}
+.ct-career-roadmap-head.ct-accent-tint {
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface) 60%, var(--accent-cyan-glow) 100%);
+  border-color: color-mix(in srgb, var(--accent-cyan-deep) 30%, var(--primary-tint));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-pulse-cyan { animation: none; }
+  .ct-accent-glow { transition: none; }
+}
+
+/* ===========================================================
+ * Site landing premium — classes utilitárias
+ * ---------------------------------------------------------
+ * Usadas SOMENTE em /site (landing pública) e em alguns
+ * showcases internos (/transparencia, /privacidade) que
+ * compartilham a estética dark editorial / glassmorphism.
+ * NÃO usar dentro do app autenticado (/app) — lá temos o
+ * sistema light/dark do data-theme.
+ * =========================================================== */
+
+/* --- Layout primitives --- */
+.site-container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .site-container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+.site-section {
+  padding-top: 120px;
+  padding-bottom: 120px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .site-section {
+    padding-top: 96px;
+    padding-bottom: 96px;
+  }
+}
+
+.site-section-mesh {
+  background-image:
+    radial-gradient(ellipse 60% 50% at 20% 20%, var(--site-mesh-cyan), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, var(--site-mesh-magenta), transparent 60%);
+  background-repeat: no-repeat;
+}
+
+/* --- Cards (glassmorphism) --- */
+.site-card-glass {
+  background: var(--site-card-bg);
+  -webkit-backdrop-filter: blur(var(--site-glass-blur));
+  backdrop-filter: blur(var(--site-glass-blur));
+  border: 1px solid var(--site-border);
+  border-radius: 16px;
+  box-shadow: var(--site-shadow-card);
+  transition: background 250ms var(--ease-out-quart),
+              border-color 250ms var(--ease-out-quart),
+              box-shadow 250ms var(--ease-out-quart),
+              transform 250ms var(--ease-out-quart);
+}
+
+.site-card-glass:hover {
+  background: var(--site-card-bg-hover);
+  border-color: var(--site-border-strong);
+  box-shadow: var(--site-shadow-card-hover);
+}
+
+.site-card-glass-accent {
+  background: var(--site-card-bg);
+  -webkit-backdrop-filter: blur(var(--site-glass-blur));
+  backdrop-filter: blur(var(--site-glass-blur));
+  border: 1px solid var(--site-accent-glow);
+  border-radius: 16px;
+  box-shadow: var(--site-shadow-card);
+  transition: background 250ms var(--ease-out-quart),
+              border-color 250ms var(--ease-out-quart),
+              box-shadow 250ms var(--ease-out-quart);
+}
+
+.site-card-glass-accent:hover {
+  background: var(--site-card-bg-hover);
+  border-color: var(--site-accent);
+  box-shadow: var(--site-shadow-card-hover);
+}
+
+/* --- Buttons --- */
+.site-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--site-accent) 0%, var(--site-accent-deep) 100%);
+  color: var(--site-accent-on, #08313F);
+  padding: 16px 32px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 200ms var(--ease-out-quart),
+              box-shadow 200ms var(--ease-out-quart),
+              filter 200ms var(--ease-out-quart);
+  box-shadow: 0 8px 24px var(--site-accent-glow);
+}
+
+.site-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px var(--site-accent-glow);
+  filter: brightness(1.04);
+}
+
+.site-btn-primary:active {
+  transform: translateY(0);
+}
+
+.site-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--site-border-strong);
+  color: var(--site-fg);
+  padding: 16px 32px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+  font-family: var(--font-body);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 200ms var(--ease-out-quart),
+              border-color 200ms var(--ease-out-quart),
+              transform 200ms var(--ease-out-quart);
+}
+
+.site-btn-secondary:hover {
+  background: var(--site-card-bg-hover);
+  border-color: var(--site-fg-muted);
+  transform: translateY(-1px);
+}
+
+/* --- Typography (display + hierarchy) --- */
+.site-h-display {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(56px, 9vw, 144px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: var(--site-fg);
+  margin: 0;
+}
+
+.site-h1 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(40px, 6vw, 72px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--site-fg);
+  margin: 0;
+}
+
+.site-h2 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(32px, 4.5vw, 56px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  color: var(--site-fg);
+  margin: 0;
+}
+
+.site-h3 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--site-fg);
+  margin: 0;
+}
+
+.site-body-lg {
+  font-family: var(--font-body);
+  font-size: clamp(18px, 1.6vw, 22px);
+  color: var(--site-fg-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.site-body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--site-fg-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.site-body-sm {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--site-fg-dim);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --- Scroll-reveal (toggle via IntersectionObserver -> .is-visible) --- */
+.site-fade-up {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 700ms ease, transform 700ms ease;
+  will-change: opacity, transform;
+}
+
+.site-fade-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- Cursor glow (follows pointer; positioned by JS via CSS vars) --- */
+.site-cursor-glow {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 600px;
+  height: 600px;
+  margin-left: -300px;
+  margin-top: -300px;
+  z-index: 1;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, var(--site-accent-glow) 0%, transparent 60%);
+  transform: translate3d(var(--cursor-x, 50vw), var(--cursor-y, 50vh), 0);
+  transition: opacity 400ms ease;
+}
+
+/* --- Top navigation --- */
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(10, 10, 14, 0.72);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--site-border);
+}
+
+/* --- Pricing card featured variant --- */
+.site-pricing-card-featured {
+  background: var(--site-card-bg-hover);
+  -webkit-backdrop-filter: blur(var(--site-glass-blur));
+  backdrop-filter: blur(var(--site-glass-blur));
+  border: 1px solid var(--site-accent);
+  border-radius: 16px;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.40),
+    0 0 0 1px var(--site-accent-glow) inset,
+    0 0 60px var(--site-accent-glow);
+  transform: scale(1.04);
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .site-pricing-card-featured {
+    transform: scale(1);
+  }
+}
+
+/* --- FAQ item (semantic <details>) --- */
+.site-faq-item {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--site-border);
+  transition: background 200ms var(--ease-out-quart);
+}
+
+.site-faq-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.site-faq-item > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--site-fg);
+  letter-spacing: -0.01em;
+}
+
+.site-faq-item > summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-faq-item[open] > summary {
+  color: var(--site-accent);
+}
+
+/* --- Step number (huge gradient outlined digit) --- */
+.site-step-number {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(80px, 12vw, 160px);
+  font-weight: 800;
+  line-height: 1;
+  color: transparent;
+  background-image: linear-gradient(135deg, var(--site-accent) 0%, var(--site-accent-magenta) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  letter-spacing: -0.04em;
+  display: inline-block;
+}
+
+/* --- App glassmorphism util (reuso dentro de /app) --- */
+.app-glass {
+  background: var(--app-glass-bg);
+  -webkit-backdrop-filter: blur(var(--app-glass-blur));
+  backdrop-filter: blur(var(--app-glass-blur));
+  border: 1px solid var(--app-glass-border);
+  border-radius: var(--radius-lg);
+}
+
+/* --- Reduced motion: respeita prefers-reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .site-fade-up {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .site-cursor-glow {
+    display: none;
+    transition: none;
+  }
+  .site-card-glass,
+  .site-card-glass-accent,
+  .site-btn-primary,
+  .site-btn-secondary,
+  .site-faq-item {
+    transition: none;
+  }
+}
+
+/* ===========================================================
+ * Cloudwalk-style lime accent — uso EXTREMAMENTE controlado.
+ * Aplique em: CTA principal de hero + 1 destaque por viewport.
+ * Em light/dark, vira accent-cyan normal (compatibilidade).
+ * =========================================================== */
+.cloud-accent {
+  color: var(--accent-cyan);
+}
+
+.cloud-accent-bg {
+  background-color: var(--accent-cyan);
+  color: #000;
+}
+
+.cloud-accent-border {
+  border-color: var(--accent-cyan);
+}
+
+/* Hero brutalist tracking — usar em h-display do site quando quiser
+   Cloudwalk feel. Não default — opt-in. */
+.h-brutal {
+  letter-spacing: -0.05em;
+  font-weight: 700;
+  line-height: 0.92;
+}
 

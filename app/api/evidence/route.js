@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { EvidenceCreateBody } from "@/lib/validators";
+import { grantAchievement } from "@/lib/achievements";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -100,5 +101,19 @@ export async function POST(req) {
       whenLabel: data.whenLabel?.trim() || null,
     },
   });
+
+  // Achievement: FIRST_EVIDENCE concedido na primeira evidence documentada.
+  // count ja existe acima (linha 82) mas estava pre-create; usamos count+1
+  // (apos o create) pra decidir. Idempotente via unique constraint.
+  try {
+    if (count === 0) {
+      await grantAchievement(session.user.id, "FIRST_EVIDENCE", {
+        evidenceId: item.id,
+      });
+    }
+  } catch (e) {
+    console.error("evidence: achievement falhou", e?.message);
+  }
+
   return NextResponse.json({ item });
 }

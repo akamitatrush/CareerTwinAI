@@ -18,8 +18,11 @@ export default function RequirementsFrequency({
   const list = Array.isArray(requirements) ? requirements.slice(0, limit) : [];
   return (
     <section
-      className="ct-req-freq"
+      className="ct-req-freq app-glass"
       aria-labelledby="gaps-req-freq-title"
+      style={{
+        boxShadow: "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }}
     >
       <header className="ct-req-freq-head">
         <div>
@@ -48,6 +51,14 @@ export default function RequirementsFrequency({
                 className={
                   "ct-req-freq-tag " +
                   (r.status === "have" ? "have" : "missing")
+                }
+                style={
+                  r.status === "have"
+                    ? {
+                        filter:
+                          "drop-shadow(0 0 6px var(--accent-cyan-glow))",
+                      }
+                    : undefined
                 }
               >
                 {r.status === "have" ? "você tem" : "falta"}

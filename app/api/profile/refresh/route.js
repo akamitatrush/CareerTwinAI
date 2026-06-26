@@ -20,14 +20,16 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { promptDiag } from "@/lib/prompts";
 import { DiagShape } from "@/lib/validators";
 import { computeAllSubScores } from "@/lib/scoring/subscores";
 import { searchJobs } from "@/lib/jobs";
 import { audit } from "@/lib/audit";
-import { enforceUsage } from "@/lib/billing/enforce";
+import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { grantAchievement } from "@/lib/achievements";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -62,7 +64,7 @@ function pickExplicacao(llmText, key) {
   return s.length > 0 ? s : FALLBACK_EXPL[key];
 }
 
-export async function POST(req) {
+async function handler(req) {
   // 1) Sessao obrigatoria. userId NUNCA vem do body — anti IDOR.
   const session = await auth();
   if (!session?.user?.id) {
@@ -92,6 +94,29 @@ export async function POST(req) {
         feature: "analyze",
         plan: enforce.plan,
         limit: enforce.limit,
+        upgradeUrl: "/precos",
+      },
+      { status: 402 }
+    );
+  }
+  const userPlan = enforce.plan;
+
+  // 3.5) Pre-check budget diario (cost amplification defense — Wave 11).
+  const budget = await checkDailyBudget(userId, userPlan);
+  if (!budget.ok) {
+    await audit({
+      userId,
+      action: "SECURITY_BUDGET_EXCEEDED",
+      target: `User:${userId}`,
+      req,
+      meta: { feature: "analyze", route: "profile.refresh", used: budget.used, cap: budget.cap },
+    });
+    return NextResponse.json(
+      {
+        error: "Você atingiu o limite diário de uso de IA. Volte amanhã ou faça upgrade.",
+        code: "BUDGET_EXCEEDED",
+        used: budget.used,
+        cap: budget.cap,
         upgradeUrl: "/precos",
       },
       { status: 402 }
@@ -166,6 +191,19 @@ export async function POST(req) {
   //    sub-scores (cap pra prevenir gaming). Skills armazenadas só após user
   //    explicitar consentimento na UI (modal "Aplicar conquistas?").
   //    Sem applyCompletedSkills, perfilJson fica intacto e nenhum bonus aplicado.
+  //
+  //    Bug fix: gaps antigos podem nao ter impactoDimensao/impactoPontos (LLM
+  //    nao retornava esses campos consistentemente em versoes anteriores).
+  //    Defaults: 5 pts em relevancia_habilidades (skill adicionada = mais
+  //    relevancia). Sem isso, user marca done -> score nao sobe -> loop infinito.
+  const DEFAULT_BONUS_PTS = 5;
+  const DEFAULT_BONUS_DIM = "relevancia_habilidades";
+  const VALID_DIMENSIONS = new Set([
+    "aderencia_vagas",
+    "relevancia_habilidades",
+    "otimizacao_perfil",
+    "experiencia_mercado",
+  ]);
   let appliedSkills = [];
   let mergedSkills = Array.isArray(profile.skills) ? [...profile.skills] : [];
   let completedHabilidades = []; // pra passar pro LLM (evita loop)
@@ -175,6 +213,7 @@ export async function POST(req) {
     otimizacao_perfil: 0,
     experiencia_mercado: 0,
   };
+  let completedGapsDebug = []; // so usado se DEBUG_REFRESH ativo
   if (applyCompletedSkills && previousSnapshot) {
     const completed = previousSnapshot.gaps.filter((g) => g.completedAt);
     const existing = new Set(mergedSkills.map((s) => String(s).toLowerCase()));
@@ -189,16 +228,32 @@ export async function POST(req) {
         mergedSkills.push(skill);
       }
       // Acumula projected gain por dimensao (cap 15 pts por sub-score)
-      if (g.impactoDimensao && g.impactoPontos && projectedGains[g.impactoDimensao] !== undefined) {
-        projectedGains[g.impactoDimensao] = Math.min(
-          15,
-          projectedGains[g.impactoDimensao] + g.impactoPontos,
-        );
-      }
+      // Defaults: se gap nao tem impactoDimensao/impactoPontos (snapshots
+      // antigos), assume DEFAULT_BONUS_DIM + DEFAULT_BONUS_PTS. Garante que
+      // QUALQUER gap concluida contribui pro score (fix do bug do loop).
+      const dim = VALID_DIMENSIONS.has(g.impactoDimensao) ? g.impactoDimensao : DEFAULT_BONUS_DIM;
+      const pts = Number.isFinite(g.impactoPontos) && g.impactoPontos > 0
+        ? g.impactoPontos
+        : DEFAULT_BONUS_PTS;
+      projectedGains[dim] = Math.min(15, projectedGains[dim] + pts);
+      completedGapsDebug.push({
+        hab: skill,
+        dim,
+        pts,
+        ptsFromLLM: g.impactoPontos,
+        dimFromLLM: g.impactoDimensao,
+      });
     }
     if (mergedSkills.length > SKILLS_CAP) {
       mergedSkills = mergedSkills.slice(0, SKILLS_CAP);
     }
+  }
+
+  // Logging diagnostico opt-in via DEBUG_REFRESH=1. Sem isso, log normal
+  // nao mostra esses dados (LGPD: habilidades podem ser PII fraca).
+  if (process.env.DEBUG_REFRESH === "1") {
+    console.log("[refresh] completedGaps:", JSON.stringify(completedGapsDebug));
+    console.log("[refresh] projectedGains:", JSON.stringify(projectedGains));
   }
 
   // 8) LLM: re-extrai perfil + explicações + gaps a partir do mesmo CV.
@@ -208,19 +263,27 @@ export async function POST(req) {
   const role = profile.targetRole;
 
   let llmDiag;
+  let llmUsage = null; // Wave 11: capturado pra trackTokenUsage
   try {
     // Passa completedHabilidades pro LLM evitar repetir as mesmas microacoes
     // (loop "marca done -> volta mesma sugestao -> marca de novo").
-    const raw = await completeJSON(
+    // Skip cache: refresh user-specific (mesmo CV+role deve gerar snapshot
+    // fresco com nova explicacao). Cache mascarariam analises antigas e
+    // mesmas microacoes — quebra a UX do "completed -> reroll".
+    const { result: raw, usage } = await completeJSONWithUsage(
       await promptDiag(role.trim(), cv.trim(), completedHabilidades),
       {
         route: "profile.refresh",
         userId,
+        cache: false,
       }
     );
+    llmUsage = usage;
     const valid = DiagShape.safeParse(raw);
     if (!valid.success) {
       console.error("profile.refresh: LLM shape inválido");
+      // Tokens ja gastos — track antes do 502.
+      if (llmUsage) await trackTokenUsage(userId, "analyze", llmUsage);
       return NextResponse.json(
         {
           error: "A IA devolveu resposta em formato inesperado. Tente novamente em alguns segundos.",
@@ -240,6 +303,31 @@ export async function POST(req) {
       },
       { status: 502 }
     );
+  }
+
+  // Token tracking + post-budget audit (Wave 11). Falha silenciosa.
+  if (llmUsage) {
+    await trackTokenUsage(userId, "analyze", llmUsage);
+    try {
+      const budgetAfter = await checkDailyBudget(userId, userPlan);
+      if (!budgetAfter.ok) {
+        await audit({
+          userId,
+          action: "SECURITY_BUDGET_EXCEEDED",
+          target: `User:${userId}`,
+          req,
+          meta: {
+            feature: "analyze",
+            route: "profile.refresh",
+            used: budgetAfter.used,
+            cap: budgetAfter.cap,
+            phase: "post-llm",
+          },
+        });
+      }
+    } catch (e) {
+      console.error("profile.refresh: post-budget check falhou", e?.message);
+    }
   }
 
   // 9) Busca vagas (falha graceful — score continua valido com 0 vagas).
@@ -284,14 +372,67 @@ export async function POST(req) {
 
   // 11) Score determinístico — mesma função usada em /api/analyze.
   //     Quando applyCompletedSkills, aplica projectedGains como bonus aos
-  //     sub-scores correspondentes (capado a 15 pts por dimensao, 20 total).
+  //     sub-scores correspondentes (capado a 15 pts por dimensao, 25 total).
   //     Sem isso, o score NUNCA subia (loop infinito do user).
+  //
+  //     Cap total subiu de 20 -> 25 pra dar movimento visivel quando user
+  //     conclui 3-4 microacoes. Cap de 15 por dimensao mantido (previne abuso).
+  //     Recalculo do overall *sempre* roda quando applyCompletedSkills=true e
+  //     houve bonus, mesmo que LLM tenha re-extraido skills levemente diferentes
+  //     (que faz o overall base oscilar e mascarava o ganho real do bonus).
   const computed = computeAllSubScores(syntheticProfile, role, jobsForScore);
+
+  if (process.env.DEBUG_REFRESH === "1") {
+    console.log("[refresh] sub_scores antes do bonus:", JSON.stringify(computed.sub_scores));
+    console.log("[refresh] overall antes do bonus:", computed.overall);
+  }
+
+  // FIX: quando applyCompletedSkills, usa previous sub-scores como BASELINE em vez
+  // de confiar 100% na re-extracao do LLM. LLM e nao-deterministico — mesmo CV
+  // gera perfil ligeiramente diferente a cada call, o que faz computeAllSubScores
+  // produzir numeros diferentes. Sem essa floor, user que ganhou bonus podia
+  // VER score CAIR (re-extracao -9 + bonus +5 = liquido -4).
+  //
+  // User reportou: "marquei 1 tarefa, cliquei atualizar, score caiu 9 pontos".
+  // Logica nova: quando user explicitamente aplica conquistas, ele MERECE pelo
+  // menos os pontos prometidos. Baseline = previous sub-scores. Bonus aplicado
+  // em cima desse baseline (nao em cima do re-computado).
+  //
+  // Sem applyCompletedSkills (so recalcular): comportamento antigo mantido —
+  // user opted-in pra re-extracao integral, aceita oscilacao.
+  if (applyCompletedSkills && previousSnapshot?.subScores) {
+    const prevSubs = previousSnapshot.subScores;
+    for (const dim of Object.keys(computed.sub_scores)) {
+      const prevValor = Number(prevSubs[dim]?.valor);
+      if (Number.isFinite(prevValor)) {
+        // Preserva o valor anterior — bonus sera aplicado em cima dele.
+        // Explicacao continua sendo a NOVA do LLM (sem isso, snapshot velho).
+        computed.sub_scores[dim].valor = prevValor;
+      }
+    }
+    // Recalcula overall baseado nos sub-scores restaurados.
+    computed.overall = Math.round(
+      computed.sub_scores.aderencia_vagas.valor * 0.4 +
+        computed.sub_scores.relevancia_habilidades.valor * 0.3 +
+        computed.sub_scores.otimizacao_perfil.valor * 0.2 +
+        computed.sub_scores.experiencia_mercado.valor * 0.1,
+    );
+    if (process.env.DEBUG_REFRESH === "1") {
+      console.log("[refresh] baseline restaurado de previousSnapshot");
+      console.log("[refresh] sub_scores apos baseline:", JSON.stringify(computed.sub_scores));
+      console.log("[refresh] overall apos baseline:", computed.overall);
+    }
+  }
 
   if (applyCompletedSkills) {
     let totalBonus = 0;
-    const MAX_TOTAL_BONUS = 20;
-    for (const dim of Object.keys(projectedGains)) {
+    const MAX_TOTAL_BONUS = 25;
+    // Ordem deterministica de aplicacao: dimensoes com maior gain primeiro,
+    // pra cap nao prejudicar arbitrariamente a dimensao com mais conquistas.
+    const orderedDims = Object.keys(projectedGains).sort(
+      (a, b) => (projectedGains[b] || 0) - (projectedGains[a] || 0),
+    );
+    for (const dim of orderedDims) {
       const gain = projectedGains[dim] || 0;
       if (gain <= 0) continue;
       const remaining = Math.max(0, MAX_TOTAL_BONUS - totalBonus);
@@ -311,6 +452,11 @@ export async function POST(req) {
           computed.sub_scores.otimizacao_perfil.valor * 0.2 +
           computed.sub_scores.experiencia_mercado.valor * 0.1,
       );
+    }
+    if (process.env.DEBUG_REFRESH === "1") {
+      console.log("[refresh] totalBonus aplicado:", totalBonus);
+      console.log("[refresh] sub_scores depois do bonus:", JSON.stringify(computed.sub_scores));
+      console.log("[refresh] overall depois do bonus:", computed.overall);
     }
   }
 
@@ -431,6 +577,24 @@ export async function POST(req) {
     },
   });
 
+  // 15) Achievements: FIRST_REFRESH + tiers SCORE_70/80/90 quando o novo
+  // overall cruza os thresholds. Idempotentes via unique constraint.
+  // Falhas sao silenciosas — diagnostico ja foi persistido.
+  try {
+    await grantAchievement(userId, "FIRST_REFRESH", { snapshotId: snapshot.id });
+    if (overall >= 70) {
+      await grantAchievement(userId, "SCORE_70", { overall, snapshotId: snapshot.id });
+    }
+    if (overall >= 80) {
+      await grantAchievement(userId, "SCORE_80", { overall, snapshotId: snapshot.id });
+    }
+    if (overall >= 90) {
+      await grantAchievement(userId, "SCORE_90", { overall, snapshotId: snapshot.id });
+    }
+  } catch (e) {
+    console.error("profile.refresh: achievements falhou", e?.message);
+  }
+
   return NextResponse.json({
     ok: true,
     snapshotId: snapshot.id,
@@ -440,3 +604,5 @@ export async function POST(req) {
     appliedSkills,
   });
 }
+
+export const POST = withApiGuard(handler);

@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { completeJSON } from "@/lib/llm";
+import { completeJSONWithUsage } from "@/lib/llm";
 import { promptTailor } from "@/lib/prompts";
 import { TailorBody } from "@/lib/validators";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
-import { enforceUsage } from "@/lib/billing/enforce";
+import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
+import { audit } from "@/lib/audit";
+import { grantAchievement } from "@/lib/achievements";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req) {
+async function handler(req) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -19,6 +22,7 @@ export async function POST(req) {
 
   // Enforcement do plano apenas pra logados (anonimos sao rate-limited acima).
   // enforceUsage AGORA INCREMENTA ATOMICAMENTE — nao chamar trackUsage depois.
+  let userPlan = null;
   if (userId) {
     const lim = await enforceUsage(userId, "tailor");
     if (!lim.ok) {
@@ -29,6 +33,28 @@ export async function POST(req) {
           feature: "tailor",
           plan: lim.plan,
           limit: lim.limit,
+          upgradeUrl: "/precos",
+        },
+        { status: 402 }
+      );
+    }
+    userPlan = lim.plan;
+    // Pre-check de budget diario (cost amplification defense — Wave 11).
+    const budget = await checkDailyBudget(userId, userPlan);
+    if (!budget.ok) {
+      await audit({
+        userId,
+        action: "SECURITY_BUDGET_EXCEEDED",
+        target: `User:${userId}`,
+        req,
+        meta: { feature: "tailor", used: budget.used, cap: budget.cap },
+      });
+      return NextResponse.json(
+        {
+          error: "Voce atingiu o limite diario de uso de IA. Volte amanha ou faca upgrade.",
+          code: "BUDGET_EXCEEDED",
+          used: budget.used,
+          cap: budget.cap,
           upgradeUrl: "/precos",
         },
         { status: 402 }
@@ -78,7 +104,38 @@ export async function POST(req) {
   const { role, cv, vaga, applicationId, vagaTitulo, vagaEmpresa } = parsed.data;
 
   try {
-    const data = await completeJSON(promptTailor(role, cv, vaga), { route: "tailor", userId });
+    // Skip cache: tailor produz adaptacao unica por vaga + user. Mesmo input
+    // (raro) gera CV adaptado novo — alterar pra cache iria devolver CV
+    // identico em re-tries, mascarando regressoes do modelo.
+    const { result: data, usage: llmUsage } = await completeJSONWithUsage(
+      promptTailor(role, cv, vaga),
+      { route: "tailor", userId, cache: false }
+    );
+
+    // Tokens cobrados pelo provider — track imediatamente, antes do persist.
+    // Garantia: mesmo se persist abaixo falhar, o uso conta pro budget diario.
+    if (userId && llmUsage) {
+      await trackTokenUsage(userId, "tailor", llmUsage);
+      try {
+        const budgetAfter = await checkDailyBudget(userId, userPlan);
+        if (!budgetAfter.ok) {
+          await audit({
+            userId,
+            action: "SECURITY_BUDGET_EXCEEDED",
+            target: `User:${userId}`,
+            req,
+            meta: {
+              feature: "tailor",
+              used: budgetAfter.used,
+              cap: budgetAfter.cap,
+              phase: "post-llm",
+            },
+          });
+        }
+      } catch (e) {
+        console.error("tailor: post-budget check falhou", e?.message);
+      }
+    }
 
     // Persiste no historico se o user estiver logado. User anonimo NAO gera
     // TailoredCv (sem userId nao tem dono — fail closed; resposta volta igual).
@@ -140,6 +197,20 @@ export async function POST(req) {
           select: { id: true },
         });
         tailoredCvId = created.id;
+
+        // Achievement: primeiro CV adaptado. count escopado por userId
+        // garante que so dispara quando o user atinge total=1 (ate aqui).
+        // Idempotente — segundo +1 cai em alreadyEarned via unique.
+        try {
+          const total = await prisma.tailoredCv.count({ where: { userId } });
+          if (total === 1) {
+            await grantAchievement(userId, "FIRST_TAILOR", {
+              tailoredCvId: created.id,
+            });
+          }
+        } catch (e) {
+          console.error("tailor: achievement falhou", e?.message);
+        }
       } catch (e) {
         // Log sem PII (so .message). Nao derruba resposta.
         console.error("tailor: persist falhou", e?.message);
@@ -160,3 +231,5 @@ export async function POST(req) {
     );
   }
 }
+
+export const POST = withApiGuard(handler);

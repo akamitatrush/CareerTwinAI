@@ -36,6 +36,48 @@ export default async function CvsAdaptadosPage() {
 
   return (
     <main className="app-container" id="main-content">
+      {/* Refresh visual (Sam) — gradient cyan + glass + hover scale.
+          Sem tocar globals.css. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .tailor-card-glass {
+              transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+              box-shadow: var(--shadow-md);
+            }
+            .tailor-card-glass:hover {
+              transform: scale(1.01);
+              box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent-cyan-glow);
+              border-color: var(--accent-cyan-glow);
+            }
+            .tailor-card-glass .ct-tailor-btn-view {
+              background: linear-gradient(140deg, var(--accent-cyan) 0%, var(--accent-cyan-deep) 100%);
+              color: var(--accent-on-cyan, #08313F);
+              border: 1px solid transparent;
+              box-shadow: var(--shadow-md);
+              transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+            }
+            .tailor-card-glass .ct-tailor-btn-view:hover {
+              transform: translateY(-1px);
+              box-shadow: var(--shadow-lg), 0 0 0 3px var(--accent-cyan-glow);
+              filter: brightness(1.04);
+            }
+            .tailor-card-glass .ct-tailor-btn-view:focus-visible {
+              outline: none;
+              box-shadow: var(--shadow-md), 0 0 0 3px var(--accent-cyan-glow);
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .tailor-card-glass,
+              .tailor-card-glass:hover,
+              .tailor-card-glass .ct-tailor-btn-view,
+              .tailor-card-glass .ct-tailor-btn-view:hover {
+                transition: none;
+                transform: none;
+              }
+            }
+          `,
+        }}
+      />
       <div className="ct-gaps-header">
         <div>
           <h1 className="ct-gaps-title">CVs adaptados</h1>
@@ -78,7 +120,7 @@ function CvCard({ cv }) {
   const preview = fullText.slice(0, 200).replace(/\n+/g, " ");
   const truncated = fullText.length > 200;
   return (
-    <div className="ct-tailor-card">
+    <div className="ct-tailor-card app-glass tailor-card-glass">
       <div className="ct-tailor-card-head">
         <div>
           <h3 className="ct-tailor-card-title">{cv.vagaTitulo}</h3>
@@ -94,6 +136,13 @@ function CvCard({ cv }) {
       </p>
       <div className="ct-tailor-card-foot">
         <CvDetailClient cvId={cv.id} />
+        <Link
+          href={`/cvs-adaptados/${cv.id}`}
+          className="ct-tailor-btn-view"
+          style={{ marginLeft: 8 }}
+        >
+          Ver diff
+        </Link>
       </div>
     </div>
   );

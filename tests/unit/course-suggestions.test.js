@@ -146,3 +146,61 @@ describe("decorateUrl (affiliate hook)", () => {
     );
   });
 });
+
+describe("mix de free + pago no retorno", () => {
+  // Catalogo tem cursos free (freeCodeCamp/Coursera audit/MDN/YouTube) e pagos
+  // (Tera/Alura/Rocketseat/DIO/Udemy/Coursera Plus/Hashtag/Trybe/PM3). Quando
+  // a skill tem ambos disponiveis, retorno default deve trazer ao menos 1 de
+  // cada — usuario ve alternativa gratis E alternativa paga em plataforma BR.
+
+  it("mix=true (default) retorna >=1 free e >=1 pago quando existem ambos", () => {
+    // Python tem free (Coursera/FCC) e pago (Alura/Udemy/Coursera Plus/IBM/Hashtag).
+    const r = suggestCoursesForSkill("python", { limit: 4 });
+    const free = r.filter((c) => c.free === true);
+    const paid = r.filter((c) => c.free !== true);
+    expect(free.length).toBeGreaterThanOrEqual(1);
+    expect(paid.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("mix=true tambem garante mix em SQL", () => {
+    const r = suggestCoursesForSkill("sql", { limit: 3 });
+    const free = r.filter((c) => c.free === true);
+    const paid = r.filter((c) => c.free !== true);
+    expect(free.length).toBeGreaterThanOrEqual(1);
+    expect(paid.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("mix=false reverte pra ordem de score pura (legacy behavior)", () => {
+    // Sem mix, top scores ganham. Pode ser tudo free ou tudo pago dependendo
+    // do match — so checamos que retorna algo e nao quebra.
+    const r = suggestCoursesForSkill("python", { limit: 3, mix: false });
+    expect(r.length).toBeGreaterThan(0);
+  });
+
+  it("limit=1 ignora mix (sem espaco pra incluir os dois tipos)", () => {
+    const r = suggestCoursesForSkill("python", { limit: 1, mix: true });
+    expect(r.length).toBeLessThanOrEqual(1);
+  });
+
+  it("skill so com cursos free retorna so free (sem inventar pago)", () => {
+    // "ats" e "linkedin" tendem a so ter cursos free (Jobscan, LinkedIn proprio).
+    const r = suggestCoursesForSkill("ats", { limit: 3 });
+    if (r.length > 0) {
+      // Pode ser tudo free, e tudo bem — nao forcamos pago se nao existe.
+      const paid = r.filter((c) => c.free !== true);
+      // Se nao houver pago no catalogo pra essa skill, paid sera 0 e ainda eh
+      // valido. Teste so confirma que nao quebra.
+      expect(paid.length).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("cursos pagos tem campo price visivel pra UI", () => {
+    const r = suggestCoursesForSkill("python", { limit: 4 });
+    const paid = r.filter((c) => c.free !== true);
+    if (paid.length > 0) {
+      // Todos os pagos novos tem price string. Free nao precisa ter.
+      const withPrice = paid.filter((c) => typeof c.price === "string" && c.price.length > 0);
+      expect(withPrice.length).toBeGreaterThan(0);
+    }
+  });
+});

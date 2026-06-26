@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { safeHref } from "@/lib/url-safe";
+import SrcChip from "@/components/SrcChip";
 
 // Labels casam exatamente com os aliases que a rota /api/opportunities
 // normaliza (junior/jr/trainee, pleno/mid, senior/sr...). Strings vazias =
@@ -62,7 +63,10 @@ export default function RadarClient({ initial }) {
 
   return (
     <>
-      <div className="ct-filters-bar">
+      <div
+        className="ct-filters-bar app-glass"
+        style={{ boxShadow: "var(--shadow-md)" }}
+      >
         {/* aria-live: anuncia mudanca de contagem quando filtros disparam re-fetch.
             polite = espera SR terminar leitura corrente; atomic=false = so le delta. */}
         <span className="ct-filters-count" aria-live="polite" aria-atomic="true">
@@ -103,11 +107,25 @@ export default function RadarClient({ initial }) {
             border: "1px solid var(--attention-tint)",
           }}
         >
-          Sem provider de vagas configurado — exibindo dados ilustrativos.
+          {Object.keys(counts).length === 0 || Object.keys(counts).every((k) => k === "fixtures") ? (
+            <>
+              Nenhum provider de vagas configurado retornou resultados — exibindo dados ilustrativos.
+              <br />
+              <span style={{ fontSize: 12, color: "var(--text-soft)" }}>
+                Se as chaves estão configuradas no Vercel, pode ser: rate-limit do free tier
+                atingido, busca muito específica, ou cache stale (espere ~5min e recarregue).
+              </span>
+            </>
+          ) : (
+            <>
+              Alguns providers configurados não retornaram resultados — completamos com
+              dados ilustrativos. Detalhe por fonte abaixo.
+            </>
+          )}
         </div>
       )}
 
-      {!loading && !illustrative && Object.keys(counts).length > 0 && (
+      {!loading && Object.keys(counts).length > 0 && (
         <div className="ct-sources-strip" aria-label="Fontes de vagas">
           {Object.entries(counts)
             .sort((a, b) => b[1] - a[1])
@@ -138,7 +156,14 @@ export default function RadarClient({ initial }) {
       )}
 
       {error && (
-        <div className="ct-dash-empty" role="alert">
+        <div
+          className="ct-dash-empty app-glass"
+          role="alert"
+          style={{
+            boxShadow:
+              "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+          }}
+        >
           <h2>Falhou a busca</h2>
           <p>{error}. Tente recarregar.</p>
         </div>
@@ -151,7 +176,13 @@ export default function RadarClient({ initial }) {
           ))}
         </div>
       ) : vagas.length === 0 && !error ? (
-        <div className="ct-dash-empty">
+        <div
+          className="ct-dash-empty app-glass"
+          style={{
+            boxShadow:
+              "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+          }}
+        >
           <h2>Nenhuma vaga voltou agora</h2>
           <p>
             As fontes de vagas (Adzuna, Jooble e os ATS) não responderam ou
@@ -272,8 +303,19 @@ function JobCard({ job, index }) {
   // ID estavel pro aria-controls (job.url nem sempre presente nos fixtures).
   const panelId = `breakdown-${index}`;
 
+  // High priority = fit >= 70%. Card ganha borda esquerda cyan + glow lateral
+  // pra puxar o olho do usuario na lista.
+  const isHighFit = fit >= 70;
+  const cardStyle = isHighFit
+    ? {
+        borderLeft: "3px solid var(--accent-cyan)",
+        boxShadow:
+          "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+      }
+    : { boxShadow: "var(--shadow-md)" };
+
   return (
-    <div className="ct-job-card">
+    <div className="ct-job-card app-glass" style={cardStyle}>
       <div className="ct-job-logo">{initial}</div>
       <div className="ct-job-info">
         <div className="ct-job-top">
@@ -325,11 +367,21 @@ function JobCard({ job, index }) {
             </span>
           ))}
         </div>
-        {job.porque && (
-          <p className="ct-job-why">
-            {job.porque.replace(/\s*\[(.+?)\]\s*$/, "")}
-          </p>
-        )}
+        {job.porque && (() => {
+          // Wave 10 — extrai a fonte ("[Base de Vagas]"/"[Mercado]"/etc) do
+          // final do "porque" e renderiza como <SrcChip>. O fallback
+          // deterministico tambem injeta "[Base de Vagas]", entao todo card
+          // ganha chip — moat #1 (transparencia / score auditavel) preservado.
+          const m = job.porque.match(/\[([^\]]+)\]\s*$/);
+          const fonte = m ? `[${m[1].trim()}]` : null;
+          const texto = job.porque.replace(/\s*\[[^\]]+\]\s*$/, "").trim();
+          return (
+            <p className="ct-job-why">
+              {texto}
+              <SrcChip src={fonte} />
+            </p>
+          );
+        })()}
         <div className="ct-job-actions">
           {/* safeHref: vagas vem de fontes externas (Lever/Greenhouse/etc),
               defesa-em-profundidade contra URLs com schemes perigosos. */}
@@ -359,7 +411,14 @@ function JobCard({ job, index }) {
             showBreakdown ? "Fechar" : "Abrir"
           } detalhamento do cálculo.`}
         >
-          <div className="ct-fit-ring">
+          <div
+            className="ct-fit-ring"
+            style={
+              isHighFit
+                ? { filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))" }
+                : undefined
+            }
+          >
             <svg
               width="62"
               height="62"
