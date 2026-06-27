@@ -193,6 +193,15 @@ async function handler(req) {
           data: { userId, source: "LINKEDIN_PASTE", payloadHash },
         }),
       ]);
+      // Audit consentimento LGPD (Galadriel v4: enum CONSENT_GRANTED existia
+      // sem callers, quebrando auditabilidade do consent). Fora-da-transacao.
+      await audit({
+        userId,
+        action: "CONSENT_GRANTED",
+        target: `Consent:${userId}`,
+        req,
+        meta: { source: "LINKEDIN_PASTE" },
+      });
     } catch (e) {
       console.error("linkedin: persistencia falhou", e?.message);
     }

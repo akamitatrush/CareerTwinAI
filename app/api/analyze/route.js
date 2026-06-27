@@ -460,6 +460,16 @@ async function core(req, emit = () => {}) {
       }),
     ]);
 
+    // Audit consentimento LGPD (Galadriel v4: enum CONSENT_GRANTED existia
+    // sem callers, quebrando auditabilidade do consent). Fora-da-transacao.
+    await audit({
+      userId,
+      action: "CONSENT_GRANTED",
+      target: `Consent:${userId}`,
+      req,
+      meta: { source: "CV_PASTE" },
+    });
+
     // Audit upload (paste counts as upload). Meta sanitizado: so metadados.
     await audit({
       userId,
