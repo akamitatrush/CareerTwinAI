@@ -322,9 +322,12 @@ function SkillNode({ p, variant, onHover }) {
 // caca-tesouro pelos componentes.
 const VARIANT_COLORS = {
   have: {
+    // fill = positive (verde forte); usamos card-bg como fundo do texto
+    // implicitamente via stroke do node + var(--fg) garante contraste AA
+    // em ambos os temas (era #FFFFFF sobre cinza claro -> 1.2:1, fail AA).
     fill: "var(--positive)",
     stroke: "var(--positive-deep)",
-    text: "#FFFFFF",
+    text: "var(--fg)",
   },
   extra: {
     fill: "var(--primary-soft)",
