@@ -36,7 +36,7 @@ export default function RootError({ error, reset }) {
           <button onClick={() => reset()} className="btn btn-primary">
             Tentar de novo
           </button>
-          <Link href="/" className="btn-ghost">
+          <Link href="/meu-gemeo" className="btn-ghost">
             Voltar pra home
           </Link>
         </div>

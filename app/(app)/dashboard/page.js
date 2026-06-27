@@ -266,11 +266,11 @@ function EmptyState() {
     <div className="ct-dash-empty app-glass">
       <h2>Seu gêmeo ainda está em branco.</h2>
       <p>
-        Cole seu currículo e diga o cargo-alvo na <Link href="/">home</Link>{" "}
+        Cole seu currículo e diga o cargo-alvo na <Link href="/meu-gemeo">home</Link>{" "}
         pra começar a ver o diagnóstico aqui.
       </p>
       <Link
-        href="/"
+        href="/meu-gemeo"
         className="btn btn-primary"
         style={{ marginTop: 14, display: "inline-block" }}
       >
@@ -313,7 +313,7 @@ function WelcomeBanner({ profile, onDismiss }) {
         </p>
         <div className="ct-welcome-banner-actions">
           {isFirstTime ? (
-            <Link href="/" className="ct-welcome-banner-cta">
+            <Link href="/meu-gemeo" className="ct-welcome-banner-cta">
               Construir meu gêmeo →
             </Link>
           ) : (
