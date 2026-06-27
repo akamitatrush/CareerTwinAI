@@ -613,7 +613,10 @@ html {
   margin-top:4px;
   display:flex; align-items:center; gap:6px;
 }
-.info-tip{display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; border-radius:50%; border:1px solid currentColor; font-size:9px; font-weight:700; cursor:help; position:relative; user-select:none; line-height:1;}
+/* WCAG 2.5.8 (AA) Target Size: 24x24 minimo pra alvo de toque/click.
+   14x14 anterior falhava AA. font-size ajustado de 9px -> 13px pra que o
+   "i"/"?" interno fique legivel no novo tamanho. */
+.info-tip{display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:1px solid currentColor; font-size:13px; font-weight:700; cursor:help; position:relative; user-select:none; line-height:1;}
 .info-tip:focus{outline:2px solid var(--accent); outline-offset:2px;}
 .info-tip::after{content:attr(data-tip); position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%); width:260px; padding:10px 12px; background:var(--text); color:var(--bg); font-family:var(--font-body); font-size:11px; line-height:1.45; letter-spacing:0; text-transform:none; border-radius:var(--radius-sm); box-shadow:0 8px 24px var(--scrim); opacity:0; pointer-events:none; transition:opacity .15s; z-index:50;}
 .info-tip:hover::after, .info-tip:focus::after{opacity:1;}
@@ -3778,10 +3781,30 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 .appshell-notif-close { background: none; border: 0; font-size: 22px; line-height: 1; color: var(--text-muted); cursor: pointer; padding: 0 4px; }
 .appshell-notif-close:hover { color: var(--text); }
 .appshell-notif-list { list-style: none; padding: 0; margin: 0; }
-.appshell-notif-item { padding: 16px 22px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 150ms; background: var(--primary-soft); }
+/* WCAG 2.1.1: o item clicavel agora e um <button> dentro do <li>. Wrapper
+   <li> nao tem mais cursor/hover; toda a interatividade fica no <button>.
+   Reset do <button> nativo (background/border/etc) pra preservar look-and-feel. */
+.appshell-notif-item-wrap { border-bottom: 1px solid var(--border); }
+.appshell-notif-item-wrap:last-child { border-bottom: 0; }
+.appshell-notif-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: var(--primary-soft);
+  border: 0;
+  padding: 16px 22px;
+  cursor: pointer;
+  transition: background 150ms;
+}
 .appshell-notif-item.read { background: var(--surface); cursor: default; }
 .appshell-notif-item:hover { background: var(--surface-2); }
 .appshell-notif-item.read:hover { background: var(--surface-2); }
+.appshell-notif-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* Link "Ver detalhes" agora fica fora do <button> (HTML nao permite <a>
+   dentro de <button>). Render como bloco abaixo pra ficar visivel. */
+.appshell-notif-item-wrap > .appshell-notif-link { display: block; padding: 0 22px 12px; }
 .appshell-notif-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; line-height: 1.35; }
 .appshell-notif-body { font-size: 12.5px; color: var(--text-muted); margin-bottom: 5px; line-height: 1.45; }
 .appshell-notif-time { font-size: 11px; color: var(--text-faint); }
