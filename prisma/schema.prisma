@@ -54,6 +54,7 @@ model User {
   outcomes      Outcome[]
   achievements  Achievement[]
   dailyQuests   DailyQuest[]
+  funnelEntries FunnelEntry[]
 }
 
 model Account {
@@ -113,7 +114,7 @@ model Profile {
   rawCvRedactedAt DateTime?
 
   // LinkedIn (texto colado, parseado pra estrutura).
-  linkedinRaw  String? @db.Text
+  linkedinRaw           String?   @db.Text
   // LGPD storage limitation: linkedinRaw tambem expira em 90 dias.
   // Coluna dedicada (separada de rawCvExpiresAt) porque linkedin e CV podem
   // ser atualizados em momentos distintos — cada um carrega seu proprio TTL.
@@ -121,7 +122,7 @@ model Profile {
   // marca linkedinRawRedactedAt. linkedinJson (estruturado) fica.
   linkedinRawExpiresAt  DateTime?
   linkedinRawRedactedAt DateTime?
-  linkedinJson Json?
+  linkedinJson          Json?
 
   // Portfolio (GitHub username + projetos extraidos + sites pessoais).
   githubUser    String?
@@ -564,26 +565,26 @@ enum AuditAction {
 //  - (kind, occurredAt): agregacao pra mediana real (groupBy kind, sample
 //    do scoreAtTime).
 model Outcome {
-  id              String      @id @default(cuid())
-  userId          String
-  kind            OutcomeKind
-  occurredAt      DateTime    @default(now())
+  id         String      @id @default(cuid())
+  userId     String
+  kind       OutcomeKind
+  occurredAt DateTime    @default(now())
 
   // Snapshot do score no momento do reporte (do latest ScoreSnapshot do user
   // no momento do POST). Imutavel apos criacao — historiza pra correlacionar
   // score -> outcome mesmo que o user faca novo diagnostico depois.
-  scoreAtTime     Int?
-  roleAtTime      String?
+  scoreAtTime Int?
+  roleAtTime  String?
 
   // Contexto opcional. monthsSearching e int (clamped 0-60 no validator).
   // evidence e texto livre limitado (max 2000 chars) — SEM PII obrigatorio.
   monthsSearching Int?
-  evidence        String?     @db.Text
+  evidence        String? @db.Text
 
   // Discrimina survey programado (cron) de self-reported (user inicia).
-  surveyKind      SurveyKind?
+  surveyKind SurveyKind?
 
-  createdAt       DateTime    @default(now())
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -592,12 +593,12 @@ model Outcome {
 }
 
 enum OutcomeKind {
-  HIRED                  // contratado pra cargo-alvo
-  HIRED_DIFFERENT        // contratado pra cargo diferente
-  NOT_HIRED              // continua procurando (decisao explicita)
-  STILL_LOOKING          // ativo, sem decisao
-  PAUSED                 // pausou busca (mudanca de vida, estudo)
-  DECLINED_TO_ANSWER     // user pulou survey (registra pra nao perguntar de novo)
+  HIRED // contratado pra cargo-alvo
+  HIRED_DIFFERENT // contratado pra cargo diferente
+  NOT_HIRED // continua procurando (decisao explicita)
+  STILL_LOOKING // ativo, sem decisao
+  PAUSED // pausou busca (mudanca de vida, estudo)
+  DECLINED_TO_ANSWER // user pulou survey (registra pra nao perguntar de novo)
 }
 
 enum SurveyKind {
@@ -685,4 +686,37 @@ enum QuestKind {
   NETWORK_OUTREACH
   MARKET_RESEARCH
   REFLECTION
+}
+
+// Funnel tracker semanal — caso Jamar Martins. User reporta volume por estagio
+// (applications -> callbacks -> hmConversations -> finals -> offers) e o backend
+// agrega/analisa o gargalo (analyzeBottleneck em lib/funnel.js).
+//
+// Audit Wave 11 (Treebeard v2 P0): callsites em app/api/funnel/route.js e
+// app/(app)/funil/page.js usavam prisma.funnelEntry sem o model existir
+// no schema. Adicionado pra fechar o gap — feature ja estava 100% codada.
+//
+// Unique (userId, weekStart) habilita upsert atomico que o POST usa pra
+// permitir update da semana corrente. weekStart e sempre segunda 00:00 UTC
+// calculada no servidor (anti-tampering via timestamp arbitrario).
+//
+// Indice (userId, weekStart DESC) acelera findMany ordenado das ultimas
+// 12 semanas. Cascade no userId garante delete-account leva tudo junto.
+model FunnelEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  weekStart       DateTime
+  applications    Int      @default(0)
+  callbacks       Int      @default(0)
+  hmConversations Int      @default(0)
+  finals          Int      @default(0)
+  offers          Int      @default(0)
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([userId, weekStart(sort: Desc)])
 }

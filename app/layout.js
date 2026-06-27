@@ -16,6 +16,14 @@ export const metadata = {
     "Copiloto de empregabilidade: construa o gêmeo digital da sua carreira, veja sua aderência às vagas com o porquê de cada número.",
 };
 
+// Sem isso o iOS Safari abre o app desktop-escalado (texto ilegivel, scroll
+// horizontal). ICP do CareerTwin e mobile-heavy BR. Reportado em audit Frodo v2.
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
