@@ -1,12 +1,11 @@
-"use client";
-
 // 3 steps gigantes. Cloudwalk pattern: numero enorme (60+) à esquerda,
 // conteudo à direita, separadores fininhos entre eles.
 // Sticky number trick (browser feature: position: sticky relativo a parent).
 // Mas pra evitar complexidade visual: layout linear, com lines verticais
 // conectando os steps (visual de trajetoria continua).
-
-import { useEffect, useRef } from "react";
+//
+// Server Component apos audit Gimli v3: fade-up via CSS @keyframes
+// (.site-fade-up em globals.css), sem IntersectionObserver.
 
 const STEPS = [
   {
@@ -49,39 +48,6 @@ const STEPS = [
 ];
 
 export default function SiteHowItWorks() {
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const items = containerRef.current?.querySelectorAll("[data-step]") || [];
-    if (reduce) {
-      items.forEach((el) => {
-        el.style.opacity = "1";
-        el.style.transform = "none";
-      });
-      return;
-    }
-    items.forEach((el) => {
-      el.style.opacity = "0";
-      el.style.transform = "translateY(30px)";
-      el.style.transition = "opacity 800ms ease, transform 800ms ease";
-    });
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
-          io.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.2 }
-    );
-    items.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-
   return (
     <section
       id="como-funciona"
@@ -127,7 +93,6 @@ export default function SiteHowItWorks() {
         </header>
 
         <div
-          ref={containerRef}
           style={{
             display: "grid",
             gap: 0,
@@ -145,8 +110,9 @@ export default function SiteHowItWorks() {
                 padding: "56px 0",
                 borderTop: i === 0 ? "1px solid var(--site-border)" : "none",
                 borderBottom: "1px solid var(--site-border)",
+                animationDelay: `${i * 120}ms`,
               }}
-              className="site-how-step"
+              className="site-how-step site-fade-up"
             >
               <div
                 style={{

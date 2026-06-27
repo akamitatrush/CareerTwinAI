@@ -1,9 +1,9 @@
-"use client";
-
 // Pricing 3-tier Cloudwalk-style. Card Pro destacado (border accent + glow).
 // Honesto: Free continua util, Pro é o sweet spot, Team é "futuro".
+//
+// Server Component apos audit Gimli v3: fade-up via CSS @keyframes
+// (.site-fade-up em globals.css), sem IntersectionObserver.
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
 
 const TIERS = [
@@ -62,40 +62,9 @@ const TIERS = [
 ];
 
 export default function SitePricing() {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const cards = ref.current?.querySelectorAll("[data-tier]") || [];
-    if (reduce) {
-      cards.forEach((c) => { c.style.opacity = "1"; c.style.transform = "none"; });
-      return;
-    }
-    cards.forEach((c) => {
-      c.style.opacity = "0";
-      c.style.transform = "translateY(28px)";
-      c.style.transition = "opacity 700ms ease, transform 700ms ease";
-    });
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const idx = Number(entry.target.dataset.idx || 0);
-        setTimeout(() => {
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
-        }, idx * 100);
-        io.unobserve(entry.target);
-      });
-    }, { threshold: 0.15 });
-    cards.forEach((c) => io.observe(c));
-    return () => io.disconnect();
-  }, []);
-
   return (
     <section
       id="precos"
-      ref={ref}
       className="site-section"
       style={{ padding: "140px 24px", position: "relative" }}
     >
@@ -153,7 +122,7 @@ export default function SitePricing() {
               data-tier
               data-idx={i}
               data-highlight={t.highlight ? "1" : "0"}
-              className={t.highlight ? "site-pricing-featured" : "site-pricing-tier"}
+              className={`${t.highlight ? "site-pricing-featured" : "site-pricing-tier"} site-fade-up`}
               style={{
                 position: "relative",
                 background: t.highlight
@@ -173,6 +142,7 @@ export default function SitePricing() {
                 flexDirection: "column",
                 gap: 24,
                 transition: "transform 280ms ease, box-shadow 280ms ease",
+                animationDelay: `${i * 100}ms`,
               }}
             >
               {t.highlight && (

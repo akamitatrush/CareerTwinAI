@@ -6541,11 +6541,19 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   margin: 0;
 }
 
-/* --- Scroll-reveal (toggle via IntersectionObserver -> .is-visible) --- */
+/* --- Scroll-reveal — CSS-only fade-up auto no mount, sem JS. Respeita
+   prefers-reduced-motion. Usado em SiteFaq, SiteHowItWorks, SiteTrustBar,
+   SiteSocialProof, SitePricing — todos agora Server Components apos audit
+   Gimli v3. Aceita stagger via inline style={{animationDelay}}. Tambem
+   continua compativel com pattern legacy .is-visible (estado final igual). */
+@keyframes siteFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .site-fade-up {
   opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 700ms ease, transform 700ms ease;
+  animation: siteFadeUp 700ms ease forwards;
   will-change: opacity, transform;
 }
 
@@ -6668,6 +6676,7 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
     opacity: 1;
     transform: none;
     transition: none;
+    animation: none;
   }
   .site-cursor-glow {
     display: none;

@@ -1,13 +1,10 @@
-"use client";
-
 // TrustBar — fila discreta de "selos" de confianca entre Hero e Features.
 // Pilula com microicone SVG + label curta. Glass sutil em noir, border-soft
-// em light/dark. Fade-up stagger via IntersectionObserver (mesmo padrao do
-// SiteHero/SiteFeatures). Tudo via tokens var(--site-*); zero hex hardcoded.
+// em light/dark. Fade-up stagger via CSS @keyframes (.site-fade-up).
+// Tudo via tokens var(--site-*); zero hex hardcoded.
 //
 // Mobile: vira scroll horizontal com snap. Desktop: grid auto-fit.
-
-import { useEffect, useRef } from "react";
+// Server Component apos audit Gimli v3 (zero JS de animacao).
 
 const CHIPS = [
   {
@@ -70,42 +67,6 @@ const CHIPS = [
 ];
 
 export default function SiteTrustBar() {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const chips = ref.current?.querySelectorAll("[data-chip]") || [];
-    if (reduce) {
-      chips.forEach((c) => {
-        c.style.opacity = "1";
-        c.style.transform = "none";
-      });
-      return;
-    }
-    chips.forEach((c) => {
-      c.style.opacity = "0";
-      c.style.transform = "translateY(12px)";
-      c.style.transition = "opacity 600ms ease, transform 600ms ease";
-    });
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const idx = Number(entry.target.dataset.idx || 0);
-          setTimeout(() => {
-            entry.target.style.opacity = "1";
-            entry.target.style.transform = "translateY(0)";
-          }, idx * 60);
-          io.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.2, rootMargin: "0px 0px -5% 0px" }
-    );
-    chips.forEach((c) => io.observe(c));
-    return () => io.disconnect();
-  }, []);
-
   return (
     <section
       aria-label="Sinais de confianca"
@@ -119,7 +80,6 @@ export default function SiteTrustBar() {
       }}
     >
       <div
-        ref={ref}
         className="site-container site-trust-grid"
         style={{
           maxWidth: 1280,
@@ -136,6 +96,7 @@ export default function SiteTrustBar() {
             key={c.label}
             data-chip
             data-idx={i}
+            className="site-fade-up"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -153,6 +114,7 @@ export default function SiteTrustBar() {
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
+              animationDelay: `${i * 60}ms`,
             }}
           >
             <span
@@ -191,6 +153,7 @@ export default function SiteTrustBar() {
             opacity: 1 !important;
             transform: none !important;
             transition: none !important;
+            animation: none !important;
           }
         }
       `}</style>
