@@ -116,15 +116,45 @@ export default async function AutoconhecimentoPage() {
         </ul>
       </section>
 
+      {/* Progress card — Pippin v2: envelopa em .app-glass + accent border-top
+          sutil pra ancorar progresso como milestone editorial. */}
       <section
-        className="ct-self-progress"
+        className="ct-self-progress app-glass"
         aria-label={`${doneCount} de ${totalCount} reflexoes feitas`}
+        style={{
+          padding: "clamp(20px, 2.5vw, 28px)",
+          borderRadius: 16,
+          position: "relative",
+          overflow: "hidden",
+          marginBottom: "clamp(24px, 3vw, 40px)",
+        }}
       >
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: "linear-gradient(90deg, transparent, var(--accent), transparent)",
+            opacity: 0.5,
+          }}
+        />
         <div className="ct-self-progress-head">
           <span className="ct-self-progress-label">
             {doneCount} de {totalCount} reflexões feitas
           </span>
-          <span className="ct-self-progress-value">{progressPct}%</span>
+          <span
+            className="ct-self-progress-value"
+            style={{
+              color: "var(--accent)",
+              textShadow: "0 0 24px var(--accent)",
+              fontWeight: 700,
+            }}
+          >
+            {progressPct}%
+          </span>
         </div>
         <div
           className="ct-self-progress-track"
@@ -135,7 +165,11 @@ export default async function AutoconhecimentoPage() {
         >
           <div
             className="ct-self-progress-fill"
-            style={{ width: `${progressPct}%` }}
+            style={{
+              width: `${progressPct}%`,
+              background: "var(--accent)",
+              boxShadow: "0 0 16px var(--accent)",
+            }}
           />
         </div>
       </section>
@@ -158,8 +192,17 @@ export default async function AutoconhecimentoPage() {
             <Link
               key={def.kind}
               href={`/autoconhecimento/${slug}`}
-              className={`ct-self-card ct-self-card-${palette}`}
+              className={`ct-self-card ct-self-card-${palette} app-glass`}
               data-done={doneAt ? "true" : "false"}
+              style={{
+                padding: "clamp(20px, 2.4vw, 28px)",
+                borderRadius: 16,
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                overflow: "hidden",
+                transition: "transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease",
+              }}
             >
               <div className="ct-self-card-head">
                 <div
@@ -169,7 +212,14 @@ export default async function AutoconhecimentoPage() {
                   <AssessmentIcon kind={def.iconKind} size={26} />
                 </div>
                 {doneAt ? (
-                  <span className="ct-self-badge ct-self-badge-done" aria-label="Concluido">
+                  <span
+                    className="ct-self-badge ct-self-badge-done"
+                    aria-label="Concluido"
+                    style={{
+                      color: "var(--accent)",
+                      borderColor: "var(--accent)",
+                    }}
+                  >
                     <svg
                       width="11"
                       height="11"
@@ -202,7 +252,15 @@ export default async function AutoconhecimentoPage() {
 
               <div className="ct-self-card-foot">
                 <span className="ct-self-card-meta">{meta}</span>
-                <span className="ct-self-card-cta" aria-hidden="true">
+                <span
+                  className="ct-self-card-cta"
+                  aria-hidden="true"
+                  style={{
+                    color: "var(--accent)",
+                    fontWeight: 600,
+                    letterSpacing: "0.01em",
+                  }}
+                >
                   {doneAt ? "Refazer →" : "Começar →"}
                 </span>
               </div>
@@ -216,10 +274,24 @@ export default async function AutoconhecimentoPage() {
         })}
       </div>
 
-      <aside className="ct-self-disclaimer" role="note">
-        <strong>Importante:</strong> estes assessments são informativos. Não
-        substituem MBTI/DISC oficial, avaliação psicológica ou consulta com
-        psicólogo. Use como ponto de partida.
+      {/* Disclaimer — Pippin v2: envelopa em .app-glass pra integrar à grade
+          visual ao invés de ficar como bloco órfão. */}
+      <aside
+        className="ct-self-disclaimer app-glass"
+        role="note"
+        style={{
+          padding: "clamp(18px, 2vw, 24px)",
+          borderRadius: 12,
+          marginTop: "clamp(32px, 4vw, 56px)",
+          fontSize: 14,
+          lineHeight: 1.55,
+          color: "var(--fg-muted, var(--text-muted))",
+        }}
+      >
+        <strong style={{ color: "var(--fg)" }}>Importante:</strong> estes
+        assessments são informativos. Não substituem MBTI/DISC oficial,
+        avaliação psicológica ou consulta com psicólogo. Use como ponto de
+        partida.
       </aside>
     </main>
   );

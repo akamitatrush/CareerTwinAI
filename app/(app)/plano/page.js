@@ -163,8 +163,29 @@ export default async function PlanoPage() {
         </div>
       </div>
 
-      {/* Card: saude da carreira ao longo do tempo */}
-      <div className="ct-chart-card">
+      {/* Card: saude da carreira ao longo do tempo — Pippin v2: envelopa em
+          .app-glass pra glassmorphism premium + accent border-top sutil. */}
+      <div
+        className="ct-chart-card app-glass"
+        style={{
+          padding: "clamp(20px, 2.5vw, 32px)",
+          borderRadius: 16,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: "linear-gradient(90deg, transparent, var(--accent), transparent)",
+            opacity: 0.5,
+          }}
+        />
         <div className="ct-chart-head">
           <div>
             <div className="ct-chart-title">
@@ -180,6 +201,13 @@ export default async function PlanoPage() {
                     ? "ct-delta-positive"
                     : "ct-delta-attention"
                 }
+                style={{
+                  color: deltaFromFirst > 0 ? "var(--accent)" : undefined,
+                  textShadow:
+                    deltaFromFirst > 0
+                      ? "0 0 24px var(--accent)"
+                      : undefined,
+                }}
               >
                 {deltaFromFirst > 0 ? "+" : ""}
                 {deltaFromFirst} pontos
@@ -195,37 +223,81 @@ export default async function PlanoPage() {
           )}
         </div>
         {points.length === 0 ? (
-          <div style={{ padding: 28, textAlign: "center" }}>
-            <p style={{ color: "var(--text-muted)" }}>
-              Ainda sem snapshots. Faça seu primeiro diagnóstico no{" "}
-              <Link href="/dashboard">seu dashboard</Link>.
-            </p>
-          </div>
+          <EditorialEmpty
+            eyebrow="Primeiro passo"
+            title="Seu gêmeo ainda não tem com o que comparar"
+          >
+            Faça seu primeiro diagnóstico no{" "}
+            <Link
+              href="/dashboard"
+              style={{
+                color: "var(--accent)",
+                textDecoration: "underline",
+                textUnderlineOffset: 3,
+              }}
+            >
+              seu dashboard
+            </Link>
+            {" "}— a partir do segundo, esta página mostra evolução real.
+          </EditorialEmpty>
         ) : points.length === 1 ? (
-          <div style={{ padding: 28, textAlign: "center" }}>
-            <p style={{ color: "var(--text-muted)" }}>
-              Você tem 1 snapshot até agora. Refaça o diagnóstico daqui a 2-4
-              semanas com CV atualizado pra ver a evolução real.
-            </p>
-          </div>
+          <EditorialEmpty
+            eyebrow="Snapshot inicial salvo"
+            title="Volte daqui a 2-4 semanas"
+          >
+            Refaça o diagnóstico com CV atualizado pra desenhar a primeira
+            linha de evolução real.
+          </EditorialEmpty>
         ) : (
           <ScoreChart points={points} />
         )}
       </div>
 
-      {/* Timeline — spacing generoso entre sections (Arwen uplift). */}
+      {/* Timeline — h2 com underline + container .app-glass (Pippin v2). */}
       <h2
         className="ct-actions-title"
-        style={{ marginTop: "clamp(48px, 6vw, 72px)", marginBottom: 14 }}
+        style={{
+          marginTop: "clamp(48px, 6vw, 72px)",
+          marginBottom: 18,
+          fontSize: "clamp(22px, 2.6vw, 30px)",
+          fontWeight: 600,
+          letterSpacing: "-0.01em",
+          paddingBottom: 12,
+          borderBottom: "1px solid var(--border, rgba(255,255,255,0.08))",
+        }}
       >
         Linha do tempo das ações
       </h2>
-      <div className="ct-timeline">
+      <div
+        className="ct-timeline app-glass"
+        style={{
+          padding: "clamp(20px, 2.5vw, 32px)",
+          borderRadius: 16,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1,
+            background: "linear-gradient(90deg, transparent, var(--accent), transparent)",
+            opacity: 0.5,
+          }}
+        />
         {timeline.length === 0 ? (
-          <div className="ct-empty-card">
-            Sem ações registradas ainda. Conforme você completar microações,
-            atualizar candidaturas e refazer diagnósticos, elas aparecem aqui.
-          </div>
+          <EditorialEmpty
+            eyebrow="Diário em branco"
+            title="Suas ações vão aparecer aqui"
+          >
+            Conforme você completar microações, atualizar candidaturas e
+            refazer diagnósticos, sua jornada se constrói visualmente nesta
+            timeline.
+          </EditorialEmpty>
         ) : (
           timeline.map((item, i) => (
             <TimelineRow
@@ -237,6 +309,55 @@ export default async function PlanoPage() {
         )}
       </div>
     </main>
+  );
+}
+
+// Estado vazio editorial: eyebrow mono + h3 + body. Pippin v2 — substitui
+// os "Sem dados" planos por algo com tom de produto premium. Re-utilizado
+// pelos 3 estados vazios (no snapshots, 1 snapshot, timeline vazia).
+function EditorialEmpty({ eyebrow, title, children }) {
+  return (
+    <div
+      style={{
+        padding: "clamp(32px, 5vw, 56px) 24px",
+        textAlign: "center",
+      }}
+    >
+      <p
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color: "var(--accent)",
+          fontFamily: "var(--font-mono, ui-monospace, monospace)",
+          marginBottom: 12,
+        }}
+      >
+        {eyebrow}
+      </p>
+      <h3
+        style={{
+          fontSize: "clamp(20px, 2.4vw, 28px)",
+          fontWeight: 600,
+          letterSpacing: "-0.01em",
+          lineHeight: 1.2,
+          marginBottom: 12,
+        }}
+      >
+        {title}
+      </h3>
+      <p
+        style={{
+          color: "var(--fg-muted, var(--text-muted))",
+          maxWidth: "52ch",
+          margin: "0 auto",
+          lineHeight: 1.55,
+        }}
+      >
+        {children}
+      </p>
+    </div>
   );
 }
 
@@ -432,7 +553,16 @@ function TimelineRow({ item, isLast }) {
     };
 
   return (
-    <div className="ct-timeline-row">
+    <div
+      className="ct-timeline-row app-glass"
+      style={{
+        padding: "16px 18px",
+        borderRadius: 12,
+        marginBottom: isLast ? 0 : 10,
+        transition: "transform 160ms ease, border-color 160ms ease",
+      }}
+      onMouseEnter={undefined}
+    >
       <div className="ct-timeline-date">{dateStr}</div>
       <div className="ct-timeline-dot-col">
         <div className="ct-timeline-dot" style={{ background: icon.bg }}>
