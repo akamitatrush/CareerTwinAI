@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db";
 import { extractPdfText, MAX_PDF_BYTES, PdfError } from "@/lib/pdf";
 import { extractDocxText, isDocx, isLegacyDoc, MAX_DOCX_BYTES, DocxError } from "@/lib/docx";
 import { audit } from "@/lib/audit";
+import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { withApiGuard } from "@/lib/api-handler";
 
 // TTL de 90 dias pro rawCv. LGPD principle of storage limitation. Cron diario
 // (/api/cron/redact-cv) apaga rawCv/linkedinRaw quando expira.
@@ -27,7 +29,7 @@ export const dynamic = "force-dynamic";
 //    TEXTO, nao do binario — politica de minimizacao).
 const MAX_BYTES = Math.max(MAX_PDF_BYTES, MAX_DOCX_BYTES); // 5 MB pra ambos
 
-export async function POST(req) {
+async function handler(req) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -36,6 +38,12 @@ export async function POST(req) {
     );
   }
   const userId = session.user.id;
+
+  // Rate-limit pos-auth (audit Faramir v2: rota CPU-bound parseando PDF 5MB
+  // sem cap permite abuso de insider/token leak). Anonimos ja foram barrados
+  // pelo auth() acima. Limite user: 5/min e suficiente pra uso legitimo.
+  const limit = await guardLLM(req, { name: "cv_upload", userId, perMinuteAnon: 0, perMinuteUser: 5 });
+  if (!limit.ok) return tooMany(limit);
 
   // Limite por header (curto-circuita antes de ler bytes).
   const lenHeader = Number(req.headers.get("content-length") || "0");
@@ -193,3 +201,8 @@ export async function POST(req) {
   // Devolve o TEXTO (nao o binario) — o front segue para o fluxo de analyze.
   return NextResponse.json({ ok: true, text, length: text.length, format: labelType });
 }
+
+// Audit Faramir v2: envelopa em withApiGuard pra capturar excecoes nao tratadas
+// (ex: Prisma $transaction falhar) e retornar JSON estruturado ao inves de HTML
+// do Next, evitando que o frontend quebre no JSON.parse e que stack trace vaze.
+export const POST = withApiGuard(handler);
