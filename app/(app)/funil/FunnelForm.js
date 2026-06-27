@@ -54,19 +54,19 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
 
     // Validacao basica no client antes de gastar round-trip.
     if (form.callbacks > form.applications) {
-      setError("Callbacks nao pode ser maior que applications.");
+      setError("Callbacks não pode ser maior que applications.");
       return;
     }
     if (form.hmConversations > form.callbacks) {
-      setError("Conversas com HM nao podem ser maior que callbacks.");
+      setError("Conversas com HM não podem ser maior que callbacks.");
       return;
     }
     if (form.finals > form.hmConversations) {
-      setError("Finais nao podem ser maior que conversas com HM.");
+      setError("Finais não podem ser maior que conversas com HM.");
       return;
     }
     if (form.offers > form.finals) {
-      setError("Offers nao podem ser maior que finais.");
+      setError("Offers não podem ser maior que finais.");
       return;
     }
 
@@ -92,7 +92,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
         setSubmitting(false);
         return;
       }
-      setSuccess("Numeros salvos. Atualizando analise...");
+      setSuccess("Números salvos. Atualizando análise...");
       // refresh re-roda o server component da pagina e pega a nova analise.
       router.refresh();
       // Limpa mensagem de sucesso depois de 2.5s.
@@ -107,7 +107,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
   return (
     <form
       onSubmit={submit}
-      aria-label="Registrar numeros do funil desta semana"
+      aria-label="Registrar números do funil desta semana"
       className="app-glass"
       style={{
         borderRadius: "var(--radius-lg)",
@@ -143,7 +143,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
               letterSpacing: "-.2px",
             }}
           >
-            Numeros desta semana
+            Números desta semana
           </h2>
           {weekLabel && (
             <p
@@ -168,7 +168,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
         }}
       >
         <NumberField
-          label="Aplicacoes"
+          label="Aplicações"
           hint="vagas enviadas"
           value={form.applications}
           onChange={(v) => updateNumber("applications", v)}
@@ -215,7 +215,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
           textTransform: "uppercase",
         }}
       >
-        Observacoes (opcional, max 500 chars)
+        Observações (opcional, max 500 chars)
         <textarea
           value={form.notes}
           onChange={(e) => updateText("notes", e.target.value)}
@@ -293,7 +293,7 @@ export default function FunnelForm({ initial = null, weekLabel = "" }) {
             boxShadow: submitting ? "none" : "0 4px 16px -6px var(--accent-cyan-glow)",
           }}
         >
-          {submitting ? "Salvando..." : initial ? "Atualizar numeros" : "Salvar numeros"}
+          {submitting ? "Salvando..." : initial ? "Atualizar números" : "Salvar números"}
         </button>
       </div>
     </form>

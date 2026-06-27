@@ -4,16 +4,20 @@
 // SEGURANCA: customerId resolvido pela Subscription do user logado.
 // Sem session => 401. Sem customer (free user) => 404. Defesa contra
 // vazamento de portal de outro user via parametro forjado.
+// Rate-limit (5/min/user) defende contra spam de Stripe portal sessions
+// (custo $, ruido no painel Stripe). Anon bloqueado (401 antes do limit).
 
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { stripe, isStripeConfigured } from "@/lib/billing/stripe";
+import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req) {
+async function postHandler(req) {
   if (!isStripeConfigured()) {
     return NextResponse.json(
       { error: "Pagamentos ainda nao estao configurados.", code: "BILLING_NOT_CONFIGURED" },
@@ -28,9 +32,18 @@ export async function POST(req) {
       { status: 401 }
     );
   }
+  const userId = session.user.id;
+
+  const limit = await guardLLM(req, {
+    name: "billing.portal",
+    userId,
+    perMinuteAnon: 0,
+    perMinuteUser: 5,
+  });
+  if (!limit.ok) return tooMany(limit);
 
   const sub = await prisma.subscription.findUnique({
-    where: { userId: session.user.id },
+    where: { userId },
     select: { stripeCustomerId: true },
   });
   if (!sub?.stripeCustomerId) {
@@ -56,3 +69,5 @@ export async function POST(req) {
     );
   }
 }
+
+export const POST = withApiGuard(postHandler);

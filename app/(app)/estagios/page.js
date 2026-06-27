@@ -17,7 +17,7 @@ import { auth } from "@/lib/auth";
 import { fetchEstagios } from "@/lib/estagios";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Estagios — CareerTwin AI" };
+export const metadata = { title: "Estágios — CareerTwin AI" };
 
 const UFS = [
   "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA",
@@ -30,18 +30,18 @@ const AREAS = [
   { value: "ti", label: "TI / Dados" },
   { value: "marketing", label: "Marketing" },
   { value: "vendas", label: "Vendas" },
-  { value: "financas", label: "Financas" },
+  { value: "financas", label: "Finanças" },
   { value: "rh", label: "RH" },
-  { value: "juridico", label: "Juridico" },
+  { value: "juridico", label: "Jurídico" },
   { value: "engenharia", label: "Engenharia" },
-  { value: "saude", label: "Saude" },
+  { value: "saude", label: "Saúde" },
   { value: "design", label: "Design / UX" },
 ];
 
 const MODALIDADES = [
   { value: "", label: "Todas" },
   { value: "presencial", label: "Presencial" },
-  { value: "hibrido", label: "Hibrido" },
+  { value: "hibrido", label: "Híbrido" },
   { value: "remoto", label: "Remoto" },
 ];
 
@@ -75,14 +75,14 @@ function PageHeader({ total }) {
         </svg>
       </div>
       <div className="ct-page-header-content">
-        <div className="ct-page-header-eyebrow">MERCADO · ESTAGIOS</div>
-        <h1 className="ct-page-header-title">Estagios abertos</h1>
+        <div className="ct-page-header-eyebrow">MERCADO · ESTÁGIOS</div>
+        <h1 className="ct-page-header-title">Estágios abertos</h1>
         <p className="ct-page-header-sub">
-          Oportunidades pra comecar sua jornada. Filtros por UF, area e modalidade.
+          Oportunidades pra começar agora. Filtros por UF, área e modalidade.
         </p>
         {total > 0 && (
           <div className="ct-page-header-meta">
-            <span>{total} estagio{total === 1 ? "" : "s"} disponiveis</span>
+            <span>{total} estágio{total === 1 ? "" : "s"} disponíveis</span>
           </div>
         )}
       </div>
@@ -112,7 +112,7 @@ function DicaBanner() {
       <span aria-hidden="true" style={{ fontSize: 16 }}>💡</span>
       <span>
         <strong style={{ color: "var(--text)" }}>Dica:</strong>{" "}
-        Estagio + LinkedIn ativo = 3x mais callbacks. Veja{" "}
+        Estágio + LinkedIn ativo = 3x mais callbacks. Veja{" "}
         <Link href="/conta" style={{ color: "var(--primary)", fontWeight: 600 }}>
           /conta
         </Link>{" "}
@@ -189,12 +189,12 @@ function FiltersForm({ uf, area, modalidade, query }) {
           flex: "1 1 240px",
         }}
       >
-        Area
+        Área
         <input
           type="text"
           name="area"
           defaultValue={area || ""}
-          placeholder="ex.: ti, marketing, financas"
+          placeholder="ex.: ti, marketing, finanças"
           maxLength={60}
           list="estagios-areas"
           style={{
@@ -233,7 +233,7 @@ function FiltersForm({ uf, area, modalidade, query }) {
           type="text"
           name="query"
           defaultValue={query || ""}
-          placeholder="ex.: frontend, vendas, juridico"
+          placeholder="ex.: frontend, vendas, jurídico"
           maxLength={120}
           style={{
             background: "var(--surface)",
@@ -501,7 +501,7 @@ export default async function EstagiosPage({ searchParams }) {
             }}
           >
             {items.length > 0
-              ? `${items.length} estagio${items.length === 1 ? "" : "s"} encontrado${items.length === 1 ? "" : "s"}`
+              ? `${items.length} estágio${items.length === 1 ? "" : "s"} encontrado${items.length === 1 ? "" : "s"}`
               : "Resultados"}
           </h2>
           {items.length > 0 && (
@@ -530,13 +530,13 @@ export default async function EstagiosPage({ searchParams }) {
             </div>
             <h3 className="ct-empty-state-v2-title">
               {uf || area || modalidade || query
-                ? "Nenhum estagio bate com seus filtros"
-                : "Nenhum estagio retornado agora"}
+                ? "Nenhum estágio bate com seus filtros"
+                : "Nenhum estágio retornado agora"}
             </h3>
             <p className="ct-empty-state-v2-desc">
               {uf || area || modalidade || query
-                ? "Tente afrouxar os filtros — ou remova a UF pra ver estagios em todo o Brasil."
-                : "Estagios sao publicados em batch (geralmente segundas). Cache de 30min pode atrasar ate la. Tente novamente em alguns minutos."}
+                ? "Tente afrouxar os filtros — ou remova a UF pra ver estágios em todo o Brasil."
+                : "Estágios são publicados em batch (geralmente segundas). Cache de 30min pode atrasar até lá. Tente novamente em alguns minutos."}
             </p>
             {(uf || area || modalidade || query) && (
               <Link

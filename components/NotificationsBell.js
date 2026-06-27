@@ -279,11 +279,8 @@ export default function NotificationsBell({ compact = false }) {
                   <li
                     key={n.id}
                     className={
-                      "appshell-notif-item" + (n.readAt ? " read" : "")
+                      "appshell-notif-item-wrap" + (n.readAt ? " read" : "")
                     }
-                    onClick={() => {
-                      if (!n.readAt) markOneRead(n.id);
-                    }}
                     style={
                       // Refresh visual: items nao lidos ganham border-left cyan,
                       // sinalizando "novo" sem depender so do background primary-soft.
@@ -292,22 +289,42 @@ export default function NotificationsBell({ compact = false }) {
                         : undefined
                     }
                   >
-                    <div className="appshell-notif-title">{n.title}</div>
-                    {n.body && (
-                      <div className="appshell-notif-body">{n.body}</div>
-                    )}
-                    <div className="appshell-notif-time">
-                      {new Date(n.createdAt).toLocaleString("pt-BR")}
-                    </div>
+                    {/* WCAG 2.1.1 (A) Keyboard: trocamos <li onClick> por
+                        <button> interno. <li> nao recebe foco, Enter/Space nao
+                        ativam o handler. <button> herda comportamento nativo
+                        de teclado (Tab/Enter/Space) e screen readers anunciam
+                        como acao. Estilo visual preservado via classe. */}
+                    <button
+                      type="button"
+                      className={
+                        "appshell-notif-item" + (n.readAt ? " read" : "")
+                      }
+                      onClick={() => {
+                        if (!n.readAt) markOneRead(n.id);
+                      }}
+                      aria-label={
+                        n.readAt
+                          ? `${n.title} (lida)`
+                          : `${n.title} (não lida — clique para marcar como lida)`
+                      }
+                    >
+                      <div className="appshell-notif-title">{n.title}</div>
+                      {n.body && (
+                        <div className="appshell-notif-body">{n.body}</div>
+                      )}
+                      <div className="appshell-notif-time">
+                        {new Date(n.createdAt).toLocaleString("pt-BR")}
+                      </div>
+                    </button>
                     {/* safeHref: defesa-em-profundidade contra javascript:/data:/
                         vbscript:/file: que poderiam ter entrado no DB (Notification.link
                         e populado server-side, mas se rota futura aceitar input de user
-                        sem validar, render fica seguro). Sem href safe, esconde o link. */}
+                        sem validar, render fica seguro). Sem href safe, esconde o link.
+                        Fora do <button> pra nao aninhar interativos (HTML invalido). */}
                     {n.link && safeHref(n.link) && (
                       <a
                         href={safeHref(n.link)}
                         className="appshell-notif-link"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         Ver detalhes
                       </a>

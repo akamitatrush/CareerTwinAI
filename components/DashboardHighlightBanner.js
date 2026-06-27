@@ -23,7 +23,7 @@ const VARIANTS = {
   },
   noStreak: {
     icon: "✦",
-    title: "Comece sua jornada de carreira hoje",
+    title: "Comece seu plano de carreira hoje",
     desc: "Marque sua primeira microação e comece a evoluir.",
     cta: "Ver gaps",
     href: "/gaps",

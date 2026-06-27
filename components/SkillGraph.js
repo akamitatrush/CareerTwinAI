@@ -273,6 +273,11 @@ export default function SkillGraph({
 // SkillNode — um <g> clicavel pra desktop e touch. tabIndex=0 + onFocus/onBlur
 // pra navegacao por teclado. focusable="true" e necessario porque SVG nao
 // herda comportamento de foco do HTML — sem isso o Tab pula.
+//
+// WCAG 2.1.1 (A) Keyboard: <g role="button"> precisa reagir a Enter/Space
+// (handler nativo de <button> nao existe em <g>). onKeyDown abaixo toggla
+// a tooltip de forma equivalente ao hover/focus — sem essa linha o role
+// promete acao mas o teclado nao consegue ativar.
 function SkillNode({ p, variant, onHover }) {
   const colors = VARIANT_COLORS[variant];
   const display = p.label.length > 8 ? p.label.slice(0, 7) + "…" : p.label;
@@ -281,6 +286,18 @@ function SkillNode({ p, variant, onHover }) {
   const show = () => onHover({ label: p.label, variant });
   const hide = () => onHover(null);
 
+  // Keyboard handler: Enter/Space (re)dispara o show(). Como onFocus ja
+  // mostra a tooltip ao receber Tab, esta key handler garante consistencia
+  // com a expectativa de role="button" + permite re-mostrar se o usuario
+  // pressionar tab e depois Enter pra confirmar. e.preventDefault evita
+  // scroll no Space.
+  const onKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      show();
+    }
+  };
+
   return (
     <g
       onMouseEnter={show}
@@ -288,6 +305,7 @@ function SkillNode({ p, variant, onHover }) {
       onFocus={show}
       onBlur={hide}
       onTouchStart={show}
+      onKeyDown={onKeyDown}
       tabIndex={0}
       focusable="true"
       role="button"
