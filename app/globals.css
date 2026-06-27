@@ -2167,15 +2167,6 @@ img.appshell-avatar { object-fit: cover; padding: 0; }
 /* ===== /dashboard ===== */
 .ct-dash-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 26px; flex-wrap: wrap; }
 .ct-dash-eyebrow { font-family: var(--font-display); font-size: 15px; color: var(--text-soft); font-style: italic; margin: 0; }
-.ct-dash-title {
-  font-family: var(--font-display);
-  font-size: clamp(28px, 3.4vw, 32px);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: var(--text);
-  margin: 2px 0 0;
-  line-height: 1.1;
-}
 .ct-target-pill {
   display: flex;
   align-items: center;
@@ -2379,7 +2370,6 @@ img.appshell-avatar { object-fit: cover; padding: 0; }
 
 /* ===== /gaps ===== */
 .ct-gaps-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 8px; flex-wrap: wrap; }
-.ct-gaps-title { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -.6px; color: var(--text); margin: 0; }
 .ct-gaps-sub { font-size: 13.5px; color: var(--text-muted); margin: 4px 0 0; }
 
 .ct-kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 20px 0; }
@@ -4322,15 +4312,6 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   background: linear-gradient(135deg, var(--attention), var(--attention-deep));
 }
 .ct-self-kind-hero-body { flex: 1; min-width: 0; }
-.ct-self-kind-title {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--text);
-  margin: 0 0 6px;
-  line-height: 1.2;
-}
 .ct-self-kind-sub {
   font-size: 13.5px;
   color: var(--text-muted);
@@ -4339,7 +4320,6 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 }
 @media (max-width: 720px) {
   .ct-self-kind-hero { flex-direction: column; align-items: flex-start; padding: 18px 18px; }
-  .ct-self-kind-title { font-size: 20px; }
 }
 
 /* ---- HowTo (3 dicas) ---- */
@@ -6050,9 +6030,7 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 
   /* --- Headers de tela: menos padding vertical, fontes menores */
   .ct-gaps-header { padding: 12px 0 0; gap: 14px; }
-  .ct-gaps-title { font-size: 24px; }
   .ct-dash-header { gap: 16px; margin-bottom: 18px; }
-  .ct-dash-title { font-size: 26px; }
 
   /* --- Filtros do radar: pills com area de toque maior */
   .ct-filter-pill { font-size: 13px; padding: 10px 14px; min-height: 44px; }
@@ -6076,8 +6054,6 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
 
 @media (max-width: 480px) {
   /* Refinamentos pra iPhone SE 1a gen (320px) e Galaxy Fold dobrado */
-  .ct-dash-title { font-size: 22px; }
-  .ct-gaps-title { font-size: 22px; }
   .ct-target-pill { font-size: 11px; padding: 8px 12px; }
   .ct-score-big { font-size: 48px; }
   .modal-overlay { padding: 8px; }
