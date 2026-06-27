@@ -9,7 +9,7 @@
 // evita dependencia extra.
 
 const STAGES = [
-  { key: "applications", label: "Aplicacoes", short: "APPS" },
+  { key: "applications", label: "Aplicações", short: "APPS" },
   { key: "callbacks", label: "Callbacks", short: "CALLBACKS" },
   { key: "hmConversations", label: "Hiring Managers", short: "HMs" },
   { key: "finals", label: "Entrevistas finais", short: "FINAIS" },
@@ -64,7 +64,7 @@ export default function FunnelChart({ aggregated, analysis }) {
   return (
     <section
       style={{ marginTop: 28 }}
-      aria-label="Visualizacao do funil"
+      aria-label="Visualização do funil"
     >
       <h2
         style={{
@@ -90,7 +90,7 @@ export default function FunnelChart({ aggregated, analysis }) {
           width="100%"
           style={{ display: "block", maxWidth: "100%" }}
           role="img"
-          aria-label="Funil de candidaturas: barras horizontais decrescentes por estagio"
+          aria-label="Funil de candidaturas: barras horizontais decrescentes por estágio"
         >
           <defs>
             <linearGradient id="funnel-bar-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -190,8 +190,8 @@ export default function FunnelChart({ aggregated, analysis }) {
           color: "var(--text-subtle)",
         }}
       >
-        Cada barra mostra o volume absoluto do estagio. A porcentagem indica a
-        taxa de conversao em relacao ao estagio anterior.
+        Cada barra mostra o volume absoluto do estágio. A porcentagem indica a
+        taxa de conversão em relação ao estágio anterior.
       </p>
     </section>
   );

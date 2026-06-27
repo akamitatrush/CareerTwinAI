@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Funil de busca — CareerTwin AI",
   description:
-    "Auto-reporte seus numeros semanais e identifique em qual estagio do funil sua busca esta parando.",
+    "Auto-reporte seus números semanais e identifique em qual estágio do funil sua busca está parando.",
 };
 
 // Formata DateTime do DB pra label PT-BR "23 jun" (compacto pra UI tabela/chart).
@@ -76,13 +76,13 @@ export default async function FunilPage() {
           </svg>
         </div>
         <div className="ct-page-header-content">
-          <div className="ct-page-header-eyebrow">METRICAS - FUNIL DE BUSCA</div>
+          <div className="ct-page-header-eyebrow">MÉTRICAS - FUNIL DE BUSCA</div>
           <h1 className="ct-page-header-title">
-            Onde sua busca esta parando?
+            Onde sua busca está parando?
           </h1>
           <p className="ct-page-header-sub">
-            Anote semanalmente seus numeros e a gente identifica em qual estagio
-            do funil seu CV esta sendo barrado.
+            Anote semanalmente seus números e a gente identifica em qual estágio
+            do funil seu CV está sendo barrado.
           </p>
         </div>
       </header>
@@ -110,9 +110,9 @@ export default async function FunilPage() {
             Comece registrando esta semana
           </div>
           <p className="ct-empty-state-v2-desc">
-            Preencha o formulario acima com os numeros desta semana. Em ~4
-            semanas a gente vai conseguir te dizer qual estagio do funil
-            esta segurando voce.
+            Preencha o formulário acima com os números desta semana. Em ~4
+            semanas a gente vai conseguir te dizer qual estágio do funil
+            está segurando você.
           </p>
         </div>
       ) : (
@@ -149,7 +149,7 @@ function BottleneckBanner({ analysis, aggregated }) {
     hm: "GARGALO: HIRING MANAGER",
     final: "GARGALO: ENTREVISTA FINAL",
     offer: "GARGALO: FECHAMENTO",
-    saudavel: "FUNIL SAUDAVEL",
+    saudavel: "FUNIL SAUDÁVEL",
   };
 
   return (
@@ -157,7 +157,7 @@ function BottleneckBanner({ analysis, aggregated }) {
       className="ct-highlight-banner"
       style={{ borderLeftColor: borderColor, marginTop: 24 }}
       role="status"
-      aria-label={`Analise do funil: ${STAGE_LABELS[analysis.stage]}`}
+      aria-label={`Análise do funil: ${STAGE_LABELS[analysis.stage]}`}
     >
       <div
         className="ct-highlight-banner-icon"
@@ -196,7 +196,7 @@ function BottleneckBanner({ analysis, aggregated }) {
           className="ct-highlight-banner-desc"
           style={{ marginTop: 8, fontSize: 12, opacity: 0.85 }}
         >
-          Baseado em {aggregated.applications} candidaturas das ultimas 4
+          Baseado em {aggregated.applications} candidaturas das últimas 4
           semanas.
         </p>
       </div>
@@ -204,7 +204,7 @@ function BottleneckBanner({ analysis, aggregated }) {
         <Link
           href={analysis.link}
           className="ct-highlight-banner-cta"
-          aria-label="Ir para a acao sugerida"
+          aria-label="Ir para a ação sugerida"
         >
           Agir agora
         </Link>
@@ -215,12 +215,12 @@ function BottleneckBanner({ analysis, aggregated }) {
 
 function HistoryTable({ entries }) {
   return (
-    <section style={{ marginTop: 28 }} aria-label="Historico das ultimas semanas">
+    <section style={{ marginTop: 28 }} aria-label="Histórico das últimas semanas">
       <h2
         className="ct-page-header-eyebrow"
         style={{ marginBottom: 12 }}
       >
-        HISTORICO (ULTIMAS {entries.length} SEMANAS)
+        HISTÓRICO (ÚLTIMAS {entries.length} SEMANAS)
       </h2>
       <div
         className="app-glass"
@@ -234,7 +234,7 @@ function HistoryTable({ entries }) {
             <thead>
               <tr style={{ background: "var(--surface-2)" }}>
                 <Th>Semana</Th>
-                <Th align="right">Aplicacoes</Th>
+                <Th align="right">Aplicações</Th>
                 <Th align="right">Callbacks</Th>
                 <Th align="right">HMs</Th>
                 <Th align="right">Finais</Th>
