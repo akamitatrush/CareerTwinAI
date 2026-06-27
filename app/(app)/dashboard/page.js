@@ -136,16 +136,8 @@ export default async function DashboardPage() {
           >
             Dashboard · Bom te ver de volta
           </p>
-          <h1
-            className="ct-dash-title"
-            style={{
-              fontSize: "clamp(40px, 6vw, 80px)",
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.05,
-              marginBottom: "16px",
-            }}
-          >
+          {/* Arwen v4 — H1 unificado em ct-page-header-title (canonico). */}
+          <h1 className="ct-page-header-title">
             Olá, {firstName}
           </h1>
         </div>

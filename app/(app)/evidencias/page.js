@@ -45,16 +45,8 @@ export default async function EvidenciasPage() {
         }}
       >
         <div>
-          <h1
-            className="ct-gaps-title"
-            style={{
-              fontSize: "clamp(40px, 6vw, 80px)",
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.05,
-              marginBottom: "16px",
-            }}
-          >
+          {/* Arwen v4 — H1 unificado em ct-page-header-title (canonico). */}
+          <h1 className="ct-page-header-title">
             Evidências de competência
           </h1>
           <p

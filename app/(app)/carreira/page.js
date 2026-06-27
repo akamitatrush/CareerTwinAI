@@ -67,16 +67,8 @@ export default async function CarreiraPage() {
           >
             Plano de carreira
           </div>
-          <h1
-            className="ct-page-header-title"
-            style={{
-              fontSize: "clamp(40px, 6vw, 80px)",
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.05,
-              marginBottom: "16px",
-            }}
-          >
+          {/* Arwen v4 — style inline removido; ct-page-header-title ja cobre clamp/weight/ls/lh/margin. */}
+          <h1 className="ct-page-header-title">
             Sua trajetória até o cargo-alvo
           </h1>
           <p
