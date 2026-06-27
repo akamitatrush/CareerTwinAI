@@ -1,13 +1,12 @@
-"use client";
-
 // Social proof honesto. Nao fingimos volume de clientes que nao existe.
 // Mostramos:
 //   - origem (time da Tera)
 //   - stats reais e auditaveis (tests, rotas, RAG, LGPD)
 //   - quote generica honesta (sem inventar testimonial)
 //   - stack tecnologico (credibilidade de engenharia)
-
-import { useEffect, useRef } from "react";
+//
+// Server Component apos audit Gimli v3: fade-up via CSS @keyframes
+// (.site-fade-up em globals.css), sem IntersectionObserver.
 
 const STATS = [
   { value: "1101", label: "testes automatizados" },
@@ -26,39 +25,8 @@ const STACK = [
 ];
 
 export default function SiteSocialProof() {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const els = ref.current?.querySelectorAll("[data-proof]") || [];
-    if (reduce) {
-      els.forEach((e) => { e.style.opacity = "1"; e.style.transform = "none"; });
-      return;
-    }
-    els.forEach((e) => {
-      e.style.opacity = "0";
-      e.style.transform = "translateY(20px)";
-      e.style.transition = "opacity 700ms ease, transform 700ms ease";
-    });
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const idx = Number(entry.target.dataset.idx || 0);
-        setTimeout(() => {
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
-        }, idx * 70);
-        io.unobserve(entry.target);
-      });
-    }, { threshold: 0.2 });
-    els.forEach((e) => io.observe(e));
-    return () => io.disconnect();
-  }, []);
-
   return (
     <section
-      ref={ref}
       className="site-section"
       style={{
         padding: "140px 24px",
@@ -72,6 +40,7 @@ export default function SiteSocialProof() {
         <div
           data-proof
           data-idx="0"
+          className="site-fade-up"
           style={{
             display: "flex",
             alignItems: "center",
@@ -79,6 +48,7 @@ export default function SiteSocialProof() {
             justifyContent: "center",
             marginBottom: 56,
             flexWrap: "wrap",
+            animationDelay: "0ms",
           }}
         >
           <span
@@ -122,7 +92,8 @@ export default function SiteSocialProof() {
               key={s.label}
               data-proof
               data-idx={i + 1}
-              style={{ textAlign: "center" }}
+              className="site-fade-up"
+              style={{ textAlign: "center", animationDelay: `${(i + 1) * 70}ms` }}
             >
               <div
                 style={{
@@ -156,11 +127,13 @@ export default function SiteSocialProof() {
         <blockquote
           data-proof
           data-idx="5"
+          className="site-fade-up"
           style={{
             maxWidth: 880,
             margin: "0 auto 80px",
             textAlign: "center",
             padding: 0,
+            animationDelay: "350ms",
           }}
         >
           <p
@@ -193,7 +166,7 @@ export default function SiteSocialProof() {
         </blockquote>
 
         {/* Stack logos */}
-        <div data-proof data-idx="6">
+        <div data-proof data-idx="6" className="site-fade-up" style={{ animationDelay: "420ms" }}>
           <p
             style={{
               fontFamily: "'JetBrains Mono', ui-monospace, monospace",

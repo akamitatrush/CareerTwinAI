@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { EvidenceCreateBody } from "@/lib/validators";
 import { grantAchievement } from "@/lib/achievements";
+import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,7 +12,7 @@ export const dynamic = "force-dynamic";
 // GET — lista evidencias do usuario logado, mais recentes primeiro.
 // IDOR-safe: escopo de userId DENTRO do where (nao confia em nada do cliente).
 // take=200 protege contra resposta gigante; o user tipico tem 5-20 evidencias.
-export async function GET() {
+async function getHandler(req) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -18,6 +20,13 @@ export async function GET() {
       { status: 401 }
     );
   }
+  const limit = await guardLLM(req, {
+    name: "evidence.list",
+    userId: session.user.id,
+    perMinuteAnon: 0,
+    perMinuteUser: 60,
+  });
+  if (!limit.ok) return tooMany(limit);
   const items = await prisma.evidence.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
@@ -31,7 +40,7 @@ export async function GET() {
 // define dono). userId SEMPRE da sessao, nunca do body. Limite por user evita
 // abuso de armazenamento (50 evidencias e mais que suficiente; perfil real fica
 // na faixa de 5-20).
-export async function POST(req) {
+async function postHandler(req) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -39,6 +48,14 @@ export async function POST(req) {
       { status: 401 }
     );
   }
+
+  const limit = await guardLLM(req, {
+    name: "evidence.create",
+    userId: session.user.id,
+    perMinuteAnon: 0,
+    perMinuteUser: 30,
+  });
+  if (!limit.ok) return tooMany(limit);
 
   let body;
   try {
@@ -117,3 +134,6 @@ export async function POST(req) {
 
   return NextResponse.json({ item });
 }
+
+export const GET = withApiGuard(getHandler);
+export const POST = withApiGuard(postHandler);

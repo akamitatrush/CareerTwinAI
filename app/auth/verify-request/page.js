@@ -125,7 +125,7 @@ export default function VerifyRequestPage({ searchParams }) {
           lineHeight: 1.55,
         }}
       >
-        Mudou de ideia? <a href="/" style={{ color: "var(--ink-soft)", fontWeight: 600 }}>Voltar pro modo experimentar (sem login)</a> —
+        Mudou de ideia? <a href="/experimentar" style={{ color: "var(--ink-soft)", fontWeight: 600 }}>Voltar pro modo experimentar (sem login)</a> —
         a IA roda de verdade mas nada é salvo.
       </p>
     </main>

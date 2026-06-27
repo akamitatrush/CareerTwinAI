@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { exportUserData } from "@/lib/data-export";
 import { audit } from "@/lib/audit";
+import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(req) {
+async function getHandler(req) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -14,6 +16,16 @@ export async function GET(req) {
       { status: 401 }
     );
   }
+
+  // Export agrega dados de varias tabelas — caro e raro. Limite agressivo
+  // (2/min) defende contra DoS via loop. Anon nao chega aqui (401 acima).
+  const limit = await guardLLM(req, {
+    name: "me.export",
+    userId: session.user.id,
+    perMinuteAnon: 0,
+    perMinuteUser: 2,
+  });
+  if (!limit.ok) return tooMany(limit);
 
   try {
     const data = await exportUserData(session.user.id);
@@ -46,3 +58,5 @@ export async function GET(req) {
     );
   }
 }
+
+export const GET = withApiGuard(getHandler);

@@ -291,8 +291,18 @@ async function handler(req) {
           portfolioJson: portfolio,
         },
       });
+      const consentSource = github ? "PORTFOLIO_GITHUB" : "PORTFOLIO_URL";
       await prisma.consent.create({
-        data: { userId, source: github ? "PORTFOLIO_GITHUB" : "PORTFOLIO_URL" },
+        data: { userId, source: consentSource },
+      });
+      // Audit consentimento LGPD (Galadriel v4: enum CONSENT_GRANTED existia
+      // sem callers, quebrando auditabilidade do consent).
+      await audit({
+        userId,
+        action: "CONSENT_GRANTED",
+        target: `Consent:${userId}`,
+        req,
+        meta: { source: consentSource },
       });
     } catch (e) {
       console.error("portfolio: persistencia falhou", e?.message);

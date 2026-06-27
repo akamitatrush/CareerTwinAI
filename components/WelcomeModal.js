@@ -29,25 +29,26 @@ import { EVENTS } from "@/lib/analytics/events";
 const STORAGE_KEY = "ct_welcome_shown";
 
 // Cards visuais do produto. Sem assets externos — emoji + CSS inline.
-// Cor accent diferente por card pra dar sensacao de hierarquia visual.
+// Accent unificado via token semantico — em noir vira lime, em dark vira cyan.
+// Hierarquia visual agora vem do glyph/ordem, nao mais de hex hardcoded.
 const CARDS = [
   {
     icon: "◇",
     title: "Diagnóstico",
     desc: "Career Health Score 0-100 com fórmula auditável.",
-    accent: "#4F46E5",
+    accent: "var(--accent)",
   },
   {
     icon: "✦",
     title: "Gaps",
     desc: "Lacunas reais com microação acionável pra cada.",
-    accent: "#06B6D4",
+    accent: "var(--accent)",
   },
   {
     icon: "→",
     title: "Vagas",
     desc: "Match real com seu perfil, atualizado semanalmente.",
-    accent: "#8B5CF6",
+    accent: "var(--accent)",
   },
 ];
 

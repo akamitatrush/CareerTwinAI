@@ -310,21 +310,28 @@ describe("POST /api/analyze — happy path autenticado", () => {
     });
   });
 
-  it("audit() chamado com CV_UPLOADED e meta sanitizado (sem rawCv bruto)", async () => {
+  it("audit() chamado com CONSENT_GRANTED + CV_UPLOADED e meta sanitizado (sem rawCv bruto)", async () => {
     setupOk();
     await POST(makeReq({ cv: VALID_CV, role: "Backend" }));
-    expect(audit).toHaveBeenCalledTimes(1);
-    const call = audit.mock.calls[0][0];
-    expect(call.userId).toBe("u1");
-    expect(call.action).toBe("CV_UPLOADED");
-    expect(call.target).toBe("Profile:u1");
-    expect(call.meta).toMatchObject({
+    // Galadriel v4 (Wave 11): consent.create no fluxo LGPD agora emite audit
+    // CONSENT_GRANTED tambem. Esperamos 2 calls: consent e cv_uploaded.
+    expect(audit).toHaveBeenCalledTimes(2);
+    const consentCall = audit.mock.calls.find((c) => c[0].action === "CONSENT_GRANTED");
+    expect(consentCall).toBeTruthy();
+    expect(consentCall[0].userId).toBe("u1");
+    expect(consentCall[0].target).toBe("Consent:u1");
+    expect(consentCall[0].meta).toMatchObject({ source: "CV_PASTE" });
+    const uploadCall = audit.mock.calls.find((c) => c[0].action === "CV_UPLOADED");
+    expect(uploadCall).toBeTruthy();
+    expect(uploadCall[0].userId).toBe("u1");
+    expect(uploadCall[0].target).toBe("Profile:u1");
+    expect(uploadCall[0].meta).toMatchObject({
       kind: "CV_PASTE",
       snapshotId: "snap-1",
     });
-    expect(call.meta.sizeBytes).toBeGreaterThan(0);
+    expect(uploadCall[0].meta.sizeBytes).toBeGreaterThan(0);
     // Nada de PII raw no meta.
-    expect(JSON.stringify(call.meta)).not.toContain("Maria");
+    expect(JSON.stringify(uploadCall[0].meta)).not.toContain("Maria");
   });
 
   it("consent + dataSource criados em transaction (rastro LGPD)", async () => {

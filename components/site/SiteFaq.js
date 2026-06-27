@@ -1,11 +1,10 @@
-"use client";
-
 // FAQ usando <details>/<summary> semantico. SEO-friendly, sem JS necessario,
 // acessivel por teclado out-of-the-box.
 // Style: chevron rotaciona via CSS no [open]; padding generoso, divisores
 // limpos entre items.
-
-import { useEffect, useRef } from "react";
+//
+// Server Component apos audit Gimli v3: fade-up agora via CSS @keyframes
+// (.site-fade-up em globals.css). Zero JS pra animacao de entrada.
 
 const FAQ = [
   {
@@ -43,40 +42,9 @@ const FAQ = [
 ];
 
 export default function SiteFaq() {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const items = ref.current?.querySelectorAll("[data-faq]") || [];
-    if (reduce) {
-      items.forEach((el) => { el.style.opacity = "1"; el.style.transform = "none"; });
-      return;
-    }
-    items.forEach((el) => {
-      el.style.opacity = "0";
-      el.style.transform = "translateY(16px)";
-      el.style.transition = "opacity 600ms ease, transform 600ms ease";
-    });
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const idx = Number(entry.target.dataset.idx || 0);
-        setTimeout(() => {
-          entry.target.style.opacity = "1";
-          entry.target.style.transform = "translateY(0)";
-        }, idx * 50);
-        io.unobserve(entry.target);
-      });
-    }, { threshold: 0.1 });
-    items.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-
   return (
     <section
       id="faq"
-      ref={ref}
       className="site-section"
       style={{ padding: "140px 24px", position: "relative" }}
     >
@@ -116,10 +84,11 @@ export default function SiteFaq() {
               key={item.q}
               data-faq
               data-idx={i}
-              className="site-faq-item"
+              className="site-faq-item site-fade-up"
               style={{
                 borderBottom: "1px solid var(--site-border)",
                 padding: "24px 0",
+                animationDelay: `${i * 50}ms`,
               }}
             >
               <summary

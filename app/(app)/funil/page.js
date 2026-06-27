@@ -137,12 +137,11 @@ function BottleneckBanner({ analysis, aggregated }) {
   if (!analysis) return null;
   // Cores via inline pra preservar a regra "nao tocar em globals.css".
   // Mapeamos severity -> tom de border-left + icone.
+  // Accent unificado: em noir vira lime, em dark vira cyan — coerente com tema.
   const isHealthy = analysis.stage === "saudavel";
   const borderColor = isHealthy
     ? "var(--accent-cyan)"
-    : analysis.severity === "high"
-      ? "#E5A93C"
-      : "#F0C44A";
+    : "var(--accent)";
 
   const STAGE_LABELS = {
     volume: "VOLUME BAIXO",
@@ -166,9 +165,11 @@ function BottleneckBanner({ analysis, aggregated }) {
           isHealthy
             ? {}
             : {
+                // Gradient temático: usa accent (cyan/lime) com leve transparencia
+                // pra dar profundidade no icone sem hardcode de hex.
                 background:
-                  "linear-gradient(140deg, #F0C44A 0%, #E5A93C 100%)",
-                boxShadow: "0 4px 14px -2px rgba(229,169,60,.35)",
+                  "linear-gradient(140deg, var(--accent) 0%, var(--accent) 100%)",
+                boxShadow: "0 4px 14px -2px rgba(0,0,0,.18)",
               }
         }
         aria-hidden="true"

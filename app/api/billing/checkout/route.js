@@ -9,17 +9,21 @@
 // - Stripe customer criado/recuperado server-side e amarrado a session.user.id
 //   via metadata. Webhook usa esse metadata pra reconciliar.
 // - 503 se billing nao configurado (build sem Stripe nao quebra).
+// - Rate-limit (3/min/user) defende contra spam de Stripe sessions (custo $,
+//   ruido no painel). Anon bloqueado (401 antes do limit).
 
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { stripe, isStripeConfigured } from "@/lib/billing/stripe";
 import { getPlan } from "@/lib/billing/plans";
+import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(req) {
+async function postHandler(req) {
   if (!isStripeConfigured()) {
     return NextResponse.json(
       { error: "Pagamentos ainda nao estao configurados.", code: "BILLING_NOT_CONFIGURED" },
@@ -36,6 +40,14 @@ export async function POST(req) {
   }
   const userId = session.user.id;
   const userEmail = session.user.email;
+
+  const limit = await guardLLM(req, {
+    name: "billing.checkout",
+    userId,
+    perMinuteAnon: 0,
+    perMinuteUser: 3,
+  });
+  if (!limit.ok) return tooMany(limit);
 
   let body;
   try {
@@ -129,3 +141,5 @@ export async function POST(req) {
     );
   }
 }
+
+export const POST = withApiGuard(postHandler);

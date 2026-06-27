@@ -3,11 +3,13 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ApplicationCreateBody } from "@/lib/validators";
 import { grantAchievement } from "@/lib/achievements";
+import { guardLLM, tooMany } from "@/lib/rate-limit";
+import { withApiGuard } from "@/lib/api-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+async function getHandler(req) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -15,6 +17,13 @@ export async function GET() {
       { status: 401 }
     );
   }
+  const limit = await guardLLM(req, {
+    name: "applications.list",
+    userId: session.user.id,
+    perMinuteAnon: 0,
+    perMinuteUser: 60,
+  });
+  if (!limit.ok) return tooMany(limit);
   const items = await prisma.application.findMany({
     where: { userId: session.user.id },
     orderBy: { updatedAt: "desc" },
@@ -23,7 +32,7 @@ export async function GET() {
   return NextResponse.json({ items });
 }
 
-export async function POST(req) {
+async function postHandler(req) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -31,6 +40,13 @@ export async function POST(req) {
       { status: 401 }
     );
   }
+  const limit = await guardLLM(req, {
+    name: "applications.create",
+    userId: session.user.id,
+    perMinuteAnon: 0,
+    perMinuteUser: 30,
+  });
+  if (!limit.ok) return tooMany(limit);
   let body;
   try {
     body = await req.json();
@@ -122,3 +138,6 @@ export async function POST(req) {
 
   return NextResponse.json({ item });
 }
+
+export const GET = withApiGuard(getHandler);
+export const POST = withApiGuard(postHandler);
