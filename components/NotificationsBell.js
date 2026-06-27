@@ -14,6 +14,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import AchievementToast from "@/components/AchievementToast";
+import Icon from "@/components/Icon";
 import { safeHref } from "@/lib/url-safe";
 
 const EMPTY = { items: [], unreadCount: 0 };
@@ -46,23 +47,12 @@ function saveToastSeen(set) {
   }
 }
 
+// BellIcon: wrapper fino sobre <Icon name="bell"> pra preservar a API
+// existente do call site (BellIcon size={compact ? 17 : 19}). Stroke 1.5
+// (default do Icon) substitui o 1.8 legado — visualmente indistinguivel
+// em 17-19px e ganha consistencia com o resto da UI.
 function BellIcon({ size = 19 }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.7 21a2 2 0 01-3.4 0" />
-    </svg>
-  );
+  return <Icon name="bell" size={size} />;
 }
 
 export default function NotificationsBell({ compact = false }) {

@@ -80,7 +80,8 @@ export default async function CvsAdaptadosPage() {
       />
       <div className="ct-gaps-header">
         <div>
-          <h1 className="ct-gaps-title">CVs adaptados</h1>
+          {/* Arwen v4 — H1 unificado em ct-page-header-title (canonico). */}
+          <h1 className="ct-page-header-title">CVs adaptados</h1>
           <p className="ct-gaps-sub">
             Cada vez que você usa &ldquo;Adaptar currículo&rdquo; numa vaga, o
             resultado fica salvo aqui pra você comparar e reaproveitar.

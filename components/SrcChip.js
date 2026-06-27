@@ -17,6 +17,8 @@
 //  - svg e aria-hidden (decorativo); o label textual carrega o significado
 //  - inline-flex + verticalAlign middle = posicao correta no fluxo do <p>
 
+import Icon from "@/components/Icon";
+
 export default function SrcChip({ src, title }) {
   if (!src) return null;
   // Aceita "[Curriculo]" (com colchetes) ou "Curriculo" (sem). Normaliza.
@@ -44,17 +46,10 @@ export default function SrcChip({ src, title }) {
         whiteSpace: "nowrap",
       }}
     >
-      <svg
-        width="10"
-        height="10"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-        style={{ flexShrink: 0 }}
-      >
-        {/* Icone "fonte"/link: triangulo apontando = origem rastreavel. */}
-        <path d="M9 17l6-5-6-5v10z" fill="currentColor" />
-      </svg>
+      {/* Icone "fonte": triangulo apontando = origem rastreavel.
+          10px nao bate o scale 12/16/20/24 — exceto inline com texto
+          11px do chip, onde 10 e proposital. Mantido via prop size. */}
+      <Icon name="play" size={10} filled style={{ flexShrink: 0 }} />
       {label}
     </span>
   );

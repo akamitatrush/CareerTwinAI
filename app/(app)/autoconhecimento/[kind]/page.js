@@ -99,7 +99,8 @@ export default async function AssessmentPage({ params }) {
           <AssessmentIcon kind={definition.iconKind} size={36} />
         </div>
         <div className="ct-self-kind-hero-body">
-          <h1 className="ct-self-kind-title">{def.title}</h1>
+          {/* Arwen v4 — H1 unificado em ct-page-header-title (canonico). */}
+          <h1 className="ct-page-header-title">{def.title}</h1>
           <p className="ct-self-kind-sub">{def.intro}</p>
         </div>
       </header>
