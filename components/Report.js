@@ -6,6 +6,7 @@ import { WEIGHTS, SS_META } from "@/lib/score";
 import InterviewModal from "@/components/InterviewModal";
 import TailorModal from "@/components/TailorModal";
 import ChatModal from "@/components/ChatModal";
+import Icon from "@/components/Icon";
 import { track } from "@/components/PostHogProvider";
 import { EVENTS } from "@/lib/analytics/events";
 import { safeHref } from "@/lib/url-safe";
@@ -122,11 +123,11 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
 
       <div className="tools">
         <button className="tool-btn" onClick={() => setShowInterview(true)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z" /><path d="M5 11a7 7 0 0 0 14 0M12 18v4" /></svg>
+          <Icon name="mic" size={16} />
           Treinar entrevista
         </button>
         <button className="tool-btn" onClick={() => setShowChat(true)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+          <Icon name="chat" size={16} />
           Conversar com meu gêmeo
         </button>
       </div>
@@ -141,6 +142,9 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
         <div className="instrument">
           <div className="inst-top">
             <div className="gauge">
+              {/* Gauge nao migra pro <Icon> — eh um SVG funcional (viewBox
+                  proprio 120x120, stroke-width 9 e dasharray dinamico) e nao
+                  um glyph de UI. Caso intencional de variante especial. */}
               <svg width="120" height="120">
                 <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" strokeWidth="9" />
                 <circle cx="60" cy="60" r="52" fill="none" className="gauge-arc" strokeWidth="9" strokeLinecap="round" strokeDasharray={CIRC.toFixed(1)} strokeDashoffset={gaugeOff.toFixed(1)} />
@@ -219,7 +223,9 @@ export default function Report({ diag, opp, role, cv, onRestart, footerNote }) {
                 <p className="gapc-why">{text} <Src value={src} /></p>
                 <div className="gapc-foot">
                   <span className="microaction">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                    {/* 15px era do mock — fica entre 12 e 16; mantido como
+                        valor literal pra preservar alinhamento com o texto. */}
+                    <Icon name="arrow-right" size={15} stroke={2} />
                     {g.microacao}
                   </span>
                   <button className={"gap-done" + (done ? " on" : "")} onClick={() => setCompleted((c) => ({ ...c, [i]: !c[i] }))}>

@@ -5,73 +5,38 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import NotificationsBell from "@/components/NotificationsBell";
 import CopilotWidget from "@/components/CopilotWidget";
+import Icon from "@/components/Icon";
 
+// NAV usa nomes do registro centralizado em components/Icon.js.
+// Cada glyph "nav-*" vive la, viewBox 0 0 24 24, stroke=currentColor.
+// Mudou de iconPath (string) -> iconName (chave). Garante consistencia
+// visual (mesmos stroke-widths/linecaps via Icon).
 const NAV = [
-  {
-    href: "/dashboard",
-    label: "Dashboard",
-    iconPath: "M3 12l9-9 9 9M5 10v10h14V10",
-  },
-  {
-    href: "/gaps",
-    label: "Análise de gaps",
-    iconPath: "M3 3l3 12 4-8 4 6 7-13",
-  },
-  {
-    href: "/oportunidades",
-    label: "Radar de vagas",
-    iconPath: "M21 21l-6-6M10 17a7 7 0 110-14 7 7 0 010 14z",
-  },
-  {
-    href: "/concursos",
-    label: "Concursos",
-    iconPath: "M12 2l3 7h7l-5.5 4.5 2 7.5L12 17l-6.5 4 2-7.5L2 9h7z",
-  },
-  {
-    href: "/estagios",
-    label: "Estágios",
-    iconPath: "M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2M3 7h18l-1 13H4z",
-  },
-  {
-    href: "/funil",
-    label: "Funil de busca",
-    iconPath: "M3 5h18l-7 9v6l-4-2v-4z",
-  },
+  { href: "/dashboard", label: "Dashboard", iconName: "nav-home" },
+  { href: "/gaps", label: "Análise de gaps", iconName: "nav-chart" },
+  { href: "/oportunidades", label: "Radar de vagas", iconName: "nav-radar" },
+  { href: "/concursos", label: "Concursos", iconName: "nav-star" },
+  { href: "/estagios", label: "Estágios", iconName: "nav-briefcase" },
+  { href: "/funil", label: "Funil de busca", iconName: "nav-funnel" },
   {
     // Roadmap visual de carreira (feature #5 do STRATEGY_ROADMAP, MVP
     // deterministico). Fica antes do /plano porque o "plano de carreira"
     // e a visao macro (12-18 meses), e o /plano e tactico (proximas semanas).
     href: "/carreira",
     label: "Plano de carreira",
-    iconPath: "M3 17l6-6 4 4 8-8M14 7h7v7",
+    iconName: "nav-trend-up",
   },
-  {
-    href: "/plano",
-    label: "Plano",
-    iconPath: "M9 11l3 3 8-8M21 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11",
-  },
-  {
-    href: "/transparencia",
-    label: "Transparência",
-    iconPath: "M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6z",
-  },
+  { href: "/plano", label: "Plano", iconName: "nav-checklist" },
+  { href: "/transparencia", label: "Transparência", iconName: "nav-shield" },
   {
     // Modulo de autoconhecimento (3 mini-assessments: DISC-lite, Valores,
     // Ikigai). Item antes de "CVs adaptados" pra agrupar com identidade/perfil.
     href: "/autoconhecimento",
     label: "Autoconhecimento",
-    iconPath: "M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm0 2c-3 0-9 1.5-9 4.5V21h18v-2.5c0-3-6-4.5-9-4.5z",
+    iconName: "nav-user",
   },
-  {
-    href: "/cvs-adaptados",
-    label: "CVs adaptados",
-    iconPath: "M14 3v5h5M14 3H6v18h12V8z",
-  },
-  {
-    href: "/candidaturas",
-    label: "Candidaturas",
-    iconPath: "M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z",
-  },
+  { href: "/cvs-adaptados", label: "CVs adaptados", iconName: "nav-doc" },
+  { href: "/candidaturas", label: "Candidaturas", iconName: "nav-folder" },
 ];
 
 // Logo: figura de gente + check (do mock, linhas 32-33).
@@ -123,22 +88,12 @@ function getInitial(name) {
   return trimmed.charAt(0).toUpperCase();
 }
 
-function NavIcon({ d }) {
-  return (
-    <svg
-      width="19"
-      height="19"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={d} />
-    </svg>
-  );
+// NavIcon wrapper: tamanho 19px (entre 16 e 20 — vinha do legado pra
+// caber no spacing da sidebar; mantido por consistencia visual). Stroke
+// 1.5 e o default canonico de Icon (era 1.8 no legado; visualmente
+// indistinguivel em 19px de display, e ganhamos consistencia com o resto).
+function NavIcon({ name }) {
+  return <Icon name={name} size={19} />;
 }
 
 function isActive(pathname, href) {
@@ -207,7 +162,7 @@ export default function AppShell({ children, user }) {
                   className={`appshell-nav-item${active ? " active" : ""}`}
                   aria-current={active ? "page" : undefined}
                 >
-                  <NavIcon d={item.iconPath} />
+                  <NavIcon name={item.iconName} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -216,19 +171,10 @@ export default function AppShell({ children, user }) {
 
           <div className="appshell-lgpd-card">
             <div className="appshell-lgpd-title">
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 2l8 4v6c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6z" />
-              </svg>
+              {/* 13px nao bate o scale 12/16/20/24 — exceto inline com texto
+                  uppercase de fonte 10-11px, onde 13 era proposital. Manter
+                  13 via prop. Stroke 2 (forte) reforca o "selo" LGPD. */}
+              <Icon name="shield" size={13} stroke={2} />
               SEUS DADOS, PROTEGIDOS
             </div>
             <p className="appshell-lgpd-text">
@@ -311,7 +257,7 @@ export default function AppShell({ children, user }) {
                     className={`appshell-mobile-nav-item${active ? " active" : ""}`}
                     aria-current={active ? "page" : undefined}
                   >
-                    <NavIcon d={item.iconPath} />
+                    <NavIcon name={item.iconName} />
                     <span>{item.label}</span>
                   </Link>
                 );
