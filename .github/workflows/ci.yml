@@ -44,10 +44,10 @@ jobs:
         run: npm test
 
       - name: Lint
-        run: npm run lint
-        # Lint warnings ainda nao sao zero — deixamos warning visivel mas nao gate.
-        # Quando estabilizar baseline, remover continue-on-error.
-        continue-on-error: true
+        # Boromir v3 (2026-06-26): errors agora gate, warnings ainda nao.
+        # --max-warnings=9999 deixa warnings visiveis no log mas nao bloqueia.
+        # Proxima wave: reduzir warnings progressivamente e baixar o limite.
+        run: npm run lint -- --max-warnings=9999
 
       - name: npm audit (critical)
         # Bloqueia merge se houver CVE critico em deps de prod. Dependabot
