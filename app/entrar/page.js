@@ -135,7 +135,9 @@ export default function EntrarPage({ searchParams }) {
         </p>
 
         <h1 id="entrar-v2-title" className="entrar-v2-title">
-          Seu gêmeo<br />de carreira.
+          {/* Espaco apos <br /> e proposital — em mobile o <br> vira display:none
+              (regra abaixo), e sem o espaco o texto colava "gemeode carreira". */}
+          Seu gêmeo<br /> de carreira.
         </h1>
 
         <p className="entrar-v2-tagline">
@@ -326,7 +328,8 @@ export default function EntrarPage({ searchParams }) {
         .entrar-v2-input::placeholder{ color:var(--text-faint); }
         .entrar-v2-input:focus{ outline:none; border-color:var(--accent-cyan-deep,var(--accent-deep)); box-shadow:0 0 0 3px var(--accent-cyan-glow,transparent); }
 
-        .entrar-v2-dev{ margin-top:8px; padding:12px 14px; background:var(--surface); border:1px dashed var(--border-strong); border-radius:var(--radius-md,10px); }
+        .entrar-v2-dev{ margin-top:8px; padding:10px 12px; background:transparent; border:1px dashed var(--border); border-radius:var(--radius-md,10px); opacity:.5; transition: opacity 220ms var(--ease-standard,cubic-bezier(.4,0,.2,1)), border-color 220ms; }
+        .entrar-v2-dev:hover, .entrar-v2-dev:focus-within{ opacity:1; border-color:var(--border-strong); }
         .entrar-v2-dev-summary{ display:inline-flex; align-items:center; gap:10px; cursor:pointer; list-style:none; font-family:var(--mono,"JetBrains Mono",monospace); font-size:12px; letter-spacing:.06em; color:var(--text-muted); }
         .entrar-v2-dev-summary::-webkit-details-marker{ display:none; }
         .entrar-v2-dev-badge{ padding:2px 6px; border-radius:var(--radius-sm,6px); background:var(--alert,var(--negative-soft)); color:var(--bg); font-size:9.5px; font-weight:700; letter-spacing:.12em; }
@@ -366,6 +369,11 @@ export default function EntrarPage({ searchParams }) {
         @media (prefers-reduced-motion:reduce){
           .entrar-v2-brand-dot, .entrar-v2-card, .entrar-v2-magic-form{ animation:none; }
         }
+
+        /* Theme toggle scoped — em /entrar fica menor + opacity baixa pra
+           nao competir com brand mark do header. :has() suporta caem all 2026. */
+        body:has(.entrar-v2-main) .theme-toggle{ top:24px; right:24px; width:32px; height:32px; opacity:.5; transition: opacity 220ms var(--ease-standard,cubic-bezier(.4,0,.2,1)); }
+        body:has(.entrar-v2-main) .theme-toggle:hover, body:has(.entrar-v2-main) .theme-toggle:focus-visible{ opacity:1; }
       `}</style>
     </main>
   );
