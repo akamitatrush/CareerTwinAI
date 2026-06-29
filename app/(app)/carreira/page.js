@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getCareerPath, getAllPaths } from "@/lib/career-paths";
+import Icon from "@/components/Icon";
 
 // Forca render dinamico: auth() (cookies) + Prisma. Nunca cachear.
 export const dynamic = "force-dynamic";
@@ -92,19 +93,7 @@ export default async function CarreiraPage() {
           >
             <span className="ct-target-label">CARGO-ALVO</span>
             <span className="ct-target-value">{targetRole}</span>
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            <Icon name="chevron-down" size={15} stroke={2} />
           </Link>
         )}
       </header>

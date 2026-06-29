@@ -12,6 +12,7 @@ import DashboardTracker from "./DashboardTracker";
 import DailyQuestCard from "./DailyQuestCard";
 import DashboardHighlightBanner from "@/components/DashboardHighlightBanner";
 import SkillGraph from "@/components/SkillGraph";
+import Icon from "@/components/Icon";
 import { skillsForRole } from "@/lib/skills-taxonomy";
 
 export const dynamic = "force-dynamic";
@@ -151,19 +152,7 @@ export default async function DashboardPage() {
           <span className="ct-target-value">
             {profile?.targetRole || "Defina seu cargo"}
           </span>
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
+          <Icon name="chevron-down" size={15} stroke={2} />
         </Link>
       </div>
 
@@ -504,19 +493,7 @@ function SubScoresCol({ latest, projectedByDimension = {} }) {
         <div className="ct-subscores-title">Como esse número é formado</div>
         <Link href="/transparencia" className="ct-subscores-link">
           Como calculamos
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
+          <Icon name="arrow-right" size={13} stroke={2} />
         </Link>
       </div>
       <div className="ct-subscores-list">

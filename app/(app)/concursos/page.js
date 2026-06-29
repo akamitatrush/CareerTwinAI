@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { fetchConcursos } from "@/lib/concursos";
+import Icon from "@/components/Icon";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Concursos públicos — CareerTwin AI" };
@@ -340,10 +341,7 @@ export default async function ConcursosPage({ searchParams }) {
         {items.length === 0 ? (
           <div className="ct-empty-state-v2">
             <div className="ct-empty-state-v2-icon" aria-hidden="true">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
-              </svg>
+              <Icon name="search" size={28} stroke={2} />
             </div>
             <h3 className="ct-empty-state-v2-title">
               {uf || nivel || area
