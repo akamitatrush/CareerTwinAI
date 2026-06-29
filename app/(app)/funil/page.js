@@ -7,6 +7,7 @@ import {
   aggregateLastNWeeks,
   startOfWeekUTC,
 } from "@/lib/funnel";
+import Icon from "@/components/Icon";
 import FunnelForm from "./FunnelForm";
 import FunnelChart from "./FunnelChart";
 
@@ -62,18 +63,7 @@ export default async function FunilPage() {
     <main id="main-content" className="app-container site-section-mesh">
       <header className="ct-page-header">
         <div className="ct-page-header-icon" aria-hidden="true">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 5h18l-7 9v6l-4-2v-4z" />
-          </svg>
+          <Icon name="nav-funnel" size={22} stroke={2} />
         </div>
         <div className="ct-page-header-content">
           <div className="ct-page-header-eyebrow">MÉTRICAS - FUNIL DE BUSCA</div>
@@ -93,18 +83,7 @@ export default async function FunilPage() {
       {!hasEntries ? (
         <div className="ct-empty-state-v2" style={{ marginTop: 24 }}>
           <div className="ct-empty-state-v2-icon" aria-hidden="true">
-            <svg
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 5h18l-7 9v6l-4-2v-4z" />
-            </svg>
+            <Icon name="nav-funnel" size={30} stroke={2} />
           </div>
           <div className="ct-empty-state-v2-title">
             Comece registrando esta semana

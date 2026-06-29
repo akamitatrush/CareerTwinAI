@@ -6,6 +6,7 @@ import { searchJobs } from "@/lib/jobs";
 import { extractSkills, SKILLS } from "@/lib/skills-taxonomy";
 import { suggestCoursesForSkill } from "@/lib/knowledge/course-retrieval";
 import DashboardHighlightBanner from "@/components/DashboardHighlightBanner";
+import Icon from "@/components/Icon";
 import GapsKpiStrip from "./GapsKpiStrip";
 import SkillMap from "./SkillMap";
 import RequirementsFrequency from "./RequirementsFrequency";
@@ -169,18 +170,7 @@ export default async function GapsPage() {
           aria-hidden="true"
           style={{ filter: "drop-shadow(0 0 6px var(--accent-cyan-glow))" }}
         >
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M3 3l3 12 4-8 4 6 7-13" />
-          </svg>
+          <Icon name="nav-chart" size={22} stroke={2} />
         </div>
         <div className="ct-page-header-content">
           <div className="ct-page-header-eyebrow">DIAGNÓSTICO · LACUNAS</div>
@@ -212,19 +202,7 @@ export default async function GapsPage() {
           >
             <span className="ct-target-label">CARGO-ALVO</span>
             <span className="ct-target-value">{data.profile.targetRole}</span>
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+            <Icon name="chevron-down" size={15} stroke={2} />
           </Link>
         )}
       </header>
