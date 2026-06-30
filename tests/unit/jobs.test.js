@@ -43,6 +43,49 @@ describe("lib/jobs — fallback ilustrativo", () => {
   });
 });
 
+describe("searchJobs — single-flight (Gimli G2 2026-06-30)", () => {
+  beforeEach(() => {
+    cacheClear();
+    delete process.env.ADZUNA_APP_ID;
+    delete process.env.ADZUNA_APP_KEY;
+    delete process.env.JOOBLE_API_KEY;
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  });
+
+  it("3 chamadas concorrentes pra mesma key resolvem pro MESMO payload (single-flight)", async () => {
+    // Sem providers externos, sai pelo fallback de fixtures — mas o
+    // single-flight garante que apenas UMA execucao monta o payload e os 3
+    // awaiters compartilham a mesma referencia resolvida. Sem o Map de
+    // inflight, cada chamada construiria seu proprio array e objeto.
+    const [r1, r2, r3] = await Promise.all([
+      searchJobs({ role: "Engenheiro de Dados", limit: 3 }),
+      searchJobs({ role: "Engenheiro de Dados", limit: 3 }),
+      searchJobs({ role: "Engenheiro de Dados", limit: 3 }),
+    ]);
+    // Identity equality — se nao fosse single-flight, cada chamada criaria
+    // payload novo (jobs.length pode ate ser igual, mas refs distintas).
+    expect(r2).toBe(r1);
+    expect(r3).toBe(r1);
+  });
+
+  it("chamadas com keys distintas NAO compartilham resultado", async () => {
+    const [a, b] = await Promise.all([
+      searchJobs({ role: "Product Manager", limit: 3 }),
+      searchJobs({ role: "Designer", limit: 3 }),
+    ]);
+    expect(a).not.toBe(b);
+  });
+
+  it("apos resolver, inflight e limpo e proxima chamada usa cache", async () => {
+    const r1 = await searchJobs({ role: "QA", limit: 3 });
+    // 2a chamada vem do cache (mesma referencia salva), nao de uma Promise
+    // pendurada no Map de inflight.
+    const r2 = await searchJobs({ role: "QA", limit: 3 });
+    expect(r2).toBe(r1);
+  });
+});
+
 describe("searchFixtures", () => {
   it("retorna vagas relevantes pra um role conhecido", async () => {
     const out = await searchFixtures({ role: "Designer", limit: 3 });
