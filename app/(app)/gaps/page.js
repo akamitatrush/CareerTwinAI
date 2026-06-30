@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { searchJobs } from "@/lib/jobs";
-import { extractSkills, SKILLS } from "@/lib/skills-taxonomy";
+import { SKILLS } from "@/lib/skills-taxonomy";
+import { computeAdherenceTop } from "@/lib/scoring/adherence";
 import { suggestCoursesForSkill } from "@/lib/knowledge/course-retrieval";
 import DashboardHighlightBanner from "@/components/DashboardHighlightBanner";
 import Icon from "@/components/Icon";
@@ -17,15 +18,10 @@ import MicroactionCard from "./MicroactionCard";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Análise de lacunas — CareerTwin AI" };
 
-// Espelha exatamente a logica de /api/gaps/summary e /api/gaps/requirements
-// pra evitar chamada HTTP interna num server component (URL absoluta chata
-// em dev/preview/prod). Mesma formula, mesmo top-18, mesma definicao de
-// "high priority" e aderencia ponderada.
-//
-// Tambem traz o snapshot mais recente do usuario com seus Gap reais (vindos
-// do /api/analyze). Esses gaps tem microacao concreta + impactoPontos e sao
-// o que o usuario realmente vai marcar como concluido. As "requirements" sao
-// analise estatistica do mercado, abstratas, sem microacao.
+// Server component: delega calculo a lib/scoring/adherence.js (refactor
+// 2026-06-29, auditoria Gandalf). Antes duplicava a logica de /api/gaps/*
+// pra evitar fetch HTTP interno; agora a fonte unica e o modulo. Snapshot
+// do user vem do banco como antes — gaps reais sao do /api/analyze.
 async function getGapsData(userId) {
   const [profile, latestSnapshot] = await Promise.all([
     prisma.profile.findUnique({ where: { userId } }),
@@ -38,10 +34,6 @@ async function getGapsData(userId) {
   if (!profile?.targetRole) {
     return { profile, latestSnapshot, noTarget: true };
   }
-
-  const userSkills = new Set(
-    (profile.skills || []).map((s) => String(s).toLowerCase()),
-  );
 
   // Pool grande pra agregacao estatistica (limit 200). Tolerante a falha:
   // se provedores cairem, mostramos empty state ao inves de quebrar.
@@ -57,45 +49,17 @@ async function getGapsData(userId) {
   }
 
   const totalJobs = jobsPayload.jobs.length || 0;
+  const top = computeAdherenceTop(profile.skills, jobsPayload.jobs);
+  const requirements = top.requirements;
 
-  const skillMap = new Map();
-  jobsPayload.jobs.forEach((j) => {
-    const skills = extractSkills(`${j.titulo || ""} ${j.descricao || ""}`);
-    skills.forEach((sk) => {
-      const key = String(sk).toLowerCase();
-      skillMap.set(key, (skillMap.get(key) || 0) + 1);
-    });
-  });
-
-  // Top 18 requisitos mais frequentes — mesmo recorte das APIs.
-  const requirements = Array.from(skillMap.entries())
-    .map(([skill, count]) => ({
-      name: skill,
-      count,
-      pct: totalJobs > 0 ? Math.round((count / totalJobs) * 100) : 0,
-      status: userSkills.has(skill) ? "have" : "missing",
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 18);
-
-  const skillsHave = requirements.filter((r) => r.status === "have").length;
-  // "High priority" = skill em 70%+ das vagas que o usuario ainda nao tem.
-  const highPriorityGaps = requirements.filter(
-    (r) => r.status === "missing" && r.pct >= 70,
-  ).length;
-
-  // Aderencia ponderada por frequencia: skills muito pedidas pesam mais.
-  const totalWeight = requirements.reduce((s, r) => s + r.pct, 0);
-  const matchedWeight = requirements
-    .filter((r) => r.status === "have")
-    .reduce((s, r) => s + r.pct, 0);
-  const adherence =
-    totalWeight > 0 ? Math.round((matchedWeight / totalWeight) * 100) : 0;
-
-  // Bandeira de transparencia: se a unica fonte foi fixtures, eh ilustrativo.
-  const isIllustrative =
-    jobsPayload.sources.includes("fixtures") &&
-    jobsPayload.sources.length === 1;
+  // illustrativeRatio (0..1) substitui o boolean enganoso da era pre-auditoria.
+  // Hoje searchJobs nao mescla mais fixtures pra completar limite: ou veio do
+  // mercado real, ou caiu 100% em fixtures (fallback total quando nenhum
+  // provider respondeu).
+  const illustrativeRatio = typeof jobsPayload.illustrativeRatio === "number"
+    ? jobsPayload.illustrativeRatio
+    : (jobsPayload.sources.includes("fixtures") && jobsPayload.sources.length === 1 ? 1 : 0);
+  const isIllustrative = illustrativeRatio >= 0.5;
 
   // === Conjuntos derivados para o SkillMap ===
   // requirementSet: skills (lowercase) que estao nos requirements top-18.
@@ -116,10 +80,12 @@ async function getGapsData(userId) {
     noTarget: false,
     summary: {
       totalJobs,
-      skillsRequired: requirements.length,
-      skillsHave,
-      highPriorityGaps,
-      adherence,
+      realCount: jobsPayload.realCount ?? totalJobs,
+      skillsRequired: top.skillsRequired,
+      skillsHave: top.skillsHave,
+      highPriorityGaps: top.highPriorityGaps,
+      adherence: top.adherence,
+      illustrativeRatio,
       isIllustrative,
     },
     requirements,
