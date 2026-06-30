@@ -181,6 +181,56 @@ describe("fixtures produzem vagas com skills extraiveis", () => {
     expect(r[0].salario).toMatch(/R\$/);
   });
 
+  // Fix P0.7 (report Data 2026-06-30 §Apendice C, fix #1):
+  // targetTokens em searchFixtures filtra NOISE_TOKENS antes de calcular
+  // titHit. Antes, "pleno"/"senior"/"manager" no targetRole batiam ~25 de
+  // 47 fixtures de verticais aleatorias (qualquer titulo "X Pleno" matchava
+  // role "Y pleno"). Isso poluia o pool com +15-25pp de falsos positivos.
+  describe("Fix P0.7 — NOISE_TOKENS filtrado de targetTokens (anti substring-bug)", () => {
+    it("role 'analista pleno' NAO retorna 'Product Designer Pleno' (cross-vertical leak via 'pleno')", async () => {
+      // Pre-fix: tokens ["analista","pleno"] → titHit em "Product Designer Pleno"
+      // (substring "pleno" no titulo) → score=5 → entra no top-K como falso
+      // positivo. Pos-fix: "pleno" e ruido → tokens ["analista"] → "Designer
+      // Pleno" nao tem "analista" no titulo → score=0 → fora do pool.
+      const r = await searchFixtures({ role: "analista pleno", limit: 24 });
+      const titulos = r.map((j) => j.titulo.toLowerCase());
+      expect(titulos.some((t) => t.includes("designer"))).toBe(false);
+      expect(titulos.some((t) => t.includes("backend"))).toBe(false);
+      expect(titulos.some((t) => t.includes("frontend"))).toBe(false);
+    });
+
+    it("role contendo so 'pleno' NAO retorna catalogo aleatorio (token e 100% ruido)", async () => {
+      // Pre-fix: "pleno" sozinho batia titHit em ~25 fixtures (qualquer "X Pleno").
+      // Pos-fix: targetTokens=[] (so havia 1 token, todo NOISE) → titHit=false
+      // sempre → matched=[] → [] (Gimli G3: honestidade > preencher).
+      const r = await searchFixtures({ role: "pleno", limit: 24 });
+      expect(r).toEqual([]);
+    });
+
+    it("role 'designer pleno' AINDA retorna designers (token util sobrevive)", async () => {
+      // Verifica que o filtro nao quebra o caso feliz: "designer" sobrevive
+      // NOISE_TOKENS → matcha fixtures de design por areaHit/titHit normal.
+      const r = await searchFixtures({ role: "designer pleno", limit: 10 });
+      expect(r.length).toBeGreaterThan(0);
+      // Pelo menos um resultado deve ser de design (titulo ou area).
+      const algumDesign = r.some(
+        (j) =>
+          j.titulo.toLowerCase().includes("designer") ||
+          j.titulo.toLowerCase().includes("design")
+      );
+      expect(algumDesign).toBe(true);
+    });
+
+    it("role 'backend senior' AINDA retorna backends (senioridade nao quebra busca core ICP)", async () => {
+      const r = await searchFixtures({ role: "backend senior", limit: 10 });
+      expect(r.length).toBeGreaterThan(0);
+      const algumBackend = r.some((j) =>
+        j.titulo.toLowerCase().includes("backend")
+      );
+      expect(algumBackend).toBe(true);
+    });
+  });
+
   it("contrato searchFixtures: campos obrigatorios preservados", async () => {
     const r = await searchFixtures({ role: "produto", limit: 2 });
     r.forEach((j) => {

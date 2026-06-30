@@ -56,6 +56,8 @@ vi.mock("@/lib/jobs", () => ({
 vi.mock("@/lib/skills-taxonomy", () => ({
   extractSkills: vi.fn(() => ["python", "sql"]),
   matchScore: vi.fn(() => ({ match: 80, comuns: ["python"], falta: ["docker"] })),
+  // P0.3: rota agora importa detectSeniority pra alimentar matchScore multi-sinal.
+  detectSeniority: vi.fn(() => null),
 }));
 
 import { prisma } from "@/lib/db";

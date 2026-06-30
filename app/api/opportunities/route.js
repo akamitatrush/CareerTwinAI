@@ -5,7 +5,7 @@ import { completeJSONWithUsage } from "@/lib/llm";
 import { promptOpp, promptOppReal, promptPlano } from "@/lib/prompts";
 import { OppBody, OppShape, PorquesShape, PlanoShape } from "@/lib/validators";
 import { searchJobs } from "@/lib/jobs";
-import { extractSkills, matchScore } from "@/lib/skills-taxonomy";
+import { extractSkills, matchScore, detectSeniority } from "@/lib/skills-taxonomy";
 import { guardLLM, tooMany } from "@/lib/rate-limit";
 import { enforceUsage, trackTokenUsage, checkDailyBudget } from "@/lib/billing/enforce";
 import { audit } from "@/lib/audit";
@@ -148,10 +148,21 @@ async function handler(req) {
   } catch (e) {
     console.error("jobs busca falhou:", e?.message);
   }
+  // P0.3 (po-oportunidades-auditoria.md §P0.3): matchScore agora considera
+  // role similarity + senioridade alem de skills overlap. Detectamos senioridade
+  // direto do cargo-alvo (ex.: "Senior Backend Engineer" -> "senior") e caimos
+  // pro cargo atual quando o alvo nao traz nivel explicito.
+  const profileSeniority = detectSeniority(role) || detectSeniority(perfil?.cargo_atual);
   const enriched = payloadJobs.jobs.map((j) => {
     const jobSkills = extractSkills(`${j.titulo} ${j.descricao}`);
-    const { match, comuns, falta } = matchScore({ profileSkills, jobSkills });
-    return { ...j, comuns, falta: falta.slice(0, 3), match };
+    const { match, comuns, falta, breakdown } = matchScore({
+      profileSkills,
+      jobSkills,
+      targetRole: role,
+      jobTitle: j.titulo,
+      profileSeniority,
+    });
+    return { ...j, comuns, falta: falta.slice(0, 3), match, breakdown: breakdown || null };
   });
   // Filtra vagas com match=0 — "0% match" exibido no mesmo pill verde-limão
   // dos matches altos confunde o usuario e parece bug. Se sobrar zero apos
@@ -381,6 +392,12 @@ async function handler(req) {
     sources: payloadJobs.sources,
     counts: payloadJobs.counts || {},
     illustrative: allIllustrative,
+    // Fix P0.8 (report Data 2026-06-30 §8 + Apendice C, Gimli G3 2026-06-30):
+    // searchJobs ja calcula `noRelevantFixtures` (lib/jobs/index.js:176)
+    // quando providers reais zeram E fixtures retornam [] pra role nicho.
+    // Sem propagar pra UI, o RadarClient nao distingue "sem cobertura pro
+    // cargo" (empty-state honesto) de "providers cairam" (erro/retry).
+    noRelevantFixtures: Boolean(payloadJobs?.noRelevantFixtures),
   });
 }
 
