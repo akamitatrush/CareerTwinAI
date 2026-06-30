@@ -1,22 +1,74 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { safeHref } from "@/lib/url-safe";
 import SrcChip from "@/components/SrcChip";
 
-// Labels casam exatamente com os aliases que a rota /api/opportunities
-// normaliza (junior/jr/trainee, pleno/mid, senior/sr...). Strings vazias =
-// "qualquer" — a rota ignora filtros vazios.
+// Labels usados nos filtros client-side. Os aliases (junior/jr/trainee,
+// pleno/mid, senior/sr/lead/principal/staff, remoto/remote/home office...)
+// sao aplicados localmente em `applyClientFilters` abaixo — o servidor nao
+// precisa refazer a busca pra cada mudanca de filtro.
 const SENIORITY_OPTIONS = ["", "Júnior", "Pleno", "Sênior"];
 const MODEL_OPTIONS = ["", "Remoto", "Híbrido", "Presencial"];
 const MIN_MATCH_OPTIONS = [0, 30, 50, 60, 70, 80];
+
+// Aliases pra `applyClientFilters`: replicam exatamente a normalizacao do
+// servidor (`app/api/opportunities/route.js:179-198`). Mantemos uma copia
+// pequena aqui pra evitar 1 round-trip + LLM + tick de quota Free toda vez
+// que o user mexe num <select>. Se a lista de aliases crescer, considerar
+// expor via /api/config ou compartilhar de `lib/`.
+const SENIORITY_ALIASES = {
+  junior: ["junior", "jr", "trainee"],
+  pleno: ["pleno", "mid", "mid-level", "mid level"],
+  senior: ["senior", "sr", "lead", "principal", "staff"],
+};
+const MODEL_ALIASES = {
+  remoto: ["remoto", "remote", "home office", "home-office"],
+  hibrido: ["hibrido", "hybrid"],
+  presencial: ["presencial", "on-site", "on site", "onsite"],
+};
+
+const normalizeFilter = (s) =>
+  String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+
+function applyClientFilters(allVagas, { seniority, model, minMatch }) {
+  let out = allVagas;
+  if (seniority) {
+    const key = normalizeFilter(seniority);
+    const aliases = SENIORITY_ALIASES[key] || [key];
+    out = out.filter((j) => {
+      const t = normalizeFilter(j.titulo);
+      return aliases.some((a) => t.includes(a));
+    });
+  }
+  if (model) {
+    const key = normalizeFilter(model);
+    const aliases = MODEL_ALIASES[key] || [key];
+    out = out.filter((j) => {
+      const t = normalizeFilter(
+        `${j.titulo || ""} ${j.descricao || ""} ${j.local || ""}`
+      );
+      return aliases.some((a) => t.includes(a));
+    });
+  }
+  if (minMatch > 0) {
+    out = out.filter((j) => (j.match || 0) >= minMatch);
+  }
+  return out;
+}
 
 export default function RadarClient({ initial }) {
   const [seniority, setSeniority] = useState("");
   const [model, setModel] = useState("");
   const [minMatch, setMinMatch] = useState(0);
-  const [vagas, setVagas] = useState([]);
+  // `allVagas` = payload bruto do servidor (sem filtros). `vagas` derivado.
+  // Trocamos 1 POST por mudanca de filtro (~10s + 1 tick de quota Free) por
+  // filtragem em memoria — vide §P0.5 do parecer perf-oportunidades 30/06.
+  const [allVagas, setAllVagas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [sources, setSources] = useState([]);
@@ -24,8 +76,10 @@ export default function RadarClient({ initial }) {
   const [illustrative, setIllustrative] = useState(false);
 
   useEffect(() => {
-    // `cancelled` previne race-condition: se o user mexer no filtro antes da
-    // resposta anterior chegar, a nova request sobe e a antiga e descartada.
+    // Re-fetch SO quando `initial` muda (novo snapshot/cargo-alvo). Filtros
+    // de UI (seniority/model/minMatch) sao pos-processamento — nunca
+    // disparam novo POST. `cancelled` mantido pra cobrir corrida em caso
+    // raro de prop trocar (ex: route refresh).
     let cancelled = false;
     setLoading(true);
     setError("");
@@ -34,9 +88,11 @@ export default function RadarClient({ initial }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         ...initial,
-        seniority: seniority || undefined,
-        model: model || undefined,
-        minMatch,
+        // Servidor pode ate filtrar, mas mandamos undefined pra receber o
+        // pool MAXIMO (top-24) e filtrar localmente sem perder vagas.
+        seniority: undefined,
+        model: undefined,
+        minMatch: 0,
         // Radar nao usa plano — economiza 1 chamada LLM (~15s).
         withPlan: false,
       }),
@@ -45,7 +101,7 @@ export default function RadarClient({ initial }) {
       .then(({ ok, data }) => {
         if (cancelled) return;
         if (!ok) throw new Error(data.error || "Falha ao buscar vagas");
-        setVagas(data.vagas || []);
+        setAllVagas(data.vagas || []);
         setSources(data.sources || []);
         setCounts(data.counts || {});
         setIllustrative(!!data.illustrative);
@@ -59,7 +115,13 @@ export default function RadarClient({ initial }) {
     return () => {
       cancelled = true;
     };
-  }, [seniority, model, minMatch, initial]);
+  }, [initial]);
+
+  // Filtragem derivada — instantanea ao mexer no <select>.
+  const vagas = useMemo(
+    () => applyClientFilters(allVagas, { seniority, model, minMatch }),
+    [allVagas, seniority, model, minMatch]
+  );
 
   return (
     <>
@@ -461,7 +523,14 @@ function JobCard({ job, index }) {
         >
           <h4>Por que {fit}% de aderência?</h4>
           <div className="ct-job-breakdown-formula">
-            <code>match = |skills em comum| / max(|perfil|, |vaga|) × 100</code>
+            <code>
+              % match = skills em comum ÷ skills exigidas pela vaga × 100
+            </code>
+            <p className="ct-job-breakdown-formula-note">
+              Denominador é o total de skills detectadas na vaga (não no seu
+              perfil). Implementação em{" "}
+              <Link href="/transparencia">/transparencia</Link>.
+            </p>
           </div>
           <div className="ct-job-breakdown-numbers">
             <div className="ct-job-breakdown-num-row">
