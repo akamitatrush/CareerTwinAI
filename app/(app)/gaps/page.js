@@ -75,6 +75,11 @@ async function getGapsData(userId) {
     for (const a of aliases) canonicalSet.add(String(a).toLowerCase());
   }
 
+  // Gimli G3 2026-06-30: role nicho sem cobertura — providers reais e
+  // fixtures retornaram 0. NoJobsState ja trata totalJobs===0; flag fica
+  // disponivel pro form "pedir cobertura" (escopo separado).
+  const noRelevantFixtures = Boolean(jobsPayload.noRelevantFixtures);
+
   return {
     profile,
     latestSnapshot,
@@ -88,6 +93,7 @@ async function getGapsData(userId) {
       adherence: top.adherence,
       illustrativeRatio,
       isIllustrative,
+      noRelevantFixtures,
     },
     requirements,
     requirementSet,
@@ -187,7 +193,10 @@ export default async function GapsPage() {
       {data.noTarget ? (
         <NoTargetState />
       ) : data.summary && data.summary.totalJobs === 0 && !hasGaps ? (
-        <NoJobsState />
+        <NoJobsState
+          noRelevantFixtures={Boolean(data.summary.noRelevantFixtures)}
+          targetRole={data.profile?.targetRole}
+        />
       ) : (
         <>
           {/* Ato 1 — Onde voce esta */}
@@ -292,7 +301,37 @@ function NoTargetState() {
   );
 }
 
-function NoJobsState() {
+function NoJobsState({ noRelevantFixtures = false, targetRole = "" } = {}) {
+  // Diferenciacao Gimli G3 2026-06-30:
+  //  - noRelevantFixtures=true → role nicho fora das 20 categorias mapeadas
+  //    (catalogo fixtures nao tem cobertura). Mensagem honesta + sinal pro
+  //    user que vamos expandir cobertura (form "pedir cobertura" entra aqui).
+  //  - default → providers reais cairam (rate-limit, indisponibilidade) e o
+  //    role esta mapeado. Mensagem "tente mais tarde".
+  if (noRelevantFixtures) {
+    return (
+      <div
+        className="ct-dash-empty app-glass"
+        style={{
+          boxShadow:
+            "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
+        }}
+      >
+        <h2>Ainda não temos cobertura pra esse cargo</h2>
+        <p>
+          {targetRole ? <>O cargo <strong>{targetRole}</strong> está</> : "Esse cargo está"}{" "}
+          fora das áreas que hoje conseguimos analisar com profundidade.
+          Não vamos te mostrar diagnóstico com vagas de outro cargo só pra
+          preencher tela — isso seria desonesto.
+        </p>
+        <p style={{ marginTop: "0.75rem", opacity: 0.85 }}>
+          Estamos expandindo a cobertura. Em breve você poderá pedir a
+          inclusão do seu cargo nesta tela.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div
       className="ct-dash-empty app-glass"

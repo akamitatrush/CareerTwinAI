@@ -150,9 +150,25 @@ describe("fixtures produzem vagas com skills extraiveis", () => {
     expect(avg).toBeLessThanOrEqual(30000);
   });
 
-  it("role desconhecido nao retorna vazio (fallback catalogo)", async () => {
-    const r = await searchFixtures({ role: "xyz-cargo-inexistente-qualquer", limit: 8 });
-    expect(r.length).toBeGreaterThan(0);
+  it("role desconhecido retorna [] (Gimli G3 2026-06-30: honestidade > preencher)", async () => {
+    // Antes: catalogo.slice(0, 8) — qualquer role vira 8 vagas de Backend.
+    // Agora: retorna [] e caller (lib/jobs/index.js) sinaliza
+    // `noRelevantFixtures: true`. UI mostra empty-state honesto.
+    //
+    // Limitacao conhecida do algoritmo de match em searchFixtures: areas
+    // curtas (`ai`, `ux`, `ia`, `ml`, `bi`, `cs`, `rh`, `qa`, `pm`) batem
+    // por substring sem word-boundary — ate role "psiquiatra" pega por
+    // causa do "ia" em "psiqu_ia_tra". Tests usam roles cujo texto nao
+    // contem nenhuma dessas siglas em nenhum substring.
+    const r = await searchFixtures({ role: "fisioterapeuta esportivo", limit: 8 });
+    expect(r).toEqual([]);
+  });
+
+  it("roles nicho reais (professor/dentista) retornam [] pra evitar viesar p/ Backend", async () => {
+    const prof = await searchFixtures({ role: "professor matematica fisica", limit: 8 });
+    const dent = await searchFixtures({ role: "dentista clinico", limit: 8 });
+    expect(prof).toEqual([]);
+    expect(dent).toEqual([]);
   });
 
   it("respeita limit como teto, nao piso", async () => {

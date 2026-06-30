@@ -51,6 +51,8 @@ export async function GET() {
       realCount: jobsPayload.realCount ?? jobsPayload.jobs.length,
       illustrativeRatio,
       isIllustrative: illustrativeRatio >= 0.5,
+      // Gimli G3 2026-06-30: vide rota /api/gaps/summary.
+      noRelevantFixtures: Boolean(jobsPayload.noRelevantFixtures),
     });
   } catch (err) {
     console.error("gaps/requirements erro:", err?.message);

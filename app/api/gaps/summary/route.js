@@ -53,6 +53,10 @@ export async function GET() {
       adherence: top.adherence,
       illustrativeRatio,
       isIllustrative: illustrativeRatio >= 0.5,
+      // Gimli G3 2026-06-30: sinaliza role nicho sem cobertura no catalogo
+      // de fixtures (e providers reais retornaram 0). UI pode renderizar
+      // empty-state com form "pedir cobertura". Default false p/ back-compat.
+      noRelevantFixtures: Boolean(jobsPayload.noRelevantFixtures),
     });
   } catch (err) {
     console.error("gaps/summary erro:", err?.message);
