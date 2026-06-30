@@ -182,7 +182,23 @@ async function handle(req) {
         failed++;
         continue;
       }
-      const jobs = jobsByRole.get(role) || [];
+      // Gimli 2026-06-30 H1: SO vagas reais entram no briefing. Fixtures
+      // sao curadas pra fallback no /gaps (com flag illustrativeRatio na UI),
+      // mas no email diario nao temos como dizer "essa empresa nao existe" —
+      // o template fala "Vaga em destaque: X @ Y" como se fosse oferta real.
+      // Mesmo pattern do digest semanal (cron/digest/route.js:106).
+      const allJobs = jobsByRole.get(role) || [];
+      const realJobs = allJobs.filter((j) => j?.source !== "fixtures");
+      if (realJobs.length === 0) {
+        // Sem vagas reais hoje → skip silencioso. NAO atualiza
+        // lastDailyBriefingAt: proximo cron tenta de novo (debounce 18h evita
+        // spam mas permite recuperacao quando provider voltar). Log
+        // estruturado pra observabilidade (ver R-AUDIT do Gimli).
+        const uid = String(user.id || "").slice(0, 8);
+        console.warn(`daily-briefing user=${uid} role="${role}" skip: 0 vagas reais (total=${allJobs.length})`);
+        failed++;
+        continue;
+      }
       const latest = user.snapshots?.[0];
       const displayName = user.profile?.nome || user.name || "";
       const firstName = (displayName.split(" ")[0] || "").trim();
@@ -192,7 +208,7 @@ async function handle(req) {
         role,
         score: latest?.overall ?? null,
         topGap: latest?.gaps?.[0]?.habilidade || null,
-        topJobs: jobs.slice(0, 3),
+        topJobs: realJobs.slice(0, 3),
       });
 
       await sendBriefingEmail({

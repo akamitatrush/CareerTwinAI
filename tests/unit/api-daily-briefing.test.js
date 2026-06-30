@@ -320,6 +320,56 @@ describe("cron daily-briefing", () => {
     expect(mockAudit).not.toHaveBeenCalled();
   });
 
+  // ---------- FILTRA FIXTURES (Gimli H1 — 2026-06-30) ----------
+
+  it("nao envia email quando todas as vagas sao fixtures (source==='fixtures')", async () => {
+    mockUserFindMany.mockResolvedValue([makeUser()]);
+    mockSearchJobs.mockResolvedValue({
+      jobs: [
+        { titulo: "PM Fic", empresa: "Norte Tech", source: "fixtures" },
+        { titulo: "PM Mock", empresa: "Sul Corp", source: "fixtures" },
+      ],
+    });
+    mockCompleteJSON.mockResolvedValue({ subject: "s", text: "t" });
+
+    const r = await GET(makeReq("test-secret-1234567890abcd"));
+    const data = await r.json();
+    expect(r.status).toBe(200);
+    expect(data.sent).toBe(0);
+    // Sem envio, sem update de debounce (proxima execucao tenta de novo).
+    expect(mockSendBriefingEmail).not.toHaveBeenCalled();
+    expect(mockUserUpdate).not.toHaveBeenCalled();
+    expect(mockAudit).not.toHaveBeenCalled();
+  });
+
+  it("em pool misto (reais + fixtures) so reais entram no topJobs do LLM", async () => {
+    mockUserFindMany.mockResolvedValue([makeUser()]);
+    mockSearchJobs.mockResolvedValue({
+      jobs: [
+        { titulo: "PM Real", empresa: "Acme", source: "adzuna" },
+        { titulo: "PM Mock", empresa: "Norte Tech", source: "fixtures" },
+        { titulo: "PM Real 2", empresa: "Beta", source: "jooble" },
+        { titulo: "PM Mock 2", empresa: "Sul Corp", source: "fixtures" },
+      ],
+    });
+    mockCompleteJSON.mockResolvedValue({
+      subject: "Briefing",
+      text: "Texto.",
+    });
+
+    const r = await GET(makeReq("test-secret-1234567890abcd"));
+    const data = await r.json();
+    expect(data.sent).toBe(1);
+
+    // LLM prompt deve referir apenas vagas reais — checa via texto do user prompt.
+    const llmCall = mockCompleteJSON.mock.calls[0][0];
+    const userPrompt = llmCall?.user || "";
+    expect(userPrompt).toMatch(/PM Real/);
+    expect(userPrompt).toMatch(/PM Real 2/);
+    expect(userPrompt).not.toMatch(/Norte Tech/);
+    expect(userPrompt).not.toMatch(/Sul Corp/);
+  });
+
   // ---------- NO-OP SEM PROVIDER ----------
 
   it("no-op quando nenhum provider de email configurado", async () => {
