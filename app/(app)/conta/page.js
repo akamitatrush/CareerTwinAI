@@ -12,6 +12,7 @@ import {
   MAX_POINTS,
 } from "@/lib/achievements";
 import CvAnalyzer from "./CvAnalyzer";
+import TargetRoleForm from "./TargetRoleForm";
 
 // Forca render dinamico — depende de auth() (cookies) e Prisma.
 export const dynamic = "force-dynamic";
@@ -25,9 +26,10 @@ const NameSchema = z
   .object({ name: z.string().trim().min(1).max(80) })
   .strict();
 
-const TargetRoleSchema = z
-  .object({ targetRole: z.string().trim().max(80) })
-  .strict();
+// TargetRoleSchema vive em ./actions.js — server action extraida pra permitir
+// invocacao direta do client component TargetRoleForm (que orquestra save +
+// auto-refresh sincrono do diagnostico — P0.3 po-oportunidades-auditoria
+// 2026-06-30).
 
 const DigestSchema = z
   .object({ enabled: z.union([z.literal("on"), z.literal("")]).optional() })
@@ -80,37 +82,11 @@ async function updateNameAction(formData) {
   revalidatePath("/conta");
 }
 
-async function updateTargetRoleAction(formData) {
-  "use server";
-  const session = await auth();
-  if (!session?.user?.id) redirect("/entrar");
-
-  const parsed = TargetRoleSchema.safeParse({
-    targetRole: formData.get("targetRole") ?? "",
-  });
-  if (!parsed.success) genericError();
-
-  const role = parsed.data.targetRole;
-  try {
-    await prisma.profile.upsert({
-      where: { userId: session.user.id },
-      update: { targetRole: role || null },
-      create: { userId: session.user.id, targetRole: role || null },
-    });
-    // Audit log — LGPD: registra mudanca, sem revelar o cargo (privacy).
-    const h = headers();
-    await audit({
-      userId: session.user.id,
-      action: "PROFILE_UPDATED",
-      actorIp: getActorIpFromHeaders(h),
-      target: `Profile:${session.user.id}`,
-      meta: { field: "targetRole", cleared: !role },
-    });
-  } catch {
-    genericError();
-  }
-  revalidatePath("/conta");
-}
+// updateTargetRoleAction (server action) movida pra ./actions.js como
+// `updateTargetRole`. TargetRoleForm (client) chama direto e dispara
+// /api/profile/refresh sincrono quando o cargo muda — corrige bug de
+// inconsistencia Profile.targetRole vs ScoreSnapshot.role (P0.1 do
+// docs/fluxos/auditoria/30062026/po-oportunidades-auditoria.md §3.5).
 
 async function toggleDigestAction(formData) {
   "use server";
@@ -388,28 +364,10 @@ export default async function ContaPage({ searchParams }) {
             </div>
           </div>
 
-          <form
-            action={updateTargetRoleAction}
-            style={{ display: "grid", gap: 8, maxWidth: 480 }}
-          >
-            <label htmlFor="targetRole" className="ct-conta-label">
-              Cargo-alvo
-            </label>
-            <input
-              id="targetRole"
-              name="targetRole"
-              type="text"
-              maxLength={80}
-              defaultValue={profile?.targetRole || ""}
-              placeholder="Ex: Product Manager de IA"
-              className="ct-conta-input"
-            />
-            <div>
-              <button className="ct-conta-btn primary" type="submit">
-                Salvar cargo-alvo
-              </button>
-            </div>
-          </form>
+          {/* TargetRoleForm (client) — substitui form com action server pra
+              poder orquestrar auto-refresh sincrono do diagnostico quando o
+              cargo muda. Mantem a11y (label + aria-busy + aria-live status). */}
+          <TargetRoleForm initialTargetRole={profile?.targetRole || ""} />
         </section>
 
         {/* ============================================================
