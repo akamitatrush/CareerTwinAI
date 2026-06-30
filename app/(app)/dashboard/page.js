@@ -13,6 +13,7 @@ import DailyQuestCard from "./DailyQuestCard";
 import DashboardHighlightBanner from "@/components/DashboardHighlightBanner";
 import SkillGraph from "@/components/SkillGraph";
 import Icon from "@/components/Icon";
+import AlgorithmDisclaimer from "@/components/AlgorithmDisclaimer";
 import { skillsForRole } from "@/lib/skills-taxonomy";
 
 export const dynamic = "force-dynamic";
@@ -194,6 +195,10 @@ export default async function DashboardPage() {
           <SubScoresCol latest={latest} projectedByDimension={projectedByDimension} />
         </div>
       )}
+
+      {/* LGPD Art. 20 disclaimer — defesa em 1 linha pro direito do titular
+          a revisao de decisao automatizada. Vide ADR-006 + parecer PO §D2. */}
+      {latest && <AlgorithmDisclaimer />}
 
       {latest && <hr className="ct-section-divider" />}
 

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WEIGHTS, SS_META } from "@/lib/score";
+import AlgorithmDisclaimer from "@/components/AlgorithmDisclaimer";
 
 // Auth + Prisma sao dinamicos; layout (app) ja forca isso, mas reforcamos
 // aqui pra deixar explicito: a pagina LE dado do usuario.
@@ -81,6 +82,11 @@ export default async function TransparenciaPage() {
           </div>
         </div>
       </header>
+
+      {/* LGPD Art. 20 — disclaimer compacto, redundante mas obrigatorio:
+          o usuario que chega em /transparencia ja esta vendo a formula,
+          mas a microcopy do direito a revisao precisa estar aqui tambem. */}
+      <AlgorithmDisclaimer variant="compact" />
 
       {/* === 1. Tese editorial === */}
       <ThesisSection />

@@ -6,6 +6,7 @@ import { searchJobs } from "@/lib/jobs";
 import { SKILLS } from "@/lib/skills-taxonomy";
 import { computeAdherenceTop } from "@/lib/scoring/adherence";
 import { suggestCoursesForSkill } from "@/lib/knowledge/course-retrieval";
+import AlgorithmDisclaimer from "@/components/AlgorithmDisclaimer";
 import DashboardHighlightBanner from "@/components/DashboardHighlightBanner";
 import Icon from "@/components/Icon";
 import GapsKpiStrip from "./GapsKpiStrip";
@@ -195,6 +196,9 @@ export default async function GapsPage() {
             snapshot={snapshot}
             targetRole={data.profile?.targetRole}
           />
+
+          {/* LGPD Art. 20 — disclaimer compacto entre KPI e proximo bloco. */}
+          <AlgorithmDisclaimer variant="compact" />
 
           {/* Ato 2 — O que falta */}
           {data.summary && data.summary.totalJobs > 0 && (
