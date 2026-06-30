@@ -37,13 +37,7 @@ export default function SkillMap({ skills, requirementSet, canonicalSet }) {
     total > 0 ? Math.round((coveredCount / total) * 100) : 0;
 
   return (
-    <section
-      className="ct-skill-map app-glass"
-      aria-labelledby="gaps-skill-map-title"
-      style={{
-        boxShadow: "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
-      }}
-    >
+    <section className="ct-skill-map app-glass" aria-labelledby="gaps-skill-map-title">
       <header className="ct-skill-map-head">
         <div>
           <h3 id="gaps-skill-map-title" className="ct-skill-map-title">

@@ -60,7 +60,7 @@ export default async function FunilPage() {
   const hasEntries = entries.length > 0;
 
   return (
-    <main id="main-content" className="app-container site-section-mesh">
+    <main id="main-content" className="app-container">
       <header className="ct-page-header">
         <div className="ct-page-header-icon" aria-hidden="true">
           <Icon name="nav-funnel" size={22} stroke={2} />

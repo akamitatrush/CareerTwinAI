@@ -55,11 +55,11 @@ export default async function AutoconhecimentoPage() {
           spacing generoso. Mantem classes pra Galadriel polir CSS em
           paralelo, style inline garante vibe premium agora. */}
       <section
-        className="ct-self-hero site-section-mesh"
+        className="ct-self-hero"
         style={{
-          paddingTop: "clamp(56px, 9vw, 96px)",
-          paddingBottom: "clamp(32px, 5vw, 64px)",
-          marginBottom: "clamp(32px, 5vw, 64px)",
+          paddingTop: "32px",
+          paddingBottom: "24px",
+          marginBottom: "24px",
         }}
       >
         <p

@@ -115,11 +115,11 @@ export default async function PlanoPage() {
           clamp() + spacing generoso. Eyebrow "Plano de evolucao" porque o titulo
           em si nao da contexto temporal claro. */}
       <div
-        className="ct-gaps-header site-section-mesh"
+        className="ct-gaps-header"
         style={{
-          paddingTop: "clamp(56px, 9vw, 96px)",
-          paddingBottom: "clamp(32px, 5vw, 64px)",
-          marginBottom: "clamp(32px, 5vw, 64px)",
+          paddingTop: "32px",
+          paddingBottom: "24px",
+          marginBottom: "24px",
         }}
       >
         <div>

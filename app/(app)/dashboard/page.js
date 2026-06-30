@@ -118,10 +118,10 @@ export default async function DashboardPage() {
           inline pra garantir vibe Cloudwalk independente do que .ct-dash-title
           tem hoje. */}
       <div
-        className="ct-dash-header site-section-mesh"
+        className="ct-dash-header"
         style={{
-          paddingTop: "clamp(48px, 8vw, 96px)",
-          paddingBottom: "clamp(32px, 5vw, 64px)",
+          paddingTop: "32px",
+          paddingBottom: "24px",
         }}
       >
         <div>

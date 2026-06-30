@@ -311,7 +311,7 @@ export default async function ConcursosPage({ searchParams }) {
   const items = await fetchConcursos({ uf, nivel, area, limit: 30 });
 
   return (
-    <main id="main-content" className="app-container site-section-mesh">
+    <main id="main-content" className="app-container">
       <style>{`
         .ct-glass-hover:hover {
           transform: scale(1.01);

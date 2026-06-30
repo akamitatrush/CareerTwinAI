@@ -17,13 +17,7 @@ export default function RequirementsFrequency({
 }) {
   const list = Array.isArray(requirements) ? requirements.slice(0, limit) : [];
   return (
-    <section
-      className="ct-req-freq app-glass"
-      aria-labelledby="gaps-req-freq-title"
-      style={{
-        boxShadow: "0 8px 24px -6px var(--accent-cyan-glow), var(--shadow-md)",
-      }}
-    >
+    <section className="ct-req-freq app-glass" aria-labelledby="gaps-req-freq-title">
       <header className="ct-req-freq-head">
         <div>
           <h3 id="gaps-req-freq-title" className="ct-req-freq-title">

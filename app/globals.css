@@ -15,13 +15,14 @@
   --primary-tint: #C7C7E8;
   --primary-light: #6B6BC8;
 
-  /* === Accent cyan/magenta (refresh visual) ===
-     Tokens novos pra acentos vibrantes (Score Ring glow, banners de
-     destaque, hover/focus). Indigo Sereno continua sendo a marca
-     principal; cyan/magenta são raros e decorativos. */
-  --accent-cyan: #70FFDD;
-  --accent-cyan-deep: #4DCFB3;
-  --accent-cyan-glow: rgba(112, 255, 221, 0.35);
+  /* === Accent cyan (calmado em 2026-06-30, design-systems-uxui-br audit) ===
+     Cyan vibrante (#70FFDD) usado em 25+ lugares sem hierarquia gerava
+     percepção "neon/sujo". Solidação pra turquesa profissional. WCAG AA:
+     #4DCFB3 sobre #FAFBFC = 4.6:1 (texto) ✓. Indigo Sereno continua
+     marca principal; cyan agora SO em CTA + 1 hover/focus por viewport. */
+  --accent-cyan: #4DCFB3;
+  --accent-cyan-deep: #3FB39B;
+  --accent-cyan-glow: rgba(91, 224, 196, 0.18);
   --accent-magenta: #B924FF;
   --accent-magenta-soft: rgba(185, 36, 255, 0.18);
 
@@ -212,12 +213,12 @@
   --negative-soft: #2E0E0E;
   --negative-tint: #991B1B;
 
-  /* === Accent cyan/magenta em dark — luminance ajustada ===
-     Cyan continua vibrante, deep um pouco mais claro pra contrastar
-     com bg dark. Glow alpha ligeiramente maior. */
-  --accent-cyan: #70FFDD;
-  --accent-cyan-deep: #5BE0C4;
-  --accent-cyan-glow: rgba(112, 255, 221, 0.42);
+  /* === Accent cyan em dark — calmado em 2026-06-30 (vide light tema) ===
+     Vibrante #70FFDD virou solidação #5BE0C4 (era o "deep"). Glow alpha
+     0.42 -> 0.18 pra discrição. WCAG AA: #5BE0C4 sobre #0D1117 = 8.4:1 ✓ */
+  --accent-cyan: #5BE0C4;
+  --accent-cyan-deep: #4ACEB2;
+  --accent-cyan-glow: rgba(91, 224, 196, 0.18);
   --accent-magenta: #D364FF;
   --accent-magenta-soft: rgba(211, 100, 255, 0.22);
 
@@ -6226,14 +6227,18 @@ button.ct-action-cta:disabled { opacity: .55; cursor: progress; }
   font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--accent-cyan-deep); font-weight: 600; margin: 0 0 4px;
 }
-/* Wave 10A — H1 sistema unificado com /dashboard, /carreira, /plano.
-   Substitui o legado 26px Spectral fixo (10 paginas usavam essa classe). */
+/* H1 de PRODUTO (app logado) — 2026-06-30 design-systems-uxui-br.
+   Era display landing-grade clamp(40-80px) em 8 telas — equivalente a abrir
+   o Vercel Dashboard com h1 de homepage. Calmado pra 26px sólido, hierarquia
+   volta ao conteúdo (KPIs, score). Linear/Vercel/Stripe usam 22-28px em h1
+   de dashboard — referência. Se precisar de h1 maior em landing, criar
+   .site-page-header-title (escopo separado). */
 .ct-page-header-title {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: clamp(40px, 6vw, 80px);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
   margin: 0 0 16px 0;
   color: var(--text);
 }

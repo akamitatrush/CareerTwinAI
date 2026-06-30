@@ -467,7 +467,7 @@ export default async function EstagiosPage({ searchParams }) {
   }
 
   return (
-    <main id="main-content" className="app-container site-section-mesh">
+    <main id="main-content" className="app-container">
       <style>{`
         .ct-glass-hover:hover {
           transform: scale(1.01);

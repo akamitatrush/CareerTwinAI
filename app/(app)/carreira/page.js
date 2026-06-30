@@ -32,11 +32,11 @@ export default async function CarreiraPage() {
           generoso. Style inline pra garantir vibe premium independente do
           .ct-page-header-title atual (Galadriel polishing em paralelo). */}
       <header
-        className="ct-page-header site-section-mesh"
+        className="ct-page-header"
         style={{
-          paddingTop: "clamp(56px, 9vw, 96px)",
-          paddingBottom: "clamp(32px, 5vw, 64px)",
-          marginBottom: "clamp(32px, 5vw, 64px)",
+          paddingTop: "32px",
+          paddingBottom: "24px",
+          marginBottom: "24px",
         }}
       >
         <div className="ct-page-header-icon" aria-hidden="true">
