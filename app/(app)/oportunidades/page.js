@@ -50,11 +50,71 @@ export default async function OportunidadesPage() {
     gaps: latestSnapshot.gaps.map((g) => g.habilidade),
   };
 
+  // Snapshot drift detection (alerta vermelho do consolidado 2026-06-30).
+  // Users que editaram Profile.targetRole ANTES do auto-refresh sincrono
+  // (commit c90582e) tem snapshot orfao — pill mostra novo cargo, ranking
+  // usa o velho. Sem este banner, o bug raiz reportado pelo fundador
+  // sobrevive ate user salvar /conta de novo.
+  const normalizeRole = (s) => String(s || "").toLowerCase().trim();
+  const snapshotRoleDrift =
+    normalizeRole(profile.targetRole) !== normalizeRole(latestSnapshot.role);
+
   return (
     <main id="main-content" className="app-container">
       <PageHeader targetRole={profile.targetRole} />
+      {snapshotRoleDrift && (
+        <SnapshotDriftBanner
+          currentRole={profile.targetRole}
+          snapshotRole={latestSnapshot.role}
+        />
+      )}
       <RadarClient initial={initialData} />
     </main>
+  );
+}
+
+function SnapshotDriftBanner({ currentRole, snapshotRole }) {
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      style={{
+        margin: "16px 0 24px",
+        padding: "14px 18px",
+        background: "var(--surface, rgba(255,255,255,0.03))",
+        border: "1px solid var(--border-strong, rgba(255,255,255,0.12))",
+        borderLeft: "3px solid var(--accent-cyan, #5BE0C4)",
+        borderRadius: "var(--radius-md, 10px)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+      }}
+    >
+      <p style={{ margin: 0, fontWeight: 600, color: "var(--text-strong, var(--text))" }}>
+        Diagnóstico desatualizado pro cargo-alvo
+      </p>
+      <p style={{ margin: 0, fontSize: 14, color: "var(--text-soft)", lineHeight: 1.55 }}>
+        Você definiu <strong>{currentRole}</strong> como cargo-alvo, mas seu último
+        diagnóstico foi gerado pra <strong>{snapshotRole}</strong>. As vagas abaixo
+        ainda estão sendo ranqueadas pelo cargo antigo.
+      </p>
+      <Link
+        href="/conta"
+        style={{
+          alignSelf: "flex-start",
+          marginTop: 4,
+          padding: "8px 14px",
+          background: "var(--accent-cyan, #5BE0C4)",
+          color: "var(--accent-on-cyan, #0A0A0E)",
+          borderRadius: "var(--radius-sm, 6px)",
+          fontWeight: 600,
+          fontSize: 14,
+          textDecoration: "none",
+        }}
+      >
+        Atualizar diagnóstico em /conta →
+      </Link>
+    </div>
   );
 }
 
