@@ -15,23 +15,44 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { WEIGHTS, SS_META } from "@/lib/score";
 
 const PATH_LENGTH_FALLBACK = 1400;
 
-// Demo data — sintetico, sem nome real, sem empresa, sem API.
+// Aragorn v7 (2026-06-30) — DEMO sintetico que reflete a formula REAL.
+// Substitui o modelo "ação → +N pontos" (gamificacao falsa estilo Duolingo)
+// pelo modelo "4 sub-scores ponderados se montando" (vide lib/score.js:5-17).
+// Cada `value` e ilustrativo mas plausivel; scoreNow/Next sao DERIVADOS no
+// render via reduce — nao hardcoded. Se WEIGHTS mudar em lib/score.js, a UI
+// segue automaticamente. Cada `cause` descreve um ESTADO observado (nao
+// promete pontos por ação) — vide proposta §3.4 do aragorn-v7-proposal.md.
 const DEMO = {
   personaFrom: "Analista de marketing",
   personaTo: "Gerente de marketing",
   stackNow: ["GA4", "SQL", "Looker"],
-  stackTarget: ["+SEO", "+Brand"],
-  scoreNow: 47,
-  scoreNext: 73,
-  actions: [
-    { delta: 8, label: "Cases de growth", note: "3 evidências" },
-    { delta: 6, label: "LinkedIn editado", note: "autoridade" },
-    { delta: 12, label: "Curso “Brand Strategy”", note: "40h" },
+  stackTarget: ["+ SEO", "+ Branding"],
+  subScoresNow: [
+    { key: "aderencia_vagas",        value: 52 },
+    { key: "relevancia_habilidades", value: 41 },
+    { key: "otimizacao_perfil",      value: 60 },
+    { key: "experiencia_mercado",    value: 38 },
+  ],
+  subScoresNext: [
+    { key: "aderencia_vagas",        value: 68, cause: "+16 novas skills no pool" },
+    { key: "relevancia_habilidades", value: 72, cause: "+31 evidências validadas" },
+    { key: "otimizacao_perfil",      value: 85, cause: "+25 CV reescrito CAR/STAR" },
+    { key: "experiencia_mercado",    value: 72, cause: "+34 1 cargo a mais" },
   ],
 };
+
+// Helper: deriva score (0..100) a partir dos sub-scores + WEIGHTS reais.
+// Math identica ao lib/score.js::computeOverall — NUNCA hardcode.
+function computeScore(subScores) {
+  return Math.round(subScores.reduce((s, r) => s + r.value * (WEIGHTS[r.key] || 0), 0));
+}
+
+const SCORE_NOW = computeScore(DEMO.subScoresNow);     // = 47
+const SCORE_NEXT = computeScore(DEMO.subScoresNext);   // = 73
 
 // Tokens compartilhados — definidos uma vez pra reusar e baixar ruido visual no JSX.
 const MONO_FAMILY = "'JetBrains Mono', ui-monospace, monospace";
@@ -218,6 +239,56 @@ const S = {
     gap: 8,
     zIndex: 2,
   },
+  // Aragorn v7 — tokens da tabela de sub-scores
+  subScoresLabel: {
+    fontFamily: MONO_FAMILY,
+    fontSize: 10.5,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: "var(--site-fg-muted)",
+    marginBottom: 10,
+  },
+  weightTag: {
+    fontFamily: MONO_FAMILY,
+    fontSize: 10.5,
+    letterSpacing: "0.06em",
+    color: "var(--site-fg-muted)",
+    padding: "2px 7px",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 4,
+  },
+  subScoreVal: {
+    fontFamily: MONO_FAMILY,
+    fontSize: 14,
+    fontWeight: 500,
+    color: "var(--site-fg)",
+    letterSpacing: "-0.01em",
+    minWidth: 56,
+    textAlign: "right",
+  },
+  causeTag: {
+    fontFamily: MONO_FAMILY,
+    fontSize: 10.5,
+    color: "var(--site-fg-muted)",
+    opacity: 0.7,
+    marginLeft: 6,
+  },
+  demoFooter: {
+    marginTop: 18,
+    paddingTop: 14,
+    borderTop: "1px dashed rgba(255,255,255,0.06)",
+    fontFamily: MONO_FAMILY,
+    fontSize: 11,
+    color: "var(--site-fg-muted)",
+    letterSpacing: "0.02em",
+    lineHeight: 1.5,
+  },
+  demoFooterLink: {
+    color: "var(--site-fg)",
+    textDecoration: "underline",
+    textUnderlineOffset: 2,
+    textDecorationColor: "var(--site-accent)",
+  },
   srOnly: {
     position: "absolute",
     width: 1,
@@ -305,8 +376,8 @@ export default function SiteHero() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (reduceMotion) {
-      setStep(9); setScoreNow(DEMO.scoreNow); setScoreNext(DEMO.scoreNext);
-      setProgress(100); setStatusLabel("Diagnóstico completo");
+      setStep(9); setScoreNow(SCORE_NOW); setScoreNext(SCORE_NEXT);
+      setProgress(100); setStatusLabel("Diagnóstico completo · 4 dimensões ponderadas");
       return;
     }
 
@@ -354,19 +425,22 @@ export default function SiteHero() {
       timers.push(setTimeout(() => animateProgress(35, 65, 900), 1200));
       timers.push(setTimeout(() => animateProgress(65, 92, 1100), 2200));
 
+      // Steps: 1=persona, 2=stacks, 3-6=4 sub-scores agora (1 por step),
+      // 7=score atual count-up, 8=4 sub-scores projetados (revealed juntos),
+      // 9=score projetado count-up + status final.
       timers.push(setTimeout(() => setStep(1), 0));
       timers.push(setTimeout(() => setStep(2), 400));
-      timers.push(setTimeout(() => setStep(3), 800));
-      timers.push(setTimeout(() => { setStep(4); countUp(0, DEMO.scoreNow, 600, setScoreNow); }, 1200));
-      timers.push(setTimeout(() => setStep(5), 1800));
-      timers.push(setTimeout(() => setStep(6), 2100));
-      timers.push(setTimeout(() => setStep(7), 2400));
-      timers.push(setTimeout(() => { setStep(8); countUp(DEMO.scoreNow, DEMO.scoreNext, 800, setScoreNext); }, 2700));
-      timers.push(setTimeout(() => { setStep(9); animateProgress(92, 100, 400); setStatusLabel("Diagnóstico completo"); }, 3500));
+      timers.push(setTimeout(() => setStep(3), 800));    // sub-score 1
+      timers.push(setTimeout(() => setStep(4), 1100));   // sub-score 2
+      timers.push(setTimeout(() => setStep(5), 1400));   // sub-score 3
+      timers.push(setTimeout(() => setStep(6), 1700));   // sub-score 4
+      timers.push(setTimeout(() => { setStep(7); countUp(0, SCORE_NOW, 700, setScoreNow); }, 2100));
+      timers.push(setTimeout(() => setStep(8), 3000));   // reveal sub-scores projetados
+      timers.push(setTimeout(() => { setStep(9); countUp(SCORE_NOW, SCORE_NEXT, 900, setScoreNext); animateProgress(92, 100, 500); setStatusLabel("Diagnóstico completo · 4 dimensões ponderadas"); }, 3700));
 
       loopTimer = setTimeout(() => {
         if (!stopped && document.visibilityState === "visible") runSequence();
-      }, 7500);
+      }, 9000);
     };
 
     let started = false;
@@ -522,44 +596,74 @@ export default function SiteHero() {
 
           <div style={S.divider} />
 
-          {/* Score atual */}
-          <div style={{ opacity: step >= 4 ? 1 : 0, transform: step >= 4 ? "translateY(0)" : "translateY(6px)", transition: "opacity 400ms ease, transform 400ms ease", display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
-            <span style={{ ...S.label, letterSpacing: "0.14em" }}>Score atual</span>
-            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: "clamp(32px, 5vw, 40px)", lineHeight: 1, fontWeight: 500, color: "var(--site-fg)", letterSpacing: "-0.02em" }}>
-              {scoreNow}<span style={{ color: "var(--site-fg-muted)", fontSize: "0.55em" }}>/100</span>
-              <span style={S.srOnly}>Score atual de referência: 47/100</span>
-            </span>
+          {/* Sub-scores AGORA — 4 dimensoes aparecem 1 a 1 (steps 3-6). */}
+          <div style={S.subScoresLabel} aria-hidden="true">Os 4 sub-scores (mesma fórmula em /transparencia)</div>
+          <div role="table" aria-label="Sub-scores que compõem o diagnóstico atual" style={{ marginBottom: 14 }}>
+            {DEMO.subScoresNow.map((r, i) => {
+              const meta = SS_META[r.key] || { label: r.key, w: `${Math.round((WEIGHTS[r.key] || 0) * 100)}%` };
+              return (
+                <div key={r.key} role="row" style={{ opacity: step >= 3 + i ? 1 : 0, transform: step >= 3 + i ? "translateX(0)" : "translateX(-6px)", transition: "opacity 360ms ease, transform 360ms ease", display: "grid", gridTemplateColumns: "1fr auto auto", gap: 12, alignItems: "baseline", padding: "5px 0", fontSize: 13, color: "var(--site-fg)", borderBottom: i < DEMO.subScoresNow.length - 1 ? "1px dashed rgba(255,255,255,0.06)" : "none" }}>
+                  <span>{meta.label}</span>
+                  <span style={S.weightTag}>peso {meta.w}</span>
+                  <span style={S.subScoreVal}>{r.value}<span style={{ color: "var(--site-fg-muted)", fontSize: "0.7em" }}>/100</span></span>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Actions */}
-          <div style={{ marginBottom: 14 }}>
-            {DEMO.actions.map((a, i) => (
-              <div key={a.label} style={{ opacity: step >= 5 + i ? 1 : 0, transform: step >= 5 + i ? "translateX(0)" : "translateX(-6px)", transition: "opacity 360ms ease, transform 360ms ease", display: "grid", gridTemplateColumns: "44px 1fr auto", gap: 12, alignItems: "baseline", padding: "6px 0", fontSize: 13, color: "var(--site-fg)", borderBottom: i < DEMO.actions.length - 1 ? "1px dashed rgba(255,255,255,0.06)" : "none" }}>
-                <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "var(--site-accent)", fontWeight: 500, letterSpacing: "-0.01em" }}>+{a.delta}</span>
-                <span>{a.label}</span>
-                <span style={{ color: "var(--site-fg-muted)", fontSize: 11, fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}>{a.note}</span>
-              </div>
-            ))}
+          {/* Score atual = soma ponderada (count-up no step 7) */}
+          <div style={{ opacity: step >= 7 ? 1 : 0, transform: step >= 7 ? "translateY(0)" : "translateY(6px)", transition: "opacity 400ms ease, transform 400ms ease", display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 18 }}>
+            <span style={{ ...S.label, letterSpacing: "0.14em" }}>Score atual</span>
+            <span aria-live="polite" style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: "clamp(32px, 5vw, 40px)", lineHeight: 1, fontWeight: 500, color: "var(--site-fg)", letterSpacing: "-0.02em" }}>
+              {scoreNow}<span style={{ color: "var(--site-fg-muted)", fontSize: "0.55em" }}>/100</span>
+            </span>
           </div>
 
           <div style={S.divider} />
 
-          {/* Score projetado */}
-          <div style={{ opacity: step >= 8 ? 1 : 0, transform: step >= 8 ? "translateY(0)" : "translateY(6px)", transition: "opacity 400ms ease, transform 400ms ease", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+          {/* Separador editorial — "Em 60 dias, mantendo o roadmap →" */}
+          <div style={{ ...S.subScoresLabel, opacity: step >= 8 ? 1 : 0, transition: "opacity 400ms ease" }} aria-hidden="true">
+            Em 60 dias, mantendo o roadmap →
+          </div>
+
+          {/* Sub-scores PROJETADOS — revealed juntos no step 8, cause inline. */}
+          <div role="table" aria-label="Sub-scores projetados em 60 dias" style={{ opacity: step >= 8 ? 1 : 0, transform: step >= 8 ? "translateY(0)" : "translateY(6px)", transition: "opacity 500ms ease, transform 500ms ease", marginBottom: 14 }}>
+            {DEMO.subScoresNext.map((r, i) => {
+              const meta = SS_META[r.key] || { label: r.key, w: `${Math.round((WEIGHTS[r.key] || 0) * 100)}%` };
+              return (
+                <div key={r.key} role="row" style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 12, alignItems: "baseline", padding: "5px 0", fontSize: 13, color: "var(--site-fg)", borderBottom: i < DEMO.subScoresNext.length - 1 ? "1px dashed rgba(255,255,255,0.06)" : "none" }}>
+                  <span>
+                    {meta.label}
+                    <span style={S.causeTag}> · {r.cause}</span>
+                  </span>
+                  <span style={S.weightTag}>peso {meta.w}</span>
+                  <span style={S.subScoreVal}>{r.value}<span style={{ color: "var(--site-fg-muted)", fontSize: "0.7em" }}>/100</span></span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Score projetado (count-up no step 9) */}
+          <div style={{ opacity: step >= 9 ? 1 : 0, transform: step >= 9 ? "translateY(0)" : "translateY(6px)", transition: "opacity 400ms ease, transform 400ms ease", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             <span style={{ ...S.label, letterSpacing: "0.14em" }}>Score projetado</span>
-            <span style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: "clamp(40px, 6vw, 56px)", lineHeight: 1, fontWeight: 600, color: "var(--site-fg)", letterSpacing: "-0.025em", display: "inline-flex", alignItems: "baseline", gap: 10 }}>
+            <span aria-live="polite" style={{ fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: "clamp(40px, 6vw, 56px)", lineHeight: 1, fontWeight: 600, color: "var(--site-fg)", letterSpacing: "-0.025em" }}>
               {scoreNext}<span style={{ color: "var(--site-fg-muted)", fontSize: "0.45em" }}>/100</span>
-              <span style={S.srOnly}>Score projetado final: 73/100</span>
-              <span style={{ fontSize: "0.42em", color: "var(--site-accent)", fontWeight: 500, letterSpacing: "0", textShadow: "0 0 12px var(--site-accent-glow)" }}>+{delta}</span>
             </span>
           </div>
 
-          {/* Descrição estática pra screen readers */}
+          {/* Microcopy de rodapé — disclaimer + link auditavel pra /transparencia. */}
+          <div style={S.demoFooter}>
+            Demo ilustrativa · números sintéticos · <Link href="/transparencia" style={S.demoFooterLink}>fórmula real em /transparencia</Link>
+          </div>
+
+          {/* Descrição estática pra screen readers — espelha SS_META + WEIGHTS reais. */}
           <span style={S.srOnly}>
-            CareerTwin calcula um diagnóstico mostrando a persona Analista de marketing
-            evoluindo para Gerente de marketing, com score atual 47 de 100 e score
-            projetado 73 de 100 após três microações: cases de growth, LinkedIn editado
-            e curso de Brand Strategy.
+            CareerTwin calcula o score com 4 sub-scores ponderados — Aderência a vagas
+            (peso 40%), Relevância das habilidades (peso 30%), Otimização do perfil
+            (peso 20%) e Experiência de mercado (peso 10%). Persona ilustrativa
+            Analista de marketing rumo a Gerente de marketing começa em {SCORE_NOW} de 100
+            e projeta {SCORE_NEXT} de 100 após 60 dias mantendo o roadmap. Fórmula completa
+            documentada em transparência.
           </span>
         </div>
       </div>
