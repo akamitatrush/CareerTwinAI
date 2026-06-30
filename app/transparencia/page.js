@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { WEIGHTS, SS_META } from "@/lib/score";
 import AlgorithmDisclaimer from "@/components/AlgorithmDisclaimer";
 
-// Auth + Prisma sao dinamicos; layout (app) ja forca isso, mas reforcamos
-// aqui pra deixar explicito: a pagina LE dado do usuario.
+// Auth + Prisma sao dinamicos. Pagina e PUBLICA (Wave B1): renderiza dois
+// modos — anonimo (sem session) so mostra a formula; logado mostra tambem
+// os valores reais do ultimo snapshot. Foi MOVIDA de app/(app)/transparencia
+// pra app/transparencia justamente pra escapar do gate do layout (app).
+// Removida tambem de PROTECTED_PREFIXES em lib/auth-protected-paths.js.
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -24,23 +26,24 @@ const SS_KEYS = [
 ];
 
 export default async function TransparenciaPage() {
+  // PUBLICA: sem redirect. session pode ser null (anonimo) ou ter user (logado).
   const session = await auth();
-  if (!session?.user?.id) redirect("/entrar");
+  const isAnon = !session?.user?.id;
 
-  // Pega ultimo snapshot do user (se houver) pra mostrar valores reais.
-  // Em ausencia de snapshot, a tabela renderiza "—" e a tela vira pura
-  // explicacao da formula — util pra usuario antes do primeiro diagnostico.
-  // Defensivo contra DB fora do ar: nao queremos derrubar a pagina de
-  // explicacao por causa do banco.
+  // Anonimo NAO bate no DB (sem userId pra consultar). Logado tenta ler
+  // ultimo snapshot pra mostrar valores reais. Defensivo contra DB fora do
+  // ar: nao queremos derrubar a pagina publica por causa do banco.
   let latest = null;
-  try {
-    latest = await prisma.scoreSnapshot.findFirst({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      select: { overall: true, subScores: true },
-    });
-  } catch {
-    latest = null;
+  if (!isAnon) {
+    try {
+      latest = await prisma.scoreSnapshot.findFirst({
+        where: { userId: session.user.id },
+        orderBy: { createdAt: "desc" },
+        select: { overall: true, subScores: true },
+      });
+    } catch {
+      latest = null;
+    }
   }
 
   const subScores = latest?.subScores || null;
@@ -48,6 +51,13 @@ export default async function TransparenciaPage() {
 
   return (
     <main id="main-content" className="app-container">
+      {/* Nav minimal so pro anonimo — perdeu o AppShell ao sair de (app).
+          Logado que cair aqui via URL tambem ve esse nav simples (sem
+          sidebar), mas e edge-case raro (links internos no produto vao
+          dentro do AppShell em outras rotas). Vantagem: nao depende de
+          AppShell e nao tem risco de duplicar header com layout pai. */}
+      <PageNav isAnon={isAnon} />
+
       {/* === Page Header padrao (.ct-page-header) === */}
       <header className="ct-page-header">
         <div className="ct-page-header-icon" aria-hidden="true">
@@ -101,10 +111,16 @@ export default async function TransparenciaPage() {
       {/* === 3. Exemplo numérico reprodutível === */}
       <WorkedExample />
 
-      <hr className="ct-section-divider" />
-
-      {/* === 4. Tabela com os SEUS valores reais === */}
-      <YourScoreSection subScores={subScores} overall={overall} />
+      {/* === 4. Tabela com os SEUS valores reais — SO LOGADO ===
+          FormulaTable tecnicamente aceita subScores=null (mostra "—"), mas
+          mostrar tabela vazia pra anonimo polui sem agregar — descopamos.
+          Anonimo ja viu o WorkedExample (passo 3) que e didatico bastante. */}
+      {!isAnon && (
+        <>
+          <hr className="ct-section-divider" />
+          <YourScoreSection subScores={subScores} overall={overall} />
+        </>
+      )}
 
       <hr className="ct-section-divider" />
 
@@ -122,8 +138,89 @@ export default async function TransparenciaPage() {
       <DocsSection />
 
       {/* === 8. Por que isso importa (CTA / highlight) === */}
-      <WhyItMattersBanner />
+      <WhyItMattersBanner isAnon={isAnon} />
     </main>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* PageNav — barra superior minimal so renderizada na pagina publica   */
+/* (logado tipicamente entra via AppShell em outras rotas; aqui ele ve */
+/* o mesmo nav simples se cair direto, sem duplicar header).           */
+/* ------------------------------------------------------------------ */
+function PageNav({ isAnon }) {
+  return (
+    <nav
+      aria-label="Navegação principal"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "12px 0 22px",
+        borderBottom: "1px solid var(--border)",
+        marginBottom: 24,
+        gap: 12,
+        flexWrap: "wrap",
+      }}
+    >
+      <Link
+        href="/"
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: 17,
+          fontWeight: 800,
+          letterSpacing: "-.3px",
+          color: "var(--text-strong)",
+          textDecoration: "none",
+        }}
+      >
+        CareerTwin<span style={{ color: "var(--accent-cyan-deep)" }}> AI</span>
+      </Link>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        {isAnon ? (
+          <>
+            <Link
+              href="/entrar"
+              style={{
+                fontSize: 13.5,
+                fontWeight: 600,
+                color: "var(--text-muted)",
+                textDecoration: "none",
+              }}
+            >
+              Entrar
+            </Link>
+            <Link
+              href="/entrar"
+              style={{
+                fontSize: 13.5,
+                fontWeight: 700,
+                color: "var(--text-strong)",
+                background: "var(--accent-cyan-glow)",
+                border: "1px solid var(--accent-cyan)",
+                padding: "8px 14px",
+                borderRadius: "var(--radius-pill, 999px)",
+                textDecoration: "none",
+              }}
+            >
+              Calcular meu score →
+            </Link>
+          </>
+        ) : (
+          <Link
+            href="/dashboard"
+            style={{
+              fontSize: 13.5,
+              fontWeight: 600,
+              color: "var(--text-muted)",
+              textDecoration: "none",
+            }}
+          >
+            ← Voltar ao dashboard
+          </Link>
+        )}
+      </div>
+    </nav>
   );
 }
 
@@ -890,7 +987,7 @@ function DocsSection() {
 /* ------------------------------------------------------------------ */
 /* 8. Por que isso importa                                            */
 /* ------------------------------------------------------------------ */
-function WhyItMattersBanner() {
+function WhyItMattersBanner({ isAnon = false }) {
   return (
     <aside
       role="note"
@@ -906,6 +1003,7 @@ function WhyItMattersBanner() {
         display: "flex",
         gap: 18,
         alignItems: "flex-start",
+        flexWrap: "wrap",
       }}
     >
       <svg
@@ -953,6 +1051,47 @@ function WhyItMattersBanner() {
           </span>
           . Aqui você valida cada cálculo, no papel se quiser. Esse é o moat.
         </p>
+        {isAnon && (
+          <div
+            style={{
+              marginTop: 18,
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              flexWrap: "wrap",
+            }}
+          >
+            <Link
+              href="/entrar"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "11px 18px",
+                background: "var(--text-strong)",
+                color: "var(--surface)",
+                borderRadius: "var(--radius-pill, 999px)",
+                fontFamily: "var(--font-display)",
+                fontSize: 14,
+                fontWeight: 700,
+                letterSpacing: "-.1px",
+                textDecoration: "none",
+              }}
+            >
+              Calcular meu score →
+            </Link>
+            <span
+              style={{
+                fontSize: 12.5,
+                color: "var(--text-soft)",
+                fontFamily: "var(--font-mono, monospace)",
+                letterSpacing: ".02em",
+              }}
+            >
+              Ver fórmula é grátis. Calcular o SEU score precisa de conta.
+            </span>
+          </div>
+        )}
       </div>
     </aside>
   );
